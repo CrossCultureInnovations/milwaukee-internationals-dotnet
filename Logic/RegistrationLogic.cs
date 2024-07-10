@@ -98,7 +98,7 @@ public class RegistrationLogic : IRegistrationLogic
                     <br>
                     <p> {globalConfigs.TourDate.Year} Tour of Milwaukee</p>
                     <p> Date: {globalConfigs.TourDate:dddd, MMMM d, yyyy}</p>
-                    <p> Time: 12:00 noon</p>
+                    <p> Time: {globalConfigs.TourDate:HH:mm}</p>
                     <p> Address: {globalConfigs.TourAddress} </p>
                     <p> Location: {globalConfigs.TourLocation} </p>
                     <p> Thank you for registering for this event. Please share this with other new international friends.</p>
@@ -128,7 +128,7 @@ public class RegistrationLogic : IRegistrationLogic
                     <br>
                     <p> {globalConfigs.TourDate.Year} Tour of Milwaukee</p>
                     <p> Date: {globalConfigs.TourDate:dddd, MMMM d, yyyy}</p>
-                    <p> Time: 12:00 noon (Brief orientation only for drivers and navigators) </p>
+                    <p> Time: {globalConfigs.TourDate:HH:mm} (Brief orientation only for drivers and navigators) </p>
                     <p> Address: {globalConfigs.TourAddress} </p>
                     <p> Location: {globalConfigs.TourLocation} </p>
                     <br>
@@ -155,7 +155,7 @@ public class RegistrationLogic : IRegistrationLogic
                     <br>
                     <p> {globalConfigs.TourDate.Year} Tour of Milwaukee</p>
                     <p> Date: {globalConfigs.TourDate:dddd, MMMM d, yyyy}</p>
-                    <p> Time: 5:30 pm</p>
+                    <p> Time: {globalConfigs.ArrivalTimeForHost:h:mm tt}</p>
                     <p> We will send you more details once we have them.</p>
                     <p> For questions, any change in plans, please contact Asher Imtiaz (414-499-5360).</p>
                     <p> Blessings,</p>

@@ -39,7 +39,10 @@ public class GlobalConfigs
         
     [Display(Name = "Time of the tour (CST Zone)")]
     public DateTime TourDate { get; set; }
-        
+    
+    [Display(Name = "Student arrival time for hosts (CST Zone)")]
+    public DateTime ArrivalTimeForHost { get; set; }
+
     [Display(Name = "Address of the tour")]
     public string TourAddress { get; set; }     
         
