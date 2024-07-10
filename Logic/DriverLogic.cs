@@ -48,15 +48,13 @@ public class DriverLogic : BasicCrudLogicAbstract<Driver>, IDriverLogic
 
         // Normalize phone number
         instance.Phone = NormalizePhoneNumber(instance.Phone);
-            
-        var lastDisplayId = (await base.GetAll(DateTime.UtcNow.Year)).MaxBy(x => x.Id)
-            ?.DisplayId;
-        var lastId = lastDisplayId != null ? int.Parse(lastDisplayId.Split("-")[1]) : 0;
+
+        var count = await _dal.Count(x => x.Year == DateTime.Now.Year);
 
         // Set the year
         instance.Year = DateTime.UtcNow.Year;
 
-        instance.DisplayId = GenerateDisplayId(instance, lastId);
+        instance.DisplayId = GenerateDisplayId(instance, count);
 
         // Save the instance
         var retVal = await base.Save(instance);
