@@ -61,7 +61,7 @@
                             <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
                         </a>
                     </th>
-                    <th>Role</th>
+                    <th ng-show="showDetail">Role</th>
                     <th>
                         Capacity
                         <a href="?sortBy=capacity&descending=false">
@@ -108,7 +108,7 @@
                     <tr class="@(driver.Role == RolesEnum.Navigator ? "warning" : "")">
                         <td>@driver.DisplayId</td>
                         <td>@driver.Fullname</td>
-                        <td>@driver.Role.ToString()</td>
+                        <td ng-show="showDetail">@driver.Role.ToString()</td>
                         <td>@driver.Capacity</td>
                         <td ng-show="showDetail">@driver.Email</td>
                         <td>@driver.Phone</td>
