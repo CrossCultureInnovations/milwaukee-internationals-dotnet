@@ -1,12 +1,17 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 using API.Attributes;
 using API.Extensions;
 using Logic.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Models.Entities;
 using Models.Enums;
+using Models.ViewModels;
 
 namespace API.Controllers;
 
@@ -16,10 +21,12 @@ namespace API.Controllers;
 public class RegistrationController : Controller
 {
     private readonly IRegistrationLogic _registrationLogic;
+    private readonly IConfiguration _configuration;
 
-    public RegistrationController(IRegistrationLogic registrationLogic)
+    public RegistrationController(IRegistrationLogic registrationLogic, IConfiguration configuration)
     {
         _registrationLogic = registrationLogic;
+        _configuration = configuration;
     }
         
     /// <summary>
@@ -118,6 +125,34 @@ public class RegistrationController : Controller
         
         try
         {
+            // obtain the response token from user input
+            // also called "response parameter" or "verification token"
+            string hCaptchaToken = Request.Form["h-captcha-response"];
+
+            // collect data for post request
+            var dicData = new Dictionary<string, string>
+            {
+                ["secret"] = _configuration.GetValue<string>("HCPATHCA_SECRET"),
+                ["response"] = hCaptchaToken
+            };
+
+            // convert dictionary into form data
+            var formData = new FormUrlEncodedContent(dicData);
+
+            const string url = "https://hcaptcha.com/siteverify";
+
+            var hc = new HttpClient();
+
+            // perform post request
+            var res = await hc.PostAsync(url, formData);
+
+            var hCaptchaResult = await res.Content.ReadFromJsonAsync<HCaptchaResult>();
+
+            if (!hCaptchaResult.Success)
+            {
+                throw new Exception("Captcha failed");
+            }
+            
             await _registrationLogic.RegisterStudent(student);
 
             ModelState.ClearModelStateErrors();

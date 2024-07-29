@@ -1,11 +1,14 @@
 ﻿@using DAL.Interfaces
+@using Microsoft.Extensions.Configuration
 @model Models.Entities.Student
 @inject IConfigLogic ConfigLogic
+@inject IConfiguration Configuration
 
 @{
     ViewBag.Title = $"{DateTime.Now.Year} Free Tour of Milwaukee Registration";
     Layout = "_Layout";
     var globalConfig = await ConfigLogic.ResolveGlobalConfig();
+    var hcaptchaSiteKey = Configuration.GetValue<string>("HCPATHCA_SITEKEY");
 }
 
 <div class="text-center">
@@ -30,6 +33,10 @@
     {
         @(await Html.PartialAsync("StudentContent", Model, new ViewDataDictionary(ViewData) {{ "Type", "Save"}}))
         
+        <div class="h-captcha" data-sitekey="@hcaptchaSiteKey"></div>
+
         <input class="btn btn-primary" type="submit" value="Register For Tour" />
     }
+
+    <script src="https://js.hcaptcha.com/1/api.js" async defer></script>
 </div>
