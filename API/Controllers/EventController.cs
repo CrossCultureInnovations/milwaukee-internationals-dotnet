@@ -14,10 +14,6 @@ public class EventController : Controller
 {
     private readonly IEventLogic _eventLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="eventLogic"></param>
     public EventController(IEventLogic eventLogic)
     {
         _eventLogic = eventLogic;

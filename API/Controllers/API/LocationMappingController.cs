@@ -16,19 +16,11 @@ public class LocationMappingController : BasicCrudController<LocationMapping>
 {
     private readonly ILocationMappingLogic _locationMappingLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="locationMappingLogic"></param>
     public LocationMappingController(ILocationMappingLogic locationMappingLogic)
     {
         _locationMappingLogic = locationMappingLogic;
     }
 
-    /// <summary>
-    /// Returns instance of logic
-    /// </summary>
-    /// <returns></returns>
     protected override IBasicCrudLogic<LocationMapping> BasicCrudLogic()
     {
         return _locationMappingLogic;

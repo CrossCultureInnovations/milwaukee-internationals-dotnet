@@ -19,12 +19,6 @@ public class UserLogic : BasicCrudLogicAbstract<User>, IUserLogic
     private readonly UserManager<User> _userManager;
     private readonly IApiEventService _apiEventService;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="repository"></param>
-    /// <param name="userManager"></param>
-    /// <param name="apiEventService"></param>
     public UserLogic(IEfRepository repository, UserManager<User> userManager, IApiEventService apiEventService)
     {
         _dal = repository.For<User>();

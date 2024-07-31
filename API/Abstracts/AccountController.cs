@@ -127,12 +127,7 @@ public abstract class AbstractIdentityController : Controller
             
         await ResolveSignInManager().SignOutAsync();
     }
-        
-    /// <summary>
-    ///     Resolves a token given a user
-    /// </summary>
-    /// <param name="user"></param>
-    /// <returns></returns>
+
     [NonAction]
     protected string ResolveToken(User user)
     {

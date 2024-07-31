@@ -20,12 +20,6 @@ public class DriverLogic : BasicCrudLogicAbstract<Driver>, IDriverLogic
     private readonly IConfigLogic _configLogic;
     private readonly IApiEventService _apiEventService;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="repository"></param>
-    /// <param name="configLogic"></param>
-    /// <param name="apiEventService"></param>
     public DriverLogic(IEfRepository repository, IConfigLogic configLogic, IApiEventService apiEventService)
     {
         _dal = repository.For<Driver>();

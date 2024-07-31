@@ -12,10 +12,6 @@ public class UserController : BasicCrudController<User>
 {
     private readonly IUserLogic _userLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="userLogic"></param>
     public UserController(IUserLogic userLogic)
     {
         _userLogic = userLogic;

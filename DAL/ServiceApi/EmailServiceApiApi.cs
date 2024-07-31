@@ -15,13 +15,6 @@ public class EmailServiceApi : IEmailServiceApi
     private readonly IConfigLogic _configLogic;
     private readonly ILogger<EmailServiceApi> _logger;
 
-
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="mailJetClient"></param>
-    /// <param name="configLogic"></param>
-    /// <param name="logger"></param>
     public EmailServiceApi(IMailjetClient mailJetClient, IConfigLogic configLogic, ILogger<EmailServiceApi> logger)
     {
         _mailJetClient = mailJetClient;

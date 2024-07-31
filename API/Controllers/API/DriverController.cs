@@ -16,10 +16,6 @@ public class DriverController : BasicCrudController<Driver>
 {
     private readonly IDriverLogic _driverLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="driverLogic"></param>
     public DriverController(IDriverLogic driverLogic)
     {
         _driverLogic = driverLogic;
@@ -41,10 +37,6 @@ public class DriverController : BasicCrudController<Driver>
         return Ok(driver);
     }
 
-    /// <summary>
-    /// Returns instance of logic
-    /// </summary>
-    /// <returns></returns>
     protected override IBasicCrudLogic<Driver> BasicCrudLogic()
     {
         return _driverLogic;

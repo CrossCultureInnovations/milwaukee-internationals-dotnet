@@ -18,12 +18,6 @@ public class StudentLogic : BasicCrudLogicAbstract<Student>, IStudentLogic
     private readonly IConfigLogic _configLogic;
     private readonly IApiEventService _apiEventService;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="repository"></param>
-    /// <param name="configLogic"></param>
-    /// <param name="apiEventService"></param>
     public StudentLogic(IEfRepository repository, IConfigLogic configLogic, IApiEventService apiEventService)
     {
         _dal = repository.For<Student>();

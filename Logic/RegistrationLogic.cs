@@ -27,18 +27,6 @@ public class RegistrationLogic : IRegistrationLogic
     private readonly ISmsService _smsService;
     private readonly IConfigLogic _configLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="studentLogic"></param>
-    /// <param name="driverLogic"></param>
-    /// <param name="hostLogic"></param>
-    /// <param name="eventLogic"></param>
-    /// <param name="locationLogic"></param>
-    /// <param name="emailServiceApiApi"></param>
-    /// <param name="apiEventService"></param>
-    /// <param name="smsService"></param>
-    /// <param name="configLogic"></param>
     public RegistrationLogic(
         IStudentLogic studentLogic,
         IDriverLogic driverLogic,

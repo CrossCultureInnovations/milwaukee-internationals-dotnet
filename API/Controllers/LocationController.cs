@@ -14,10 +14,6 @@ public class LocationController : Controller
 {
     private readonly ILocationLogic _locationLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="locationLogic"></param>
     public LocationController(ILocationLogic locationLogic)
     {
         _locationLogic = locationLogic;

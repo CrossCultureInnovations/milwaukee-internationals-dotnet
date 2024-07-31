@@ -18,11 +18,6 @@ public class EventController : BasicCrudController<Event>
         
     private readonly IEmailUtilityLogic _emailUtilityLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="eventLogic"></param>
-    /// <param name="emailUtilityLogic"></param>
     public EventController(IEventLogic eventLogic, IEmailUtilityLogic emailUtilityLogic)
     {
         _eventLogic = eventLogic;

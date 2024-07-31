@@ -14,10 +14,6 @@ public class StudentDriverMappingController : Controller
 {
     private readonly IStudentDriverMappingLogic _studentDriverMappingLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="studentDriverMappingLogic"></param>
     public StudentDriverMappingController(IStudentDriverMappingLogic studentDriverMappingLogic)
     {
         _studentDriverMappingLogic = studentDriverMappingLogic;

@@ -14,18 +14,11 @@ public class StudentController : Controller
 {
     private readonly IStudentLogic _studentLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
     public StudentController(IStudentLogic studentLogic)
     {
         _studentLogic = studentLogic;
     }
-        
-    /// <summary>
-    /// Returns student view
-    /// </summary>
-    /// <returns></returns>
+
     [HttpGet]
     [Route("")]
     public async Task<IActionResult> Index([FromQuery]string sortBy = null, [FromQuery]bool? descending = null)

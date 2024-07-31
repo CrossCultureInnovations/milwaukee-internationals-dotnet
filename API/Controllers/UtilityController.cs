@@ -17,13 +17,6 @@ public class UtilityController : Controller
     private readonly IStudentLogic _studentLogic;
     private readonly IDriverLogic _driverLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="emailUtilityLogic"></param>
-    /// <param name="smsUtilityLogic"></param>
-    /// <param name="studentLogic"></param>
-    /// <param name="driverLogic"></param>
     public UtilityController(IEmailUtilityLogic emailUtilityLogic, ISmsUtilityLogic smsUtilityLogic, IStudentLogic studentLogic, IDriverLogic driverLogic)
     {
         _emailUtilityLogic = emailUtilityLogic;

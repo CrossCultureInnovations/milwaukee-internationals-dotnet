@@ -17,11 +17,6 @@ public class UserController : Controller
     private readonly IUserLogic _userLogic;
     private readonly UserManager<User> _userManager;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="userLogic"></param>
-    /// <param name="userManager"></param>
     public UserController(IUserLogic userLogic, UserManager<User> userManager)
     {
         _userLogic = userLogic;

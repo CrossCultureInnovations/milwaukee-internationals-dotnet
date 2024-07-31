@@ -18,13 +18,6 @@ public class LocationMappingLogic :  BasicCrudLogicAbstract<LocationMapping>, IL
     private readonly IConfigLogic _configLogic;
     private readonly IApiEventService _apiEventService;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="repository"></param>
-    /// <param name="locationLogic"></param>
-    /// <param name="configLogic"></param>
-    /// <param name="apiEventService"></param>
     public LocationMappingLogic(IEfRepository repository, ILocationLogic locationLogic, IConfigLogic configLogic, IApiEventService apiEventService)
     {
         _dal = repository.For<LocationMapping>();

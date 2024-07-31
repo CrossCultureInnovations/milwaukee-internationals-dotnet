@@ -18,12 +18,6 @@ public class HostLogic : BasicCrudLogicAbstract<Host>, IHostLogic
     private readonly IConfigLogic _configLogic;
     private readonly IApiEventService _apiEventService;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="repository"></param>
-    /// <param name="configLogic"></param>
-    /// <param name="apiEventService"></param>
     public HostLogic(IEfRepository repository, IConfigLogic configLogic, IApiEventService apiEventService)
     {
         _dal = repository.For<Host>();

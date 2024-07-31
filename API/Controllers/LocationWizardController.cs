@@ -17,11 +17,6 @@ public class LocationWizardController : Controller
     private readonly ILocationMappingLogic _locationMappingLogic;
     private readonly ILocationLogic _locationLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="locationMappingLogic"></param>
-    /// <param name="locationLogic"></param>
     public LocationWizardController(ILocationMappingLogic locationMappingLogic, ILocationLogic locationLogic)
     {
         _locationMappingLogic = locationMappingLogic;
