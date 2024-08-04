@@ -14,8 +14,6 @@ variables:
 deploy:
   stage: deploy
   resource_group: heroku
-  only:
-    - master
   allow_failure: false
   before_script:
     - apk --no-cache add curl nodejs npm
