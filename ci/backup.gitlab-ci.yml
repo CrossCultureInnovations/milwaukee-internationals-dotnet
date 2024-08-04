@@ -12,7 +12,26 @@ variables:
   AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
   BUCKET_NAME: milwaukee-internationals-backup
 
-signed-url:
+capture-backup:
+  stage: deploy
+  resource_group: heroku
+  only:
+    - master
+  allow_failure: false
+  before_script:
+    - apk --no-cache add curl nodejs npm
+    - npm install -g heroku
+  script:
+    - export CI_JOB_TIMESTAMP=$(date --utc +"%Y-%m-%dT%H_%M_%SZ")
+    - export DB_DUMP_NAME="$CI_JOB_TIMESTAMP.dump" && echo "DB_DUMP_NAME=$DB_DUMP_NAME" >> backup.env
+    - heroku pg:backups:capture --app $APP_NAME
+    - heroku pg:backups:url --app $APP_NAME | xargs -I{} curl -o "$DB_DUMP_NAME" "{}"
+  artifacts:
+    paths:
+      - backup.env
+      - *.dump
+
+upload-backup:
   stage: deploy
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
   only:
@@ -23,30 +42,9 @@ signed-url:
     - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
     - aws configure set default.region $AWS_DEFAULT_REGION
   script:
-    - export CI_JOB_TIMESTAMP=$(date --utc +"%Y-%m-%dT%H_%M_%SZ") && echo "CI_JOB_TIMESTAMP=$CI_JOB_TIMESTAMP" >> signed-url.env
-    - export S3_OBJECT_NAME="$CI_JOB_TIMESTAMP.dump" && echo "S3_OBJECT_NAME=$S3_OBJECT_NAME" >> signed-url.env
-    - export PRESIGNED_URL=$(aws s3 presign s3://$BUCKET_NAME/$S3_OBJECT_NAME --expires-in 3600) && echo "PRESIGNED_URL=$PRESIGNED_URL" >> signed-url.env
-  artifacts:
-    paths:
-      - signed-url.env
-
-deploy:
-  stage: deploy
-  resource_group: heroku
-  only:
-    - master
-  allow_failure: false
-  before_script:
-    - apk --no-cache add curl nodejs npm
-    - npm install -g heroku
-  script:
     - export $(cat signed-url.env | xargs)
-    - echo $CI_JOB_TIMESTAMP
-    - echo $PRESIGNED_URL
-    - echo $S3_OBJECT_NAME
-    - heroku pg:backups:capture --app $APP_NAME
-    - heroku pg:backups:url --app $APP_NAME | xargs -I{} curl -o "$CI_JOB_TIMESTAMP.dump" "{}"
-    - curl -X PUT --data-binary @"$S3_OBJECT_NAME" "$PRESIGNED_URL"
+    - echo $DB_DUMP_NAME
+    - aws s3 cp $DB_DUMP_NAME s3://$BUCKET_NAME/$DB_DUMP_NAME
   needs:
-    - job: signed-url
+    - job: capture-backup
       artifacts: true
