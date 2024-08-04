@@ -1,3 +1,8 @@
+image: docker:latest
+services:
+  - name: docker:dind
+    alias: docker
+
 include:
   - local: ".gitlab-ci/.gitlab-ci-db-backup.yml"
   - local: ".gitlab-ci/.gitlab-ci-deploy.yml"
