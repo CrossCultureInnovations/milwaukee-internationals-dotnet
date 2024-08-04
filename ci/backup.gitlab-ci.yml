@@ -42,7 +42,7 @@ upload-backup:
     - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
     - aws configure set default.region $AWS_DEFAULT_REGION
   script:
-    - export $(cat signed-url.env | xargs)
+    - export $(cat backup.env | xargs)
     - echo $DB_DUMP_NAME
     - aws s3 cp $DB_DUMP_NAME s3://$BUCKET_NAME/$DB_DUMP_NAME
   needs:
