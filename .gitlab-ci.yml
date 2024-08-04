@@ -1,6 +1,6 @@
 include:
-  - local: ".gitlab-ci/.gitlab-ci-db-backup.yml"
-  - local: ".gitlab-ci/.gitlab-ci-deploy.yml"
+  - local: "ci/backup.gitlab-ci.yml"
+  - local: "ci/deploy.gitlab-ci.yml"
 
 stages:
   - deploy
