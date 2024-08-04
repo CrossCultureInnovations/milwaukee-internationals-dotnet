@@ -1,0 +1,26 @@
+image: docker:latest
+services:
+  - name: docker:dind
+    alias: docker
+
+variables:
+  HEROKU_API_KEY: $HEROKU_TOKEN
+  APP_NAME: "milwaukee-internationals-core"
+  DOCKER_TLS_CERTDIR: ""
+  DOCKER_HOST: "tcp://docker:2375"
+  HEROKU_REGISTRY: "registry.heroku.com"
+  HEROKU_EMAIL: "hesamian@uwm.edu"
+
+deploy:
+  stage: deploy
+  resource_group: heroku
+  only:
+    - master
+  allow_failure: false
+  before_script:
+    - apk --no-cache add curl nodejs npm
+    - npm install -g heroku
+  script:
+    - heroku container:login
+    - heroku container:push --app $APP_NAME web
+    - heroku container:release --app $APP_NAME web

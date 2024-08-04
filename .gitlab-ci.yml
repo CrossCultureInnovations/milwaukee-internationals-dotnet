@@ -1,29 +1,20 @@
-image: docker:latest
-services:
-  - name: docker:dind
-    alias: docker
-
-variables:
-  HEROKU_API_KEY: $HEROKU_TOKEN
-  APP_NAME: "milwaukee-internationals-core"
-  DOCKER_TLS_CERTDIR: ""
-  DOCKER_HOST: "tcp://docker:2375"
-  HEROKU_REGISTRY: "registry.heroku.com"
-  HEROKU_EMAIL: "hesamian@uwm.edu"
+include:
+  - local: '.gitlab-ci/.gitlab-ci-db-backup.yml'
+  - local: '.gitlab-ci/.gitlab-ci-deploy.yml'
 
 stages:
   - deploy
+  - backup
 
-docker-build:
+deploy:
+  stage: build
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: always
+    - if: '$WHATEVER'
+      when: never
+
+build:
   stage: deploy
-  resource_group: heroku
-  only:
-    - master
-  allow_failure: false
-  before_script:
-    - apk --no-cache add curl nodejs npm
-    - npm install -g heroku
-  script:
-    - heroku container:login
-    - heroku container:push --app $APP_NAME web
-    - heroku container:release --app $APP_NAME web
+  rules:
+    - if: '$WHATEVER'
