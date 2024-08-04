@@ -22,14 +22,11 @@ capture-backup:
     - apk --no-cache add curl nodejs npm
     - npm install -g heroku
   script:
-    - export CI_JOB_TIMESTAMP=$(date --utc -Iseconds)
-    - export DB_DUMP_NAME="$CI_JOB_TIMESTAMP.dump" && echo "DB_DUMP_NAME=$DB_DUMP_NAME" >> backup.env
     - heroku pg:backups:capture --app $APP_NAME
-    - heroku pg:backups:url --app $APP_NAME | xargs -I{} curl -o "$DB_DUMP_NAME" "{}"
+    - heroku pg:backups:url --app $APP_NAME | xargs -I{} curl -o db.dump "{}"
   artifacts:
     paths:
-      - backup.env
-      - "*.dump"
+      - db.dump
 
 upload-backup:
   stage: deploy
@@ -42,9 +39,9 @@ upload-backup:
     - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
     - aws configure set default.region $AWS_DEFAULT_REGION
   script:
-    - export $(cat backup.env | xargs)
-    - echo $DB_DUMP_NAME
-    - aws s3 cp $DB_DUMP_NAME s3://$BUCKET_NAME/$DB_DUMP_NAME
+    - export CI_JOB_TIMESTAMP=$(date --utc -Iseconds)
+    - export S3_OBJECT_NAME="$CI_JOB_TIMESTAMP.dump"
+    - aws s3 cp db.dump s3://$BUCKET_NAME/$S3_OBJECT_NAME
   needs:
     - job: capture-backup
       artifacts: true
