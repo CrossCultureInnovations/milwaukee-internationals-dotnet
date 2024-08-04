@@ -1,20 +1,24 @@
 include:
-  - local: '.gitlab-ci/.gitlab-ci-db-backup.yml'
-  - local: '.gitlab-ci/.gitlab-ci-deploy.yml'
+  - local: ".gitlab-ci/.gitlab-ci-db-backup.yml"
+  - local: ".gitlab-ci/.gitlab-ci-deploy.yml"
 
 stages:
   - deploy
   - backup
 
 deploy:
-  stage: build
+  stage: deploy
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
       when: always
-    - if: '$WHATEVER'
+    - if: "$WHATEVER"
       when: never
+  script:
+    - echo "Running build"
 
-build:
-  stage: deploy
+backup:
+  stage: backup
   rules:
-    - if: '$WHATEVER'
+    - if: "$WHATEVER"
+  script:
+    - echo "Running backup"

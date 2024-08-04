@@ -12,10 +12,7 @@ variables:
   AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
   BUCKET_NAME: milwaukee-internationals-backup
 
-stages:
-  - backup
-
-docker-backup:
+backup:
   stage: backup
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
   resource_group: heroku
