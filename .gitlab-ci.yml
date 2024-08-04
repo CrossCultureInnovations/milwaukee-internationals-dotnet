@@ -4,4 +4,4 @@ include:
       - if: $CI_COMMIT_BRANCH == "master" && $WHATEVER
   - local: "ci/deploy.gitlab-ci.yml"
     rules:
-      - if: $CI_COMMIT_BRANCH == "master" && $WHATEVER != null
+      - if: $CI_COMMIT_BRANCH == "master" && $WHATEVER == null
