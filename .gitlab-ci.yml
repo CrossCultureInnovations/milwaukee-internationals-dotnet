@@ -1,8 +1,3 @@
-image: docker:latest
-services:
-  - name: docker:dind
-    alias: docker
-
 include:
   - local: ".gitlab-ci/.gitlab-ci-db-backup.yml"
   - local: ".gitlab-ci/.gitlab-ci-deploy.yml"
@@ -14,10 +9,7 @@ stages:
 deploy:
   stage: deploy
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
-      when: always
-    - if: "$WHATEVER"
-      when: never
+    - if: '$CI_COMMIT_BRANCH == "master" && ! $WHATEVER'
   script:
     - echo "Running build"
 
