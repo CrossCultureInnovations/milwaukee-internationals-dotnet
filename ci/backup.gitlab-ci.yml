@@ -22,7 +22,7 @@ capture-backup:
     - apk --no-cache add curl nodejs npm
     - npm install -g heroku
   script:
-    - export CI_JOB_TIMESTAMP=$(date --utc +"%Y-%m-%dT%H_%M_%SZ")
+    - export CI_JOB_TIMESTAMP=$(date --utc -Iseconds)
     - export DB_DUMP_NAME="$CI_JOB_TIMESTAMP.dump" && echo "DB_DUMP_NAME=$DB_DUMP_NAME" >> backup.env
     - heroku pg:backups:capture --app $APP_NAME
     - heroku pg:backups:url --app $APP_NAME | xargs -I{} curl -o "$DB_DUMP_NAME" "{}"

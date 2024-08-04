@@ -1,7 +1,7 @@
 include:
   - local: "ci/backup.gitlab-ci.yml"
     rules:
-      - if: $CI_COMMIT_BRANCH == "master" && $WHATEVER == null
-  # - local: "ci/deploy.gitlab-ci.yml"
-  #   rules:
-  #     - if: $CI_COMMIT_BRANCH == "master" && $WHATEVER == null
+      - if: $CI_COMMIT_BRANCH == "master" && $SCHEDULED_BACKUP
+  - local: "ci/deploy.gitlab-ci.yml"
+    rules:
+      - if: $CI_COMMIT_BRANCH == "master" && $SCHEDULED_BACKUP == null
