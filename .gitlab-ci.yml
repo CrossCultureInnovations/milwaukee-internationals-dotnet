@@ -9,13 +9,16 @@ stages:
 deploy:
   stage: deploy
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master" && ! $WHATEVER'
+    - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: "$WHATEVER"
+      when: never
   script:
     - echo "Running build"
 
 backup:
   stage: backup
   rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
     - if: "$WHATEVER"
   script:
     - echo "Running backup"
