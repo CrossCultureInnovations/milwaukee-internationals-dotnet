@@ -21,17 +21,6 @@ public class EmailUtilityLogic :  IEmailUtilityLogic
     private readonly IHostLogic _hostLogic;
     private readonly IDriverLogic _driverLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="configLogic"></param>
-    /// <param name="studentLogic"></param>
-    /// <param name="driverLogic"></param>
-    /// <param name="hostLogic"></param>
-    /// <param name="userLogic"></param>
-    /// <param name="emailServiceApiApi"></param>
-    /// <param name="apiEventService"></param>
-    /// <param name="registrationLogic"></param>
     public EmailUtilityLogic(
         IConfigLogic configLogic,
         IStudentLogic studentLogic,

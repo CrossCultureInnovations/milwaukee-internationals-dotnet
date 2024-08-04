@@ -14,13 +14,6 @@ public class AttendanceLogic : IAttendanceLogic
     private readonly IEmailServiceApi _emailServiceApi;
     private readonly IApiEventService _apiEventService;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="studentLogic"></param>
-    /// <param name="driverLogic"></param>
-    /// <param name="emailServiceApi"></param>
-    /// <param name="apiEventService"></param>
     public AttendanceLogic(IStudentLogic studentLogic, IDriverLogic driverLogic, IEmailServiceApi emailServiceApi, IApiEventService apiEventService)
     {
         _studentLogic = studentLogic;

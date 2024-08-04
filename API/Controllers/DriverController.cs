@@ -14,10 +14,6 @@ public class DriverController : Controller
 {
     private readonly IDriverLogic _driverLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="driverLogic"></param>
     public DriverController(IDriverLogic driverLogic)
     {
         _driverLogic = driverLogic;

@@ -14,19 +14,11 @@ public class DriverHostMappingController : Controller
 {
     private readonly IDriverHostMappingLogic _driverHostMappingLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="driverHostMappingLogic"></param>
     public DriverHostMappingController(IDriverHostMappingLogic driverHostMappingLogic)
     {
         _driverHostMappingLogic = driverHostMappingLogic;
     }
-        
-    /// <summary>
-    /// Returns the status of mappings
-    /// </summary>
-    /// <returns></returns>
+
     [HttpGet]
     [Route("Status")]
     [SwaggerOperation("DriverHostMappingStatus")]

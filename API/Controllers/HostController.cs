@@ -14,10 +14,6 @@ public class HostController : Controller
 {
     private readonly IHostLogic _hostLogic;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="hostLogic"></param>
     public HostController(IHostLogic hostLogic)
     {
         _hostLogic = hostLogic;

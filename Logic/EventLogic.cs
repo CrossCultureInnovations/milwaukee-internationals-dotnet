@@ -19,13 +19,6 @@ public class EventLogic : BasicCrudLogicAbstract<Event>, IEventLogic
     private readonly IConfigLogic _configLogic;
     private readonly IApiEventService _apiEventService;
 
-    /// <summary>
-    /// Constructor dependency injection
-    /// </summary>
-    /// <param name="repository"></param>
-    /// <param name="studentLogic"></param>
-    /// <param name="configLogic"></param>
-    /// <param name="apiEventService"></param>
     public EventLogic(IEfRepository repository, IStudentLogic studentLogic, IConfigLogic configLogic, IApiEventService apiEventService)
     {
         _dal = repository.For<Event>();
