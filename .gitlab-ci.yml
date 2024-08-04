@@ -1,10 +1,7 @@
 include:
   - local: "ci/backup.gitlab-ci.yml"
     rules:
-      - if: $CI_COMMIT_BRANCH == "master"
-      - if: "$WHATEVER"
+      - if: $CI_COMMIT_BRANCH == "master" && $WHATEVER
   - local: "ci/deploy.gitlab-ci.yml"
     rules:
-      - if: $CI_COMMIT_BRANCH == "master"
-      - if: "$WHATEVER"
-        when: never
+      - if: $CI_COMMIT_BRANCH == "master" && $WHATEVER != null
