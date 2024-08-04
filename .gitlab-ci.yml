@@ -17,7 +17,6 @@ deploy:
 backup:
   stage: backup
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
     - if: "$WHATEVER"
   script:
     - echo "Running backup"
