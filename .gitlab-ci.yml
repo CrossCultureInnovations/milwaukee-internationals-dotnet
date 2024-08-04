@@ -9,7 +9,6 @@ stages:
 deploy:
   stage: deploy
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
     - if: "$WHATEVER"
       when: never
   script:
