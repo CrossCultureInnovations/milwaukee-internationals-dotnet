@@ -29,4 +29,4 @@ backup:
     - export PRESIGNED_URL=$(aws s3 presign s3://$BUCKET_NAME/$CI_JOB_TIMESTAMP --expires-in 3600)
     - heroku pg:backups:capture --app $APP_NAME
     - heroku pg:backups:url --app $APP_NAME | xargs -I{} wget -O "$CI_JOB_TIMESTAMP.dump" "{}"
-    - wget --method=PUT --body-file="$CI_JOB_TIMESTAMP.dump" $PRESIGNED_URL --header="Content-Type: application/octet-stream"
+    - wget --method=PUT --body-file="$CI_JOB_TIMESTAMP.dump" "$PRESIGNED_URL"
