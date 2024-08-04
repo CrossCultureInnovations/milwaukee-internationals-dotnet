@@ -42,7 +42,6 @@ deploy:
     - export $(cat signed-url.env | xargs)
     - echo $CI_JOB_TIMESTAMP
     - echo $PRESIGNED_URL
-    - heroku login
     - heroku pg:backups:capture --app $APP_NAME
     - heroku pg:backups:url --app $APP_NAME | xargs -I{} wget -O "$CI_JOB_TIMESTAMP.dump" "{}"
     - wget --method=PUT --body-file="$CI_JOB_TIMESTAMP.dump" "$PRESIGNED_URL"
