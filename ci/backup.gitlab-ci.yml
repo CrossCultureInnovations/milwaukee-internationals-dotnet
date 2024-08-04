@@ -23,11 +23,11 @@ signed-url:
     - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
     - aws configure set default.region $AWS_DEFAULT_REGION
   script:
-    - export CI_JOB_TIMESTAMP=$(date --utc -Iseconds) && echo $CI_JOB_TIMESTAMP >> build.env
-    - export PRESIGNED_URL=$(aws s3 presign s3://$BUCKET_NAME/$CI_JOB_TIMESTAMP --expires-in 3600) && echo $PRESIGNED_URL >> build.env
+    - export CI_JOB_TIMESTAMP=$(date --utc -Iseconds) && echo "CI_JOB_TIMESTAMP=$CI_JOB_TIMESTAMP" >> signed-url.env
+    - export PRESIGNED_URL=$(aws s3 presign s3://$BUCKET_NAME/$CI_JOB_TIMESTAMP --expires-in 3600) && echo "PRESIGNED_URL=$PRESIGNED_URL" >> signed-url.env
   artifacts:
-    reports:
-      dotenv: build.env
+    paths:
+      - signed-url.env
 
 deploy:
   stage: deploy
@@ -39,7 +39,9 @@ deploy:
     - apk --no-cache add curl nodejs npm
     - npm install -g heroku
   script:
+    - export $(cat signed-url.env | xargs)
     - echo $CI_JOB_TIMESTAMP
+    - echo $PRESIGNED_URL
     - heroku login
     - heroku pg:backups:capture --app $APP_NAME
     - heroku pg:backups:url --app $APP_NAME | xargs -I{} wget -O "$CI_JOB_TIMESTAMP.dump" "{}"
