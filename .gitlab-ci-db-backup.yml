@@ -1,0 +1,35 @@
+image: docker:latest
+services:
+  - name: docker:dind
+    alias: docker
+
+variables:
+  HEROKU_API_KEY: $HEROKU_TOKEN
+  APP_NAME: "milwaukee-internationals-core"
+  HEROKU_EMAIL: "hesamian@uwm.edu"
+  AWS_DEFAULT_REGION: "us-east-1"
+  AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+  AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+  BUCKET_NAME: milwaukee-internationals-backup
+
+stages:
+  - backup
+
+docker-build:
+  stage: backup
+  image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
+  resource_group: heroku
+  only:
+    - master
+  allow_failure: false
+  before_script:
+    - export CI_JOB_TIMESTAMP=$(date --utc -Iseconds)
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set default.region $AWS_DEFAULT_REGION
+  script:
+    - heroku login
+    - export PRESIGNED_URL=$(aws s3 presign s3://$BUCKET_NAME/$CI_JOB_TIMESTAMP --expires-in 3600)
+    - heroku pg:backups:capture --app $APP_NAME
+    - heroku pg:backups:url --app $APP_NAME | xargs -I{} wget -O "$CI_JOB_TIMESTAMP.dump" "{}"
+    - wget --method=PUT --body-file="$CI_JOB_TIMESTAMP.dump" $PRESIGNED_URL --header="Content-Type: application/octet-stream"
