@@ -24,7 +24,8 @@ signed-url:
     - aws configure set default.region $AWS_DEFAULT_REGION
   script:
     - export CI_JOB_TIMESTAMP=$(date --utc -Iseconds) && echo "CI_JOB_TIMESTAMP=$CI_JOB_TIMESTAMP" >> signed-url.env
-    - export PRESIGNED_URL=$(aws s3 presign s3://$BUCKET_NAME/$CI_JOB_TIMESTAMP --expires-in 3600) && echo "PRESIGNED_URL=$PRESIGNED_URL" >> signed-url.env
+    - export S3_OBJECT_NAME="$CI_JOB_TIMESTAMP.dump" && echo "S3_OBJECT_NAME=$S3_OBJECT_NAME" >> signed-url.env
+    - export PRESIGNED_URL=$(aws s3 presign s3://$BUCKET_NAME/$S3_OBJECT_NAME --expires-in 3600) && echo "PRESIGNED_URL=$PRESIGNED_URL" >> signed-url.env
   artifacts:
     paths:
       - signed-url.env
@@ -42,9 +43,10 @@ deploy:
     - export $(cat signed-url.env | xargs)
     - echo $CI_JOB_TIMESTAMP
     - echo $PRESIGNED_URL
+    - echo $S3_OBJECT_NAME
     - heroku pg:backups:capture --app $APP_NAME
     - heroku pg:backups:url --app $APP_NAME | xargs -I{} curl -o "$CI_JOB_TIMESTAMP.dump" "{}"
-    - curl -X PUT --data-binary @"$CI_JOB_TIMESTAMP.dump" "$PRESIGNED_URL"
+    - curl -X PUT --data-binary @"$S3_OBJECT_NAME" "$PRESIGNED_URL"
   needs:
     - job: signed-url
       artifacts: true
