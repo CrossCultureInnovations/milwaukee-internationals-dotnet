@@ -12,7 +12,7 @@ variables:
   AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
   BUCKET_NAME: milwaukee-internationals-backup
 
-capture:
+capture-backup:
   stage: deploy
   resource_group: heroku
   only:
@@ -29,9 +29,9 @@ capture:
   artifacts:
     paths:
       - backup.env
-      - *.dump
+      - "*.dump"
 
-upload:
+upload-backup:
   stage: deploy
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
   only:
@@ -46,5 +46,5 @@ upload:
     - echo $DB_DUMP_NAME
     - aws s3 cp $DB_DUMP_NAME s3://$BUCKET_NAME/$DB_DUMP_NAME
   needs:
-    - job: capture
+    - job: capture-backup
       artifacts: true
