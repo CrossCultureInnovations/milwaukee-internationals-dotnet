@@ -37,7 +37,7 @@ upload-backup:
     - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
     - aws configure set default.region $AWS_DEFAULT_REGION
   script:
-    - export CI_JOB_TIMESTAMP=$(date --utc -Iseconds)
+    - export CI_JOB_TIMESTAMP=$(date --utc "+%Y-%m-%dT%H:%M:%S")
     - export S3_OBJECT_NAME="$CI_JOB_TIMESTAMP.dump"
     - aws s3 cp db.dump s3://$BUCKET_NAME/$S3_OBJECT_NAME
   needs:
