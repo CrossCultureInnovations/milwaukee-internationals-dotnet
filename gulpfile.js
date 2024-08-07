@@ -14,7 +14,7 @@ babelify.configure({
 });
 
 gulp.task('scripts', function () {
-    return browserify({entries: 'API/wwwroot/scripts/script.js', extensions: ['.js'], debug: false})
+    return browserify({ entries: 'API/wwwroot/scripts/script.js', extensions: ['.js'], debug: false })
         .transform(babelify)
         .bundle()
         .pipe(source('script.js'))

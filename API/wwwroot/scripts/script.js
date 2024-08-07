@@ -7,6 +7,43 @@ angular.element(document).ready(() => {
 // Ignore deprecation warnings
 moment.suppressDeprecationWarnings = true;
 
+function splitString(str, maxLength) {
+    let result = [];
+    let currentLine = '';
+    
+    str.split(' ').forEach(word => {
+        if ((currentLine + word).length <= maxLength) {
+            currentLine += (currentLine.length > 0 ? ' ' : '') + word;
+        } else {
+            if (word.length > maxLength) {
+                if (currentLine.length > 0) {
+                    result.push(currentLine);
+                    currentLine = '';
+                }
+                while (word.length > maxLength) {
+                    result.push(word.substring(0, maxLength - 1) + '-');
+                    word = word.substring(maxLength - 1);
+                }
+                currentLine = word;
+            } else {
+                result.push(currentLine);
+                currentLine = word;
+            }
+        }
+    });
+
+    if (currentLine.length > 0) {
+        result.push(currentLine);
+    }
+
+    return result.join('\n');
+}
+
+const subsetAttr = (attrList, obj) => attrList.reduce((o, k) => {
+    o[k] = splitString(_.toString(obj[k]), 30);
+    return o;
+}, {});
+
 angular.module('angular-async-await', [])
     .factory('$async', ['$rootScope', '$log', ($rootScope, $log) => ($scope, func) => async (...args) => {
         if (!$scope.contour) {
@@ -371,11 +408,6 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         $scope.toggleShowDetail = () => {
         };
 
-        const subsetAttr = (attrList, obj) => attrList.reduce((o, k) => {
-            o[k] = String(obj[k]);
-            return o;
-        }, {});
-
         $scope.getAllStudentsCSV = $async($scope, async () => {
             const {data: students} = await $http.get('/api/student');
             const attributes = Object.keys($scope.downloadTable).filter(value => $scope.downloadTable[value]);
@@ -421,7 +453,9 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
             for (i = 0, j = students.length; i < j; i += chunk) {
                 temporary = students.slice(i, i + chunk);
 
-                let str = stringTable.create(temporary.map(student => subsetAttr(attributes, student)));
+                let str = stringTable.create(
+                    temporary.map(student => subsetAttr(attributes, student))
+                , { capitalizeHeaders: true });
 
                 // Needed
                 str = str.replace(/’/g, "'");
@@ -475,11 +509,6 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
 
             doc.setFontSize(10);
 
-            const subsetAttr = (attrList, obj) => attrList.reduce((o, k) => {
-                o[k] = obj[k];
-                return o;
-            }, {});
-
             let i, j, temporary;
             const chunk = 25;
             for (i = 0, j = drivers.length; i < j; i += chunk) {
@@ -492,7 +521,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
                         (driver.navigator.length > 20 ? `${driver.navigator.substring(0, 20)} ...` : driver.navigator) : '-';
 
                     return subsetAttr(Object.keys($scope.downloadTable).filter(key => $scope.downloadTable[key]), driver);
-                }));
+                }), { capitalizeHeaders: true });
 
                 // Needed
                 str = str.replace(/’/g, "'");
@@ -524,17 +553,14 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
 
             doc.setFontSize(10);
 
-            const subsetAttr = (attrList, obj) => attrList.reduce((o, k) => {
-                o[k] = obj[k];
-                return o;
-            }, {});
-
             let i, j, temporary;
             const chunk = 25;
             for (i = 0, j = hosts.length; i < j; i += chunk) {
                 temporary = hosts.slice(i, i + chunk);
 
-                let str = stringTable.create(temporary.map(host => subsetAttr(['fullname', 'email', 'phone', 'address'], host)));
+                let str = stringTable.create(
+                    temporary.map(host => subsetAttr(['fullname', 'email', 'phone', 'address'], host))
+                , { capitalizeHeaders: true });
 
                 if (i === 0) {
                     str = `Host List ( count of hosts: ${hosts.length} )\n\n${str}`;
@@ -598,11 +624,6 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
 
             doc.setFontSize(11);
 
-            const subsetAttr = (attrList, obj) => attrList.reduce((o, k) => {
-                o[k] = obj[k];
-                return o;
-            }, {});
-
             driverBucket.map((driver, index) => {
                 let str = '';
 
@@ -617,7 +638,9 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
                     driver.students = [];
                 }
 
-                str += stringTable.create(driver.students.map(driver => subsetAttr(['fullname', 'email', 'phone', 'country', 'isPresent'], driver)));
+                str += stringTable.create(
+                    driver.students.map(driver => subsetAttr(['fullname', 'email', 'phone', 'country', 'isPresent'], driver))
+                , { capitalizeHeaders: true });
 
                 doc.text(20, 20, str);
 
@@ -866,11 +889,6 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
 
             doc.setFontSize(11);
 
-            const subsetAttr = (attrList, obj) => attrList.reduce((o, k) => {
-                o[k] = obj[k];
-                return o;
-            }, {});
-
             hostBucket.map((host, index) => {
                 let str = '';
 
@@ -881,7 +899,9 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
                     str += '\n';
                 }
 
-                str += stringTable.create(host.drivers.map(driver => subsetAttr(['fullname', 'email', 'phone', 'capacity', 'isPresent'], driver)));
+                str += stringTable.create(
+                    host.drivers.map(driver => subsetAttr(['fullname', 'email', 'phone', 'capacity', 'isPresent'], driver))
+                , { capitalizeHeaders: true });
 
                 doc.text(20, 20, str);
 
@@ -1007,11 +1027,6 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
 
             doc.setFontSize(10);
 
-            const subsetAttr = (attrList, obj) => attrList.reduce((o, k) => {
-                o[k] = obj[k];
-                return o;
-            }, {});
-
             let i, j, temporary;
             const chunk = 25;
             for (i = 0, j = locations.length; i < j; i += chunk) {
@@ -1019,7 +1034,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
 
                 let str = stringTable.create(temporary.map(location => {
                     return subsetAttr(['name', 'address', 'description'], location);
-                }));
+                }), { capitalizeHeaders: true });
 
                 // Needed
                 str = str.replace(/’/g, "'");
