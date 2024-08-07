@@ -10,6 +10,7 @@
     var selectedTheme = Model.Theme;
 }
 
+<div class="container-fluid">
 @using (Html.BeginForm("UpdateConfig", "Config", FormMethod.Post))
 {
     @Html.TextBoxFor(x => x.Id, new { @class = "hidden" })
@@ -101,3 +102,4 @@
         <button type="submit" class="btn btn-success">Save Configuration</button>
     </div>
 }
+</div>
