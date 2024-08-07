@@ -9,7 +9,7 @@
     var userInfo = await RequestUtilityBuilder.For(Context).GetUserInfo();
 }
 
-<div class="container" ng-controller="hostListCtrl">
+<div class="container-fluid" ng-controller="hostListCtrl">
     <div class="page-header">
         <h3>List of Hosts <small>(Count: @Model.Count(), Students Assigned: @(Model.Select(x => x.Drivers.Capacity).Sum()))</small></h3>
 

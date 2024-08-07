@@ -14,7 +14,7 @@
     var countFamilies = Model.Count(x => x.IsFamily);
 }
 
-<div class="container" ng-controller="studentListCtrl">
+<div class="container-fluid" ng-controller="studentListCtrl">
 <div class="page-header">
     <h3>List of Students <small>(Count: @(studentsCnt) + @(passengersCnt) = @(studentsCnt + passengersCnt), Child Seats: @(numChildSeats), Families: @(countFamilies))</small></h3>
 
