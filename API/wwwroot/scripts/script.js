@@ -11,7 +11,7 @@ function splitString(str, maxLength) {
     let result = [];
     let currentLine = '';
     
-    str.split(' ').forEach(word => {
+    str.trim().split(' ').forEach(word => {
         if ((currentLine + word).length <= maxLength) {
             currentLine += (currentLine.length > 0 ? ' ' : '') + word;
         } else {
