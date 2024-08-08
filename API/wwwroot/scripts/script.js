@@ -7,11 +7,11 @@ angular.element(document).ready(() => {
 // Ignore deprecation warnings
 moment.suppressDeprecationWarnings = true;
 
-function splitString(str, maxLength) {
+const splitString = (str, maxLength) => {
     let result = [];
     let currentLine = '';
-    
-    str.trim().split(' ').forEach(word => {
+
+    str.split(' ').forEach(word => {
         if ((currentLine + word).length <= maxLength) {
             currentLine += (currentLine.length > 0 ? ' ' : '') + word;
         } else {
@@ -37,10 +37,10 @@ function splitString(str, maxLength) {
     }
 
     return result.join('\n');
-}
+};
 
 const subsetAttr = (attrList, obj) => attrList.reduce((o, k) => {
-    o[k] = splitString(_.toString(obj[k]), 36);
+    o[k] = splitString(_.toString(_.trim(obj[k])), 36);
     return o;
 }, {});
 
@@ -68,7 +68,7 @@ angular.module('angular-async-await', [])
     }]);
 
 angular.module('cytoscape.js-edgehandles', [])
-    .factory('dag-render', () => (elm, {nodes, edges}) => {
+    .factory('dag-render', () => (elm, { nodes, edges }) => {
         const cy = cytoscape({
             container: elm,
 
@@ -213,8 +213,8 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         };
 
         $scope.init = $async($scope, async () => {
-            const {data: events} = await $http.get('/apiEvents/latest');
-            const {data: {token}} = await $http.get('/identity/token');
+            const { data: events } = await $http.get('/apiEvents/latest');
+            const { data: { token } } = await $http.get('/identity/token');
 
             events.sort((left, right) => moment.utc(left.recordedDate).diff(moment.utc(right.recordedDate))).forEach(evt => {
                 $scope.appendEvent(evt);
@@ -258,7 +258,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         $scope.countryDistributionChartLabels = [];
 
         $scope.getCountryDistribution = $async($scope, async () => {
-            const {data} = await $http.get('/stats/countryDistribution');
+            const { data } = await $http.get('/stats/countryDistribution');
             $scope.countryDistribution = data;
             $scope.refreshCountryDistributionChart();
         });
@@ -323,13 +323,13 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         });
 
         $scope.fetchInfo = $async($scope, async () => {
-            const {data} = await $http.get(`/api/event/info/${$scope.eventId}`);
+            const { data } = await $http.get(`/api/event/info/${$scope.eventId}`);
             $scope.event = data.event;
             $scope.availableStudents = data.availableStudents;
         });
 
         // Start the text editor
-        angular.element('.summernote').summernote({height: 150});
+        angular.element('.summernote').summernote({ height: 150 });
 
     }])
     .controller('userListCtrl', ['$scope', '$http', ($scope, $http) => {
@@ -343,7 +343,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         }, 2000);
 
         // Start the text editor
-        angular.element('.summernote').summernote({height: 150});
+        angular.element('.summernote').summernote({ height: 150 });
     }])
     .controller('smsUtilityCtrl', ['$timeout', '$scope', ($timeout, $scope) => {
 
@@ -351,7 +351,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         $timeout(() => {
             angular.element('.autoclose').fadeOut();
         }, 2000);
-        
+
         $scope.getSmsBodyLength = () => $scope.smsBody ? $scope.smsBody.length : 0;
     }])
     .controller('emailCheckInCtrl', ['$scope', '$http', '$async', async ($scope, $http, $async) => {
@@ -409,7 +409,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         };
 
         $scope.getAllStudentsCSV = $async($scope, async () => {
-            const {data: students} = await $http.get('/api/student');
+            const { data: students } = await $http.get('/api/student');
             const attributes = Object.keys($scope.downloadTable).filter(value => $scope.downloadTable[value]);
 
             const rows = students
@@ -426,7 +426,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         });
 
         $scope.getAllStudentsPDF = $async($scope, async () => {
-            const {data: students} = await $http.get('/api/student');
+            const { data: students } = await $http.get('/api/student');
 
             const doc = new jsPDF({
                 orientation: 'l',
@@ -455,7 +455,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
 
                 let str = stringTable.create(
                     temporary.map(student => subsetAttr(attributes, student))
-                , { capitalizeHeaders: true });
+                    , { capitalizeHeaders: true });
 
                 // Needed
                 str = str.replace(/’/g, "'");
@@ -481,7 +481,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         };
 
         $scope.getAllDriversCSV = $async($scope, async () => {
-            const {data: drivers} = await $http.get('/api/driver');
+            const { data: drivers } = await $http.get('/api/driver');
             const attributes = Object.keys($scope.downloadTable).filter(value => $scope.downloadTable[value]);
 
             const rows = drivers
@@ -496,9 +496,9 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
 
             download(csvContent, "driver-list.csv", "text/csv");
         });
-        
+
         $scope.getAllDriversPDF = $async($scope, async () => {
-            const {data: drivers} = await $http.get('/api/driver');
+            const { data: drivers } = await $http.get('/api/driver');
 
             const doc = new jsPDF({
                 orientation: 'l',
@@ -542,7 +542,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
     }])
     .controller('hostListCtrl', ['$scope', '$http', 'jsPDF', '$async', ($scope, $http, jsPDF, $async) => {
         $scope.getAllHostPDF = $async($scope, async () => {
-            const {data: hosts} = await $http.get('/api/host');
+            const { data: hosts } = await $http.get('/api/host');
 
             const doc = new jsPDF({
                 orientation: 'l',
@@ -560,7 +560,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
 
                 let str = stringTable.create(
                     temporary.map(host => subsetAttr(['fullname', 'email', 'phone', 'address'], host))
-                , { capitalizeHeaders: true });
+                    , { capitalizeHeaders: true });
 
                 if (i === 0) {
                     str = `Host List ( count of hosts: ${hosts.length} )\n\n${str}`;
@@ -589,19 +589,19 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         };
 
         $scope.driverActualSize = (driver) => {
-          return driver.students.map(x => 1 + x.familySize).reduce((acc, x) => acc + x, 0);
+            return driver.students.map(x => 1 + x.familySize).reduce((acc, x) => acc + x, 0);
         };
 
         $scope.driverOverCapacity = (driver) => {
-          return driver.capacity < $scope.driverActualSize(driver);
+            return driver.capacity < $scope.driverActualSize(driver);
         };
 
         $scope.overCapacityDrivers = () => {
-          return ($scope.availableDrivers || []).map(x => x.key).filter(driver => $scope.driverOverCapacity(driver));
+            return ($scope.availableDrivers || []).map(x => x.key).filter(driver => $scope.driverOverCapacity(driver));
         };
 
         $scope.overCapacityDriversNames = () => {
-          return $scope.overCapacityDrivers().map(driver => driver.fullname).join(", ");
+            return $scope.overCapacityDrivers().map(driver => driver.fullname).join(", ");
         };
 
         $scope.togglePresentStudents = flag => {
@@ -613,7 +613,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         };
 
         $scope.getAllDriverMappingPDF = $async($scope, async () => {
-            const {data: {mappedDrivers: driverBucket}} = await $http.get('/api/studentDriverMapping/status');
+            const { data: { mappedDrivers: driverBucket } } = await $http.get('/api/studentDriverMapping/status');
 
             const doc = new jsPDF({
                 orientation: 'l',
@@ -640,7 +640,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
 
                 str += stringTable.create(
                     driver.students.map(driver => subsetAttr(['fullname', 'email', 'phone', 'country', 'isPresent'], driver))
-                , { capitalizeHeaders: true });
+                    , { capitalizeHeaders: true });
 
                 doc.text(20, 20, str);
 
@@ -660,7 +660,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         });
 
         $scope.getStatus = $async($scope, async () => {
-            const {data} = await $http.get('/api/studentDriverMapping/status');
+            const { data } = await $http.get('/api/studentDriverMapping/status');
             $scope.availableDrivers = data.availableDrivers;
             $scope.availableStudents = data.availableStudents;
             $scope.rawAvailableStudents = $scope.availableStudents;
@@ -717,7 +717,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         $scope.drivers = [];
         $scope.availableDriversBuckets = {};
 
-        $scope.generalFilterStudents = ({ignoreAttendance = false, ignoreCountry = false} = {}) => {
+        $scope.generalFilterStudents = ({ ignoreAttendance = false, ignoreCountry = false } = {}) => {
             let students = $scope.allStudents;
             if (!ignoreCountry && $scope.country && $scope.country !== 'All Countries') {
                 students = students.filter(x => x.country === $scope.country);
@@ -735,19 +735,19 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         };
 
         $scope.getCountAllStudents = () => {
-            return $scope.generalFilterStudents({ignoreAttendance: true}).length;
+            return $scope.generalFilterStudents({ ignoreAttendance: true }).length;
         };
 
         $scope.getCountPresentStudents = () => {
-            return $scope.generalFilterStudents({ignoreAttendance: true}).filter(x => x.isPresent).length;
+            return $scope.generalFilterStudents({ ignoreAttendance: true }).filter(x => x.isPresent).length;
         };
 
         $scope.getTotalCountPresentStudents = () => {
-            return $scope.generalFilterStudents({ignoreAttendance: true}).filter(x => x.isPresent).map(x => 1 + x.familySize).reduce((acc, x) => x + acc, 0);
+            return $scope.generalFilterStudents({ ignoreAttendance: true }).filter(x => x.isPresent).map(x => 1 + x.familySize).reduce((acc, x) => x + acc, 0);
         };
 
         $scope.getCountAbsentStudents = () => {
-            return $scope.generalFilterStudents({ignoreAttendance: true}).filter(x => !x.isPresent).length;
+            return $scope.generalFilterStudents({ ignoreAttendance: true }).filter(x => !x.isPresent).length;
         };
 
         // this was needed to fix infinite digest call
@@ -759,17 +759,17 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
             const result = [
                 {
                     country: 'All Countries',
-                    count: $scope.generalFilterStudents({ignoreCountry: true}).length
+                    count: $scope.generalFilterStudents({ ignoreCountry: true }).length
                 }
             ].concat(_.orderBy(_.map(students.reduce((acc, student) => ({
                 ...acc,
                 [student.country]: student.country in acc ? acc[student.country] + 1 : 1
             }), {}), (value, key) => ({ country: key, count: value })), x => x.country));
-            
+
             if (!_.isEqual(result, $scope.countriesResult)) {
                 $scope.countriesResult = result;
             }
-            
+
             return $scope.countriesResult;
         };
 
@@ -783,7 +783,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
 
         // Get All Drivers
         $scope.getAllDrivers = $async($scope, async () => {
-            const {data} = await $http.get('/api/driver');
+            const { data } = await $http.get('/api/driver');
             $scope.drivers = data.filter(driver => driver.role === 'Driver');
 
             $scope.availableDriversTable = $scope.drivers
@@ -817,7 +817,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         });
 
         $scope.getAllStudents = $async($scope, async () => {
-            const {data: allStudents} = await $http.get('/api/student');
+            const { data: allStudents } = await $http.get('/api/student');
             $scope.allStudents = allStudents;
 
             $scope.updateTable();
@@ -901,7 +901,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
 
                 str += stringTable.create(
                     host.drivers.map(driver => subsetAttr(['fullname', 'email', 'phone', 'capacity', 'isPresent'], driver))
-                , { capitalizeHeaders: true });
+                    , { capitalizeHeaders: true });
 
                 doc.text(20, 20, str);
 
@@ -921,7 +921,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         });
 
         $scope.getStatus = $async($scope, async () => {
-            const {data} = await $http.get('/api/driverHostMapping/status');
+            const { data } = await $http.get('/api/driverHostMapping/status');
             $scope.availableDrivers = data.availableDrivers;
             $scope.availableHosts = data.availableHosts;
             $scope.mappedHosts = data.mappedHosts;
@@ -958,7 +958,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         $scope.attendanceFilter = 'all';
         $scope.fullname = '';
 
-        $scope.generalFilterDrivers = ({ignoreAttendance = false} = {}) => {
+        $scope.generalFilterDrivers = ({ ignoreAttendance = false } = {}) => {
             let drivers = $scope.allDrivers;
             if ($scope.fullname) {
                 drivers = drivers.filter(x => x.fullname.toLowerCase().includes($scope.fullname.toLowerCase()));
@@ -971,11 +971,11 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
             return drivers;
         };
 
-        $scope.getCountAllDrivers = () => $scope.generalFilterDrivers({ignoreAttendance: true}).length;
+        $scope.getCountAllDrivers = () => $scope.generalFilterDrivers({ ignoreAttendance: true }).length;
 
-        $scope.getCountPresentDrivers = () => $scope.generalFilterDrivers({ignoreAttendance: true}).filter(x => x.isPresent).length;
+        $scope.getCountPresentDrivers = () => $scope.generalFilterDrivers({ ignoreAttendance: true }).filter(x => x.isPresent).length;
 
-        $scope.getCountAbsentDrivers = () => $scope.generalFilterDrivers({ignoreAttendance: true}).filter(x => !x.isPresent).length;
+        $scope.getCountAbsentDrivers = () => $scope.generalFilterDrivers({ ignoreAttendance: true }).filter(x => !x.isPresent).length;
 
         $scope.checkInViaEmail = $async($scope, async () => {
             if ($window.confirm(`Are you sure to send check-in via email to [${$scope.getCountAllDrivers()}] drivers?`)) {
@@ -985,7 +985,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         });
 
         $scope.getAllDrivers = $async($scope, async () => {
-            const {data: drivers} = await $http.get('/api/driver');
+            const { data: drivers } = await $http.get('/api/driver');
             $scope.drivers = drivers.filter(value => value.role === 'Driver');
             $scope.allDrivers = drivers.filter(value => value.role === 'Driver');
 
@@ -1016,7 +1016,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
     }])
     .controller('locationListCtrl', ['$scope', '$http', '$window', '$async', 'jsPDF', async ($scope, $http, $window, $async, jsPDF) => {
         $scope.getAllLocationsPDF = $async($scope, async () => {
-            const {data: locations} = await $http.get('/api/location');
+            const { data: locations } = await $http.get('/api/location');
 
             const doc = new jsPDF({
                 orientation: 'l',
@@ -1057,14 +1057,14 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
     }])
     .controller('locationMappingCtrl', ['$scope', '$http', '$window', '$async', 'dag-render', async ($scope, $http, $window, $async, dagRender) => {
 
-        const {data: locations} = await $http.get(`/api/Location`);
-        const {data: mappings} = await $http.get(`/api/LocationMapping`);
+        const { data: locations } = await $http.get(`/api/Location`);
+        const { data: mappings } = await $http.get(`/api/LocationMapping`);
 
         angular.element(document).ready(() => {
 
             let data = {
-                nodes: locations.map(({id, name}) => ({data: {id, name}})),
-                edges: mappings.map(({sourceId, sinkId}) => ({data: {source: sourceId, target: sinkId}}))
+                nodes: locations.map(({ id, name }) => ({ data: { id, name } })),
+                edges: mappings.map(({ sourceId, sinkId }) => ({ data: { source: sourceId, target: sinkId } }))
             };
 
             dagRender(angular.element('#graph'), data);
