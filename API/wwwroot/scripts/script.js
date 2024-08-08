@@ -40,7 +40,7 @@ function splitString(str, maxLength) {
 }
 
 const subsetAttr = (attrList, obj) => attrList.reduce((o, k) => {
-    o[k] = splitString(_.toString(obj[k]), 30);
+    o[k] = splitString(_.toString(obj[k]), 36);
     return o;
 }, {});
 
