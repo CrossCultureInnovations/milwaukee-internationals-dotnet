@@ -1,6 +1,7 @@
 ﻿@using System.Text.RegularExpressions
 @using API.Interfaces
 @using Models.Enums
+@using Models.Extensions
 @model IEnumerable<Models.Entities.Student>
 @inject IHttpRequestUtilityBuilder RequestUtilityBuilder;
 
@@ -92,6 +93,7 @@
             </th>
             <th ng-show="showDetail">Email</th>
             <th ng-show="showDetail">Phone</th>
+            <th ng-show="showDetail">RegisteredOn</th>
             <th>
                 Kosher
                 <a href="?sortBy=kosherFood&descending=false">
@@ -126,6 +128,7 @@
                 <td>@student.IsFamily @(student.IsFamily ? $"({student.FamilySize})" : string.Empty)</td>
                 <td ng-show="showDetail">@student.Email</td>
                 <td ng-show="showDetail">@student.Phone</td>
+                <td ng-show="showDetail">@student.RegisteredOn.ToCentralTime().ToString("g")</td>
                 <td>@student.KosherFood</td>
                 <td class="hidden-xs" ng-show="showDetail">
                     <div class="btn-group-vertical btn-group-sm">
