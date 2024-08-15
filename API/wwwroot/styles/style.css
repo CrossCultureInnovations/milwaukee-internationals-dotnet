@@ -3,6 +3,11 @@
     max-height: 30rem;
 }
 
+.table-responsive .row {
+    margin-left: 0;
+    margin-right: 0;
+}
+
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
     display: none !important;
 }
