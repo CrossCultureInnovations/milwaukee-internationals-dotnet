@@ -93,7 +93,15 @@
             </th>
             <th ng-show="showDetail">Email</th>
             <th ng-show="showDetail">Phone</th>
-            <th ng-show="showDetail">RegisteredOn</th>
+            <th ng-show="showDetail">
+                RegisteredOn
+                <a href="?sortBy=RegisteredOn&descending=false">
+                    <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                </a>
+                <a href="?sortBy=RegisteredOn&descending=true">
+                    <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+                </a>
+            </th>
             <th>
                 Kosher
                 <a href="?sortBy=kosherFood&descending=false">
