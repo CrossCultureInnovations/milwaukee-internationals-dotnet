@@ -301,9 +301,17 @@
 
 <div class="clearfix">
     <br/>
+    <br />
+    <br />
 </div>
-<br/>
-<br/>
+
+@if (!utility.IsAuthenticated() && ViewContext.RouteData.MatchesAnyController("Identity")) {
+    <footer class="footer">
+        <div class="container">
+            <p class="text-muted">Copyright &copy; <a href="https://crosscultureinnovations.com/"> CrossCultureInnovations </a></p>
+        </div>
+    </footer>
+}
 
 </body>
 </html>
