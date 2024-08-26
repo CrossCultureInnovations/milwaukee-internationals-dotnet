@@ -305,7 +305,7 @@
     <br />
 </div>
 
-@if (!utility.IsAuthenticated() && ViewContext.RouteData.MatchesAnyController("Identity")) {
+@if (!utility.IsAuthenticated() && ViewContext.RouteData.Matches("Identity", "Login")) {
     <footer class="footer">
         <div class="container">
             <p class="text-muted">Copyright &copy; <a href="https://crosscultureinnovations.com/"> CrossCultureInnovations </a></p>
