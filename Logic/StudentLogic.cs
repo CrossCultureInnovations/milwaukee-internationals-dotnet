@@ -95,7 +95,6 @@ public class StudentLogic : BasicCrudLogicAbstract<Student>, IStudentLogic
             x.Interests = student.Interests;
             x.IsFamily = student.IsFamily;
             x.KosherFood = student.KosherFood;
-            x.MaskPreferred = student.MaskPreferred;
         });
     }
 

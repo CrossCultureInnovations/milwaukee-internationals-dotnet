@@ -61,9 +61,6 @@ public class Student : ObjectHash<Student>, IPerson, IYearlyEntity
     /// </summary>
     public List<EventStudentRelationship> Events { get; set; } = new();
         
-    [Display(Name="Prefer your tour driver to wear mask?")]
-    public bool MaskPreferred { get; set; }
-        
     public DateTimeOffset RegisteredOn { get; set; }
     
     protected override void ConfigureObjectSha(IConfigureObjectHashConfig<Student> config)

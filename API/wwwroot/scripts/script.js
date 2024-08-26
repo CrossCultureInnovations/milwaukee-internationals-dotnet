@@ -399,8 +399,7 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
             familySize: false,
             needCarSeat: true,
             kosherFood: true,
-            isPresent: true,
-            maskPreferred: false
+            isPresent: true
         };
 
         $scope.showDetail = false;
