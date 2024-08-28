@@ -831,7 +831,12 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
             await $scope.getAllStudents();
         });
 
-        $scope.updateTable = () => {
+        $scope.updateTable = (newValues) => {
+            // the problem is $scope.value is still old
+            // but newValue is a subset of scope that contain newly updated values
+            // by doing Object.assign we manually update $scope for the subsequent function calls
+            Object.assign($scope, newValues);
+
             $scope.students = $scope.generalFilterStudents();
             if (!$scope.country) {
                 $scope.country = 'All Countries';
