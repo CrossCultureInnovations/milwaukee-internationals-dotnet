@@ -55,8 +55,9 @@ public class SmsUtilityLogic : ISmsUtilityLogic
         // Add admin email
         if (smsFormViewModel.Admin)
         {
-            var admins = (await _userLogic.GetAll()).Where(x => x.UserRoleEnum == UserRoleEnum.Admin)
-                .Select(x => x.Email)
+            var admins = (await _userLogic.GetAll())
+                .Where(x => x.UserRoleEnum == UserRoleEnum.Admin)
+                .Select(x => x.PhoneNumber)
                 .ToList();
 
             phoneNumbers.AddRange(admins);
@@ -66,28 +67,28 @@ public class SmsUtilityLogic : ISmsUtilityLogic
         if (smsFormViewModel.Students)
         {
             var students = await _studentLogic.GetAll(year);
-            phoneNumbers.AddRange(students.Select(x => x.Email).Where(x => !string.IsNullOrWhiteSpace(x)));
+            phoneNumbers.AddRange(students.Select(x => x.Phone).Where(x => !string.IsNullOrWhiteSpace(x)));
         }
 
         // Add driver emails
         if (smsFormViewModel.Drivers)
         {
             var drivers = await _driverLogic.GetAll(year);
-            phoneNumbers.AddRange(drivers.Select(x => x.Email).Where(x => !string.IsNullOrWhiteSpace(x)));
+            phoneNumbers.AddRange(drivers.Select(x => x.Phone).Where(x => !string.IsNullOrWhiteSpace(x)));
         }
             
         // Add host emails
         if (smsFormViewModel.Hosts)
         {
             var hosts = await _hostLogic.GetAll(year);
-            phoneNumbers.AddRange(hosts.Select(x => x.Email).Where(x => !string.IsNullOrWhiteSpace(x)));
+            phoneNumbers.AddRange(hosts.Select(x => x.Phone).Where(x => !string.IsNullOrWhiteSpace(x)));
         }
             
         // Add user emails
         if (smsFormViewModel.Users)
         {
             var users = await _userLogic.GetAll();
-            phoneNumbers.AddRange(users.Select(x => x.Email).Where(x => !string.IsNullOrWhiteSpace(x)));
+            phoneNumbers.AddRange(users.Select(x => x.PhoneNumber).Where(x => !string.IsNullOrWhiteSpace(x)));
         }
 
         // Add additional emails
