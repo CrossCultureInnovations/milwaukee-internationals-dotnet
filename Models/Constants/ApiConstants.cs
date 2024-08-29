@@ -20,5 +20,5 @@ public static class ApiConstants
 
     public const string ApplicationName = "Milwaukee Internationals";
     
-    public const string SitePhoneNumber = "+14144995360";
+    public const string SitePhoneNumber = "+14147362240";
 }

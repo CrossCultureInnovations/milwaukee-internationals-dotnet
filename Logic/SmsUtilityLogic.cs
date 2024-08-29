@@ -96,12 +96,12 @@ public class SmsUtilityLogic : ISmsUtilityLogic
             var emails = smsFormViewModel.AdditionalRecipients.Split(',').Select(x => x.Trim()).ToList();
             phoneNumbers.AddRange(emails);
         }
-
-        // Remove duplicates
-        phoneNumbers = phoneNumbers.Distinct().ToList();
         
         // CC to website admin
         phoneNumbers.Add(ApiConstants.SitePhoneNumber);
+
+        // Remove duplicates
+        phoneNumbers = phoneNumbers.Distinct().ToList();
 
         // Send the email
         await _smsService.SendMessage(phoneNumbers, smsFormViewModel.Message);
