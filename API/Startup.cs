@@ -99,8 +99,6 @@ public class Startup
             options.LowercaseUrls = true;
         });
 
-        services.AddDistributedMemoryCache();
-
         services.AddSession(options =>
         {
             // Set a short timeout for easy testing.
