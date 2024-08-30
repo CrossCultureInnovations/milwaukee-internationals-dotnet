@@ -49,6 +49,8 @@ public class DriverLogic : BasicCrudLogicAbstract<Driver>, IDriverLogic
         instance.Year = DateTime.UtcNow.Year;
 
         instance.DisplayId = GenerateDisplayId(instance, count);
+        
+        instance.RegisteredOn = DateTimeOffset.Now;
 
         // Save the instance
         var retVal = await base.Save(instance);

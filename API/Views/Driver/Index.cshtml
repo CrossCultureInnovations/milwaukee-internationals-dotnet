@@ -1,5 +1,6 @@
 ﻿@using API.Interfaces
 @using Models.Enums
+@using Models.Extensions
 @model IEnumerable<Models.Entities.Driver>
 @inject IHttpRequestUtilityBuilder RequestUtilityBuilder;
 
@@ -147,6 +148,23 @@
                             </div>
                         </div>
                     </th>
+                    <th ng-show="showDetail">
+                        <div class="row">
+                            <div class="col-sm-12">
+                        <span>
+                            RegisteredOn
+                        </span>
+                            </div>
+                            <div class="col-sm-12">
+                                <a href="?sortBy=registeredOn&descending=false">
+                                    <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                                </a>
+                                <a href="?sortBy=registeredOn&descending=true">
+                                    <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+                                </a>
+                            </div>
+                        </div>
+                    </th>
                     <th class="hidden-xs" ng-show="showDetail">Action</th>
                 </tr>
                 </thead>
@@ -162,6 +180,7 @@
                         <td>@driver.Phone</td>
                         <td>@driver.Navigator</td>
                         <td>@driver.HaveChildSeat</td>
+                        <td ng-show="showDetail">@driver.RegisteredOn.ToCentralTime().ToString("g")</td>
                         <td class="hidden-xs" ng-show="showDetail">
                             <div class="btn-group-vertical btn-group-sm">
                                 <a href="~/Driver/edit/@driver.Id" class="btn btn-primary">Edit</a>

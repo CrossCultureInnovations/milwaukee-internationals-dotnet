@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using Models.Enums;
 using Models.Interfaces;
@@ -53,6 +54,8 @@ public class Driver : ObjectHash<Driver>, IPerson, IYearlyEntity
     /// Indicates the year in which driver attended the tour
     /// </summary>
     public int Year { get; set; }
+
+    public DateTimeOffset RegisteredOn { get; set; }
 
     protected override void ConfigureObjectSha(IConfigureObjectHashConfig<Driver> config)
     {
