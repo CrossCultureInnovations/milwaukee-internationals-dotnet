@@ -61,7 +61,7 @@ public class RegistrationController : Controller
     {
         if (User.Identity is { IsAuthenticated: false } && !await _registrationLogic.IsRegisterDriverOpen())
         {
-            return View("SorryClosed");
+            return View("DriverSorryClosed");
         }
     
         if (TempData.ContainsKey("Error"))
@@ -125,7 +125,7 @@ public class RegistrationController : Controller
     {
         if (User.Identity is { IsAuthenticated: false } && !await _registrationLogic.IsRegisterStudentOpen())
         {
-            return View("SorryClosed");
+            return View("StudentSorryClosed");
         }
         
         try
