@@ -160,6 +160,15 @@ public class RegistrationLogic : IRegistrationLogic
         return count < globalConfigs.MaxLimitStudentSeats;
     }
     
+    public async Task<bool> IsRegisterDriverOpen()
+    {
+        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+
+        var year = DateTime.Now.Year;
+        var count = await _driverLogic.Count(x => x.Year == year);
+
+        return count < globalConfigs.MaxLimitDrivers;
+    }
     
     public async Task RegisterDriver(Driver driver)
     {

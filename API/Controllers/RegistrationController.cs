@@ -57,8 +57,13 @@ public class RegistrationController : Controller
     /// <returns></returns>
     [HttpGet]
     [Route("Driver")]
-    public IActionResult Driver()
+    public async Task<IActionResult> Driver()
     {
+        if (User.Identity is { IsAuthenticated: false } && !await _registrationLogic.IsRegisterDriverOpen())
+        {
+            return View("SorryClosed");
+        }
+    
         if (TempData.ContainsKey("Error"))
         {
             ViewData["Error"] = TempData["Error"];

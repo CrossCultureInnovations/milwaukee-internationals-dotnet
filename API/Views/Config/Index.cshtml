@@ -69,6 +69,11 @@
     </div>
     
     <div class="form-group">
+        @Html.LabelFor(x => x.MaxLimitDrivers, $"Max upper limit of drivers for [{DateTime.Now.Year}] year")
+        @Html.TextBoxFor(x => x.MaxLimitDrivers, new { @class = "form-control", type = "number", required = true })
+    </div>
+    
+    <div class="form-group">
         @Html.LabelFor(x => x.TourDate)
         @Html.EditorFor(x => x.TourDate, new { @class = "form-control", type = "datetime-local", placeholder = "Enter date", required = "required"})
     </div>

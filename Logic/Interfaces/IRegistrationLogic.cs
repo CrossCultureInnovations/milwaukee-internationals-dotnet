@@ -10,6 +10,8 @@ public interface IRegistrationLogic
     Task RegisterStudent(Student student);
         
     Task<bool> IsRegisterStudentOpen();
+
+    Task<bool> IsRegisterDriverOpen();
         
     Task RegisterHost(Host host);
 

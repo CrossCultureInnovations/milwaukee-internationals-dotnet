@@ -36,6 +36,10 @@ public class GlobalConfigs
     [Display(Name = "Max upper limit of students for this year")]
     [Range(150, 300)]
     public int MaxLimitStudentSeats { get; set; }
+    
+    [Display(Name = "Max upper limit of drivers for this year")]
+    [Range(10, 60)]
+    public int MaxLimitDrivers { get; set; }
         
     [Display(Name = "Time of the tour (CST Zone)")]
     public DateTime TourDate { get; set; }
