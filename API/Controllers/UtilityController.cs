@@ -135,6 +135,6 @@ public class UtilityController : Controller
         // Handle the action
         var result = await _smsUtilityLogic.HandleAdHocSms(smsFormViewModel);
 
-        return RedirectToAction("AdHocSms", new { status = result });
+        return RedirectToAction("AdHocSms", new { status = true });
     }
 }
