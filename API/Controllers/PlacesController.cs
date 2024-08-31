@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Logic.Interfaces;
@@ -20,8 +21,10 @@ public class PlacesController : Controller
     
     [HttpGet]
     [Route("{year:int?}")]
-    public async Task<IActionResult> Place(int year = 2023)
+    public async Task<IActionResult> Place(int? year)
     {
-        return View((await _locationLogic.GetAll(year)).ToList());
+        year ??= DateTime.Now.Year;
+        
+        return View((await _locationLogic.GetAll(year.Value)).ToList());
     }
 }
