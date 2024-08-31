@@ -223,7 +223,7 @@ public class RegistrationLogic : IRegistrationLogic
     {
         var url = $"{ApiConstants.SiteUrl}/utility/EmailCheckIn/Driver/{driver.GenerateHash()}";
 
-        var text = $"Asher here.Your display ID is {driver.DisplayId.Split('-')[0]}, link to check-in and see tour details {url}";
+        var text = $"Asher here.Your display ID is {driver.DisplayId.Split('-')[1]}, link to check-in and see tour details {url}";
         
         await _smsService.SendMessage(driver.Phone, text);
     }
