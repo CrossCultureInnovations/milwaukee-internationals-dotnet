@@ -26,8 +26,6 @@ public class SmsService : ISmsService
 
     public async Task SendMessage(string phoneNumber, string message)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
-        
         if (!string.IsNullOrWhiteSpace(phoneNumber))
         { 
             // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
@@ -39,9 +37,7 @@ public class SmsService : ISmsService
                 var options = new NewMessagingSenderId
                 {
                     From = NormalizePhoneNumberForSms(_senderPhoneNumber),
-                    To = NormalizePhoneNumberForSms(globalConfigs.SmsTestMode
-                        ? ApiConstants.SitePhoneNumber
-                        : phoneNumber),
+                    To = NormalizePhoneNumberForSms(phoneNumber),
                     Text = message
                 };
 
@@ -58,7 +54,11 @@ public class SmsService : ISmsService
 
     public async Task SendMessage(IEnumerable<string> phoneNumbers, string message)
     {
-        await Task.WhenAll(phoneNumbers.Select(phoneNumber => SendMessage(phoneNumber, message)));
+        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        
+        await Task.WhenAll(phoneNumbers.Select(phoneNumber => SendMessage(globalConfigs.SmsTestMode
+            ? ApiConstants.SitePhoneNumber
+            : phoneNumber, message)));
     }
 
     private static string NormalizePhoneNumberForSms(string phoneNumberRaw)
