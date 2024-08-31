@@ -78,7 +78,9 @@
                 <td>@host.Fullname</td>
                 <td>@host.Email</td>
                 <td>@host.Phone</td>
-                <td>@host.Address</td>
+                <td>
+                    <a href="https://www.google.com/maps/place/@host.Address" target="_blank">@host.Address</a>
+                </td>
                 @if (userInfo.UserRoleEnum == UserRoleEnum.Admin)
                 {
                     <td class="hidden-xs" ng-show="showDetail">
