@@ -1,4 +1,4 @@
-@model List<Models.Entities.Location>
+@model (List<Models.Entities.Location> Locations, int Year)
 
 @{
     ViewBag.Title = $"Places {DateTime.Now.Year}";
@@ -6,7 +6,7 @@
 }
 
 <div class="container">
-    <h2>@(DateTime.Now.Year) Tour of Milwaukee Guide</h2>
+    <h2>@(Model.Year) Tour of Milwaukee Guide</h2>
     <p>
         This guide includes directions and information about various key sights around Milwaukee. Look over a map
         before leaving to familiarize yourself with the route. Try to help the driver know about the next turn well
@@ -22,7 +22,7 @@
         </tr>
         </thead>
         <tbody>
-        @foreach (var location in Model)
+        @foreach (var location in Model.Locations)
         {
             <tr>
                 <td>@(location.Name)</td>

@@ -25,6 +25,8 @@ public class PlacesController : Controller
     {
         year ??= DateTime.Now.Year;
         
-        return View((await _locationLogic.GetAll(year.Value)).ToList());
+        var model = ((await _locationLogic.GetAll(year.Value)).ToList(), year.Value);
+        
+        return View(model);
     }
 }
