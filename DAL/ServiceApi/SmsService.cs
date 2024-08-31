@@ -38,10 +38,10 @@ public class SmsService : ISmsService
                 var service = new MessagingSenderIdService();
                 var options = new NewMessagingSenderId
                 {
-                    From = NormalizePhoneNumberForSms(globalConfigs.SmsTestMode
+                    From = NormalizePhoneNumberForSms(_senderPhoneNumber),
+                    To = NormalizePhoneNumberForSms(globalConfigs.SmsTestMode
                         ? ApiConstants.SitePhoneNumber
-                        : _senderPhoneNumber),
-                    To = NormalizePhoneNumberForSms(phoneNumber),
+                        : phoneNumber),
                     Text = message
                 };
 
