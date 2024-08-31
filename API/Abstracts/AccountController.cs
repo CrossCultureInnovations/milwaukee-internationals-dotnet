@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using API.Utilities;
+using Logic.Utilities;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
@@ -41,7 +42,7 @@ public abstract class AbstractIdentityController : Controller
             Fullname = registerViewModel.Fullname,
             UserName = registerViewModel.Username,
             Email = registerViewModel.Email,
-            PhoneNumber = registerViewModel.PhoneNumber,
+            PhoneNumber = RegistrationUtility.NormalizePhoneNumber(registerViewModel.PhoneNumber),
             SecurityStamp = Guid.NewGuid().ToString(),
             UserRoleEnum = role,
             Enable = enable
