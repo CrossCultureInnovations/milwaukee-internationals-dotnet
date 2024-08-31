@@ -166,7 +166,8 @@ angular.module('cytoscape.js-edgehandles', [])
 
 angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize', 'angular-async-await', 'angular-loading-bar', 'cytoscape.js-edgehandles'])
     .config(['cfpLoadingBarProvider', cfpLoadingBarProvider => {
-        cfpLoadingBarProvider.includeSpinner = false;
+        cfpLoadingBarProvider.includeBar = true;
+        cfpLoadingBarProvider.includeSpinner = true;
         cfpLoadingBarProvider.latencyThreshold = 300;
     }])
     .constant('jsPDF', (jspdf || window.jspdf).jsPDF)
