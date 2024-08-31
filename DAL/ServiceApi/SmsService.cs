@@ -42,7 +42,8 @@ public class SmsService : ISmsService
                     To = NormalizePhoneNumberForSms(globalConfigs.SmsTestMode
                         ? ApiConstants.SitePhoneNumber
                         : phoneNumber),
-                    Text = message
+                    Text = message,
+                    
                 };
 
                 var messageResponse = await service.CreateAsync(options);
