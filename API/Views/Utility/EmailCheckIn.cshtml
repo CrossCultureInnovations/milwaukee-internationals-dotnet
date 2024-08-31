@@ -30,7 +30,11 @@
             <ul class="list-group">
                 <li class="list-group-item clearfix list-group-item-success">
                     <label class="pull-left">Display ID</label>
-                    <label class="pull-right">@(driver.DisplayId)</label>
+                    <label class="pull-right">
+                        @(driver.DisplayId.Split('-')[0])
+                        -
+                        <strong style="font-size: 2rem">@(driver.DisplayId.Split('-')[1])</strong>
+                    </label>
                 </li>
                 <li class="list-group-item clearfix">
                     <label class="pull-left">Navigator</label>
