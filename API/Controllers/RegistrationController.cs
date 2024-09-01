@@ -63,7 +63,7 @@ public class RegistrationController : Controller
         {
             return View("DriverSorryClosed");
         }
-    
+
         if (TempData.ContainsKey("Error"))
         {
             ViewData["Error"] = TempData["Error"];
@@ -103,7 +103,7 @@ public class RegistrationController : Controller
     {
         if (User.Identity is { IsAuthenticated: false } && !await _registrationLogic.IsRegisterStudentOpen())
         {
-            return View("SorryClosed");
+            return View("StudentSorryClosed");
         }
 
         if (TempData.ContainsKey("Error"))
@@ -123,11 +123,6 @@ public class RegistrationController : Controller
     [Route("Student/Register")]
     public async Task<IActionResult> RegisterStudent(Student student)
     {
-        if (User.Identity is { IsAuthenticated: false } && !await _registrationLogic.IsRegisterStudentOpen())
-        {
-            return View("StudentSorryClosed");
-        }
-        
         try
         {
             // obtain the response token from user input

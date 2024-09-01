@@ -157,7 +157,11 @@ public class RegistrationLogic : IRegistrationLogic
         var year = DateTime.Now.Year;
         var count = await _studentLogic.Count(x => x.Year == year);
 
-        return count < globalConfigs.MaxLimitStudentSeats;
+        var overLimit = count < globalConfigs.MaxLimitStudentSeats;
+
+        var afterTour = await IsAfterTourDay();
+        
+        return !overLimit && !afterTour;
     }
     
     public async Task<bool> IsRegisterDriverOpen()
@@ -167,7 +171,17 @@ public class RegistrationLogic : IRegistrationLogic
         var year = DateTime.Now.Year;
         var count = await _driverLogic.Count(x => x.Year == year);
 
-        return count < globalConfigs.MaxLimitDrivers;
+        var overLimit = count < globalConfigs.MaxLimitDrivers;
+        var afterTour = await IsAfterTourDay();
+        
+        return !overLimit && !afterTour;
+    }
+
+    private async Task<bool> IsAfterTourDay()
+    {
+        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+
+        return DateTime.Now.Subtract(globalConfigs.TourDate.AddDays(1)).Days > 0;
     }
     
     public async Task RegisterDriver(Driver driver)
