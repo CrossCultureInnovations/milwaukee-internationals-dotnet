@@ -962,11 +962,16 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
 
         $scope.attendanceFilter = 'all';
         $scope.fullname = '';
+        $scope.displayId = '';
 
         $scope.generalFilterDrivers = ({ ignoreAttendance = false } = {}) => {
             let drivers = $scope.allDrivers;
             if ($scope.fullname) {
                 drivers = drivers.filter(x => x.fullname.toLowerCase().includes($scope.fullname.toLowerCase()));
+            }
+
+            if ($scope.displayId) {
+                drivers = drivers.filter(x => x.displayId.toLowerCase().includes($scope.displayId.toLowerCase()));
             }
 
             if (!ignoreAttendance && $scope.attendanceFilter !== 'all') {
