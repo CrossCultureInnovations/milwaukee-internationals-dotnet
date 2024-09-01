@@ -125,34 +125,38 @@ public class RegistrationController : Controller
     {
         try
         {
-            // obtain the response token from user input
-            // also called "response parameter" or "verification token"
-            string hCaptchaToken = Request.Form["h-captcha-response"];
-
-            // collect data for post request
-            var dicData = new Dictionary<string, string>
+            // Require captcha if user is not logged-in
+            if (User.Identity is { IsAuthenticated: false })
             {
-                ["secret"] = _configuration.GetValue<string>("HCPATHCA_SECRET"),
-                ["response"] = hCaptchaToken
-            };
+                // obtain the response token from user input
+                // also called "response parameter" or "verification token"
+                string hCaptchaToken = Request.Form["h-captcha-response"];
 
-            // convert dictionary into form data
-            var formData = new FormUrlEncodedContent(dicData);
+                // collect data for post request
+                var dicData = new Dictionary<string, string>
+                {
+                    ["secret"] = _configuration.GetValue<string>("HCPATHCA_SECRET"),
+                    ["response"] = hCaptchaToken
+                };
 
-            const string url = "https://hcaptcha.com/siteverify";
+                // convert dictionary into form data
+                var formData = new FormUrlEncodedContent(dicData);
 
-            var hc = new HttpClient();
+                const string url = "https://hcaptcha.com/siteverify";
 
-            // perform post request
-            var res = await hc.PostAsync(url, formData);
+                var hc = new HttpClient();
 
-            var hCaptchaResult = await res.Content.ReadFromJsonAsync<HCaptchaResult>();
+                // perform post request
+                var res = await hc.PostAsync(url, formData);
 
-            if (!hCaptchaResult.Success)
-            {
-                throw new Exception("Captcha failed");
+                var hCaptchaResult = await res.Content.ReadFromJsonAsync<HCaptchaResult>();
+
+                if (!hCaptchaResult.Success)
+                {
+                    throw new Exception("Captcha failed");
+                }
             }
-            
+
             await _registrationLogic.RegisterStudent(student);
 
             ModelState.ClearModelStateErrors();
