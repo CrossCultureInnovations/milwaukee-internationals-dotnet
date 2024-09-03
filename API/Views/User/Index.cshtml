@@ -71,6 +71,8 @@
                 {
                     <td class="hidden-xs" ng-show="showDetail">
                         <div class="btn-group-vertical btn-group-sm">
+                            <a href="~/User/Edit/@user.Id" class="btn btn-primary">Edit</a>
+                            <a href="~/User/PasswordReset/@user.Id" class="btn btn-primary">Set Password</a>
 
                             @if (disabled)
                             {

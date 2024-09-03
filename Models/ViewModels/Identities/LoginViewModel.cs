@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Models.Validations;
 
 namespace Models.ViewModels.Identities;
 
@@ -12,7 +13,6 @@ public class LoginViewModel
     public string Username { get; set; }
         
     [Required]
-    [RegularExpression("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$",
-        ErrorMessage = "Password should contain lower and upper case alphanumeric characters + special character")]
+    [PasswordValidation]
     public string Password { get; set; }
 }

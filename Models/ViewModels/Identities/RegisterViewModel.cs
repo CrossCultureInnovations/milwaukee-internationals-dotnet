@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Models.Validations;
 
 namespace Models.ViewModels.Identities;
 
@@ -10,7 +11,7 @@ public class RegisterViewModel
     [Required]
     [Phone]
     [DataType(DataType.PhoneNumber)]
-    [RegularExpression(@"^\(?([0-9]{3})\)?[-. ]?([0-9]{3})[-. ]?([0-9]{4})$", ErrorMessage = "Not a valid phone number")]
+    [PhoneNumberValidation]
     public string PhoneNumber { get; set; }
 
     [Required]
@@ -22,13 +23,11 @@ public class RegisterViewModel
     public string Username { get; set; }
         
     [Required]
-    [RegularExpression("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$",
-        ErrorMessage = "Password should contain lower and upper case alphanumeric characters + special character")]
+    [PasswordValidation]
     public string Password { get; set; }
         
     [Required]
-    [RegularExpression("^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$",
-        ErrorMessage = "Password should contain lower and upper case alphanumeric characters + special character")]
+    [PasswordValidation]
     public string ConfirmPassword { get; set; }
         
     [Required]
