@@ -25,15 +25,14 @@ public class EmailServiceApi : IEmailServiceApi
     /// <summary>
     /// Send the email
     /// </summary>
+    /// <param name="emailSenderOnBehalf"></param>
     /// <param name="emailAddress"></param>
     /// <param name="emailSubject"></param>
     /// <param name="emailHtml"></param>
     /// <param name="attachments"></param>
     /// <returns></returns>
-    private async Task SendEmailAsync(string emailAddress, string emailSubject, string emailHtml, params (string filename, string contentType, string content)[] attachments)
+    private async Task SendEmailAsync(string emailSenderOnBehalf, string emailAddress, string emailSubject, string emailHtml, params (string filename, string contentType, string content)[] attachments)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
-        
         if (!string.IsNullOrWhiteSpace(emailAddress))
         { 
             // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
@@ -41,12 +40,12 @@ public class EmailServiceApi : IEmailServiceApi
             
             // construct your email with builder
             var email = new TransactionalEmailBuilder()
-                .WithFrom(new SendContact(globalConfigs.EmailSenderOnBehalf))
+                .WithFrom(new SendContact(emailSenderOnBehalf))
                 .WithSubject(emailSubject)
                 .WithHtmlPart(emailHtml)
                 .WithAttachments(attachments.Select(x => new Attachment(x.filename, x.content, x.content)))
                 .WithCc(new SendContact(ApiConstants.SiteEmail))
-                .WithTo(new SendContact(globalConfigs.EmailTestMode ? ApiConstants.SiteEmail : emailAddress))
+                .WithTo(new SendContact(emailAddress))
                 .Build();
 
             // invoke API to send email
@@ -67,6 +66,12 @@ public class EmailServiceApi : IEmailServiceApi
     /// <returns></returns>
     public async Task SendEmailAsync(IEnumerable<string> emailAddresses, string emailSubject, string emailHtml, params (string filename, string contentType, string content)[] attachments)
     {
-        await Task.WhenAll(emailAddresses.Select(emailAddress => SendEmailAsync(emailAddress, emailSubject, emailHtml)));
+        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+
+        await Task.WhenAll(emailAddresses.Select(emailAddress => SendEmailAsync(
+            globalConfigs.EmailSenderOnBehalf,
+            globalConfigs.EmailTestMode ? ApiConstants.SiteEmail : emailAddress,
+            emailSubject,
+            emailHtml)));
     }
 }
