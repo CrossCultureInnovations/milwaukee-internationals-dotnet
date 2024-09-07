@@ -206,7 +206,7 @@ public class SmsUtilityLogic : ISmsUtilityLogic
             var fileBytes = await response.Content.ReadAsByteArrayAsync();
             var base64File = Convert.ToBase64String(fileBytes);
            
-            return (media.url.LocalPath, media.content_type, base64File);
+            return (media.url.LocalPath.Split('/').Last(), media.content_type, base64File);
         }));
         
         await _emailServiceApi.SendEmailAsync(
