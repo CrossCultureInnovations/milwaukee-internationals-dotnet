@@ -5,7 +5,9 @@ namespace Models.ViewModels;
 
 public class Media
 {
-    public string url { get; set; }
+    public string content_type { get; set; }
+    
+    public Uri url { get; set; }
 }
 
 public class Data

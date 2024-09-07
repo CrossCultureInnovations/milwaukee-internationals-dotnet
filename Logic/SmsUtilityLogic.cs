@@ -198,20 +198,15 @@ public class SmsUtilityLogic : ISmsUtilityLogic
                    $"{body}";
 
         var httpClient = new HttpClient();
-        var responses = await Task.WhenAll(request.data!.payload!.media.Select(x => httpClient.GetAsync(x.url)));
+        var responses = await Task.WhenAll(request.data!.payload!.media.Select(async x => (Media: x, Response: await httpClient.GetAsync(x.url))));
 
-        var attachments = await Task.WhenAll(responses.Select(async response =>
+        var attachments = await Task.WhenAll(responses.Select(async x =>
         {
+            var (media, response) = x;
             var fileBytes = await response.Content.ReadAsByteArrayAsync();
             var base64File = Convert.ToBase64String(fileBytes);
-            var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
-            var fileName = "unknown";
-            if (response.Content.Headers.ContentDisposition != null)
-            {
-                fileName = response.Content.Headers.ContentDisposition.FileName?.Trim('"');
-            }
-
-            return (fileName, contentType, base64File);
+           
+            return (media.url.LocalPath, media.content_type, base64File);
         }));
         
         await _emailServiceApi.SendEmailAsync(

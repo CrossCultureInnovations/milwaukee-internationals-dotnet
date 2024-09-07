@@ -72,6 +72,7 @@ public class EmailServiceApi : IEmailServiceApi
             globalConfigs.EmailSenderOnBehalf,
             globalConfigs.EmailTestMode ? ApiConstants.SiteEmail : emailAddress,
             emailSubject,
-            emailHtml)));
+            emailHtml,
+            attachments)));
     }
 }
