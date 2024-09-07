@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using DAL.Interfaces;
 using Logic.Interfaces;
@@ -194,7 +196,28 @@ public class SmsUtilityLogic : ISmsUtilityLogic
         var text = $"SMS from {from} [{carrier}]\n" +
                    $"{middle}" +
                    $"{body}";
+
+        var httpClient = new HttpClient();
+        var responses = await Task.WhenAll(request.data!.payload!.media.Select(x => httpClient.GetAsync(x.url)));
+
+        var attachments = await Task.WhenAll(responses.Select(async response =>
+        {
+            var fileBytes = await response.Content.ReadAsByteArrayAsync();
+            var base64File = Convert.ToBase64String(fileBytes);
+            var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
+            var fileName = "unknown";
+            if (response.Content.Headers.ContentDisposition != null)
+            {
+                fileName = response.Content.Headers.ContentDisposition.FileName?.Trim('"');
+            }
+
+            return (fileName, contentType, base64File);
+        }));
         
-        await _emailServiceApi.SendEmailAsync(ApiConstants.SiteEmail, $"SMS received {middle}", text);
+        await _emailServiceApi.SendEmailAsync(
+            new []{ ApiConstants.SiteEmail }, 
+            $"SMS received {middle}", 
+            text,
+            attachments);
     }
 }

@@ -139,7 +139,7 @@ public class StudentDriverMappingLogic : IStudentDriverMappingLogic
             
         // Send the email to drivers
         var tasks = drivers.Select(x =>
-            _emailServiceApi.SendEmailAsync(x.Email, "Tour of Milwaukee - Assigned Students", MessageFunc(x)));
+            _emailServiceApi.SendEmailAsync(new []{ x.Email }, "Tour of Milwaukee - Assigned Students", MessageFunc(x)));
 
         await Task.WhenAll(tasks);
             

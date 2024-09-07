@@ -105,7 +105,7 @@ public class DriverHostMappingLogic : IDriverHostMappingLogic
 
         // Send the email to hosts
         var tasks = hosts
-            .Select(x => _emailServiceApi.SendEmailAsync(x.Email, "Tour of Milwaukee - Assigned Drivers", MessageFunc(x)));
+            .Select(x => _emailServiceApi.SendEmailAsync(new []{ x.Email }, "Tour of Milwaukee - Assigned Drivers", MessageFunc(x)));
 
         await Task.WhenAll(tasks);
             

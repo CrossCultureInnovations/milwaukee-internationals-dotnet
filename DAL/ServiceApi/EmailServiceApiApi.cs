@@ -28,8 +28,9 @@ public class EmailServiceApi : IEmailServiceApi
     /// <param name="emailAddress"></param>
     /// <param name="emailSubject"></param>
     /// <param name="emailHtml"></param>
+    /// <param name="attachments"></param>
     /// <returns></returns>
-    public async Task SendEmailAsync(string emailAddress, string emailSubject, string emailHtml)
+    private async Task SendEmailAsync(string emailAddress, string emailSubject, string emailHtml, params (string filename, string contentType, string content)[] attachments)
     {
         var globalConfigs = await _configLogic.ResolveGlobalConfig();
         
@@ -43,6 +44,7 @@ public class EmailServiceApi : IEmailServiceApi
                 .WithFrom(new SendContact(globalConfigs.EmailSenderOnBehalf))
                 .WithSubject(emailSubject)
                 .WithHtmlPart(emailHtml)
+                .WithAttachments(attachments.Select(x => new Attachment(x.filename, x.content, x.content)))
                 .WithCc(new SendContact(ApiConstants.SiteEmail))
                 .WithTo(new SendContact(globalConfigs.EmailTestMode ? ApiConstants.SiteEmail : emailAddress))
                 .Build();
@@ -61,8 +63,9 @@ public class EmailServiceApi : IEmailServiceApi
     /// <param name="emailAddresses"></param>
     /// <param name="emailSubject"></param>
     /// <param name="emailHtml"></param>
+    /// <param name="attachments"></param>
     /// <returns></returns>
-    public async Task SendEmailAsync(IEnumerable<string> emailAddresses, string emailSubject, string emailHtml)
+    public async Task SendEmailAsync(IEnumerable<string> emailAddresses, string emailSubject, string emailHtml, params (string filename, string contentType, string content)[] attachments)
     {
         await Task.WhenAll(emailAddresses.Select(emailAddress => SendEmailAsync(emailAddress, emailSubject, emailHtml)));
     }
