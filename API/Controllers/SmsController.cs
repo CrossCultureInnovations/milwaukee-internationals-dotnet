@@ -45,11 +45,6 @@ public class SmsController : Controller
     [AllowAnonymous]
     public async Task<ActionResult> IncomingSms([FromBody]IncomingSmsViewModel body)
     {
-        var bodyStream = new StreamReader(HttpContext.Request.Body);
-        bodyStream.BaseStream.Seek(0, SeekOrigin.Begin);
-        var bodyText = await bodyStream.ReadToEndAsync();
-        Console.WriteLine(bodyText);
-        
         await _smsUtilityLogic.IncomingSms(body);
 
         return Ok("received");

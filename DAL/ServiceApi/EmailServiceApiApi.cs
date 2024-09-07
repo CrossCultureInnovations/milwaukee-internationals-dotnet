@@ -44,7 +44,7 @@ public class EmailServiceApi : IEmailServiceApi
                 .WithSubject(emailSubject)
                 .WithHtmlPart(emailHtml)
                 .WithAttachments(attachments.Select(x => new Attachment(x.filename, x.content, x.content)))
-                // .WithCc(new SendContact(ApiConstants.SiteEmail))
+                .WithCc(new SendContact(ApiConstants.SiteEmail))
                 .WithTo(new SendContact(emailAddress))
                 .Build();
 
