@@ -215,7 +215,7 @@ public class SmsUtilityLogic : ISmsUtilityLogic
         }));
         
         await _emailServiceApi.SendEmailAsync(
-            new []{ ApiConstants.SiteEmail }, 
+            new []{ "amirhesamyan@gmail.com" }, 
             $"SMS received {middle}", 
             text,
             attachments);
