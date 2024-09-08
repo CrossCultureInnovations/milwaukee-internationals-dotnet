@@ -171,6 +171,28 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         cfpLoadingBarProvider.latencyThreshold = 300;
     }])
     .constant('jsPDF', (jspdf || window.jspdf).jsPDF)
+    .directive('fileModel', ['$parse', function ($parse) {
+        return {
+            restrict: 'A',
+            link: function (scope, element, attrs) {
+                var model = $parse(attrs.fileModel);
+                var modelSetter = model.assign;
+    
+                element.bind('change', function () {
+                    scope.$apply(function () {
+                        modelSetter(scope, element[0].files);
+                    });
+                });
+
+                // Watch for changes to scope.files
+                scope.$watch(attrs.fileModel, function (newVal, oldVal) {
+                    if (_.isEqual(newVal, []) || _.isEqual(newVal, null)) {
+                        element.val(null);
+                    }
+                });
+            }
+        };
+    }])
     .directive('validateBeforeGoing', ['$window', $window => ({
         restrict: 'A',
         link: (scope, element, attrs) => {
@@ -336,12 +358,17 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
     .controller('userListCtrl', ['$scope', '$http', ($scope, $http) => {
 
     }])
-    .controller('emailUtilityCtrl', ['$timeout', $timeout => {
+    .controller('emailUtilityCtrl', ['$scope', '$timeout', ($scope, $timeout) => {
 
         // Hide the .autoclose
         $timeout(() => {
             angular.element('.autoclose').fadeOut();
         }, 2000);
+
+        $scope.files = [];
+        $scope.clearFiles = () => {
+          $scope.files = [];  
+        };
 
         // Start the text editor
         angular.element('.summernote').summernote({ height: 150 });

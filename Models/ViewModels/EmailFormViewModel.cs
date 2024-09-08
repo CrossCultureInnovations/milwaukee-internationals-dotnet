@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 using Models.Interfaces;
 
 namespace Models.ViewModels;
@@ -36,4 +37,7 @@ public class EmailFormViewModel : IViewModel
         
     [Display(Name = "Additional Recipients")]
     public string AdditionalRecipients { get; set; }
+    
+    [Display(Name = "Email Attachments")]
+    public IFormFile[] Files { get; set; }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using DAL.Interfaces;
@@ -129,7 +130,18 @@ public class EmailUtilityLogic :  IEmailUtilityLogic
         emailAddresses = emailAddresses.Distinct().ToList();
 
         // Send the email
-        await _emailServiceApiApi.SendEmailAsync(emailAddresses, emailFormViewModel.Subject, emailFormViewModel.Message);
+        await _emailServiceApiApi.SendEmailAsync(
+            emailAddresses,
+            emailFormViewModel.Subject, 
+            emailFormViewModel.Message,
+            await Task.WhenAll(emailFormViewModel.Files.Select(async f =>
+            {
+                var memoryStream = new MemoryStream();
+                await f.CopyToAsync(memoryStream);
+                var base64File = Convert.ToBase64String(memoryStream.ToArray());
+                
+                return (f.FileName, f.ContentType, base64File);
+            })));
 
         await _apiEventService.RecordEvent($"Sent ad-hoc email [{emailFormViewModel.Subject}] to {string.Join(',', emailAddresses)}");
 

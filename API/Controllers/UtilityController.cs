@@ -48,7 +48,7 @@ public class UtilityController : Controller
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
     [HttpPost]
     [Route("AdHocEmailAction")]
-    public async Task<IActionResult> AdHocEmailAction(EmailFormViewModel emailFormViewModel)
+    public async Task<IActionResult> AdHocEmailAction([FromForm]EmailFormViewModel emailFormViewModel)
     {
         // Handle the action
         var result = await _emailUtilityLogic.HandleAdHocEmail(emailFormViewModel);
