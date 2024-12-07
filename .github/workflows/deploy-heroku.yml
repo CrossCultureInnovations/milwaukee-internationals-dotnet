@@ -12,8 +12,6 @@ jobs:
     env:
       HEROKU_API_KEY: ${{ secrets.HEROKU_TOKEN }}
       APP_NAME: milwaukee-internationals-core
-      DOCKER_TLS_CERTDIR: ""
-      DOCKER_HOST: "tcp://127.0.0.1:2375"
       HEROKU_REGISTRY: registry.heroku.com
       HEROKU_EMAIL: hesamian@uwm.edu
 
