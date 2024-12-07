@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       docker:
-        image: docker:19.03.12
+        image: docker:dind
         options: --privileged # Required for Docker-in-Docker
 
     env:
