@@ -1,0 +1,40 @@
+name: Deploy to Heroku
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:19.03.12
+        options: --privileged # Required for Docker-in-Docker
+
+    env:
+      HEROKU_API_KEY: ${{ secrets.HEROKU_TOKEN }}
+      APP_NAME: milwaukee-internationals-core
+      DOCKER_TLS_CERTDIR: ""
+      DOCKER_HOST: "tcp://127.0.0.1:2375"
+      HEROKU_REGISTRY: registry.heroku.com
+      HEROKU_EMAIL: hesamian@uwm.edu
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker
+        run: |
+          apk --no-cache add curl nodejs npm
+          npm install -g heroku
+
+      - name: Login to Heroku Container Registry
+        run: heroku container:login
+
+      - name: Build and Push Docker Container to Heroku
+        run: heroku container:push --app $APP_NAME web
+
+      - name: Release Docker Container on Heroku
+        run: heroku container:release --app $APP_NAME web

@@ -1,9 +1,8 @@
 name: Backup and Upload
 
 on:
-  push:
-    branches:
-      - master
+  schedule:
+    - cron: '43 22 * * *'
 
 env:
   HEROKU_API_KEY: ${{ secrets.HEROKU_TOKEN }}
