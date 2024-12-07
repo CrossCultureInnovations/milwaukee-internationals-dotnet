@@ -27,7 +27,8 @@ jobs:
 
       - name: Set up Docker
         run: |
-          apk --no-cache add curl nodejs npm
+          sudo apt-get update
+          sudo apt-get install -y curl nodejs npm
           npm install -g heroku
 
       - name: Login to Heroku Container Registry
