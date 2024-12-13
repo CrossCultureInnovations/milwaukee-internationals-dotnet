@@ -32,7 +32,7 @@ public static class ConnectionStringUtility
             Password = table["Password"],
             Database = table["Database"],
             ApplicationName = table["ApplicationName"],
-            SslMode = SslMode.Require,
+            SslMode = SslMode.Prefer,
             TrustServerCertificate = true,
             Pooling = true,
             // Hard limit
