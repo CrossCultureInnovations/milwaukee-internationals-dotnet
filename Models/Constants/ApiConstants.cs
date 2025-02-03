@@ -16,8 +16,7 @@ public static class ApiConstants
         "amirhesamyan@gmail.com"
     };
 
-    // public const string SiteEmail = "tourofmilwaukee@gmail.com";
-    public const string SiteEmail = "amirhesamyan@gmail.com";
+    public const string SiteEmail = "tourofmilwaukee@gmail.com";
 
     public const string ApplicationName = "Milwaukee Internationals";
     
