@@ -17,12 +17,9 @@ jobs:
   capture-backup:
     name: Capture DigitalOcean Backup
     runs-on: ubuntu-latest
+    container:
+      image: postgres:17-alpine
     steps:
-      - name: Install PostgreSQL client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-
       - name: Dump DigitalOcean PostgreSQL Database
         env:
           DATABASE_URL: ${{ secrets.MKE_INTERNATIONAL_DATABASE_URL }}
