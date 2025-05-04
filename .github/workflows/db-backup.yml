@@ -3,6 +3,9 @@ name: Backup and Upload
 on:
   schedule:
     - cron: '43 22 * * *'
+  push:
+    branches:
+      - master
 
 env:
   AWS_DEFAULT_REGION: "us-east-1"
