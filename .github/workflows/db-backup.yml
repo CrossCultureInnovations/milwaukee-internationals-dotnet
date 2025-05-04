@@ -5,9 +5,6 @@ on:
     - cron: '43 22 * * *'
 
 env:
-  HEROKU_API_KEY: ${{ secrets.HEROKU_TOKEN }}
-  APP_NAME: "milwaukee-internationals-core"
-  HEROKU_EMAIL: "hesamian@uwm.edu"
   AWS_DEFAULT_REGION: "us-east-1"
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -15,22 +12,20 @@ env:
 
 jobs:
   capture-backup:
-    name: Capture Heroku Backup
+    name: Capture DigitalOcean Backup
     runs-on: ubuntu-latest
     steps:
-      - name: Set up dependencies
+      - name: Install PostgreSQL client
         run: |
           sudo apt-get update
-          sudo apt-get install -y curl nodejs npm
-          npm install -g heroku
-      - name: Login to Heroku
-        run: heroku auth:token
+          sudo apt-get install -y postgresql-client
+
+      - name: Dump DigitalOcean PostgreSQL Database
         env:
-          HEROKU_API_KEY: ${{ secrets.HEROKU_TOKEN }}
-      - name: Capture Heroku Backup
-        run: heroku pg:backups:capture --app $APP_NAME
-      - name: Download Backup
-        run: heroku pg:backups:url --app $APP_NAME | xargs -I{} curl -o db.dump "{}"
+          DATABASE_URL: ${{ secrets.MKE_INTERNATIONAL_DATABASE_URL }}
+        run: |
+          pg_dump "$DATABASE_URL" -F c -f db.dump
+
       - name: Upload Backup as Artifact
         uses: actions/upload-artifact@v3
         with:
@@ -47,11 +42,13 @@ jobs:
         with:
           name: db-dump
           path: .
+
       - name: Configure AWS CLI
         run: |
           aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
           aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
           aws configure set default.region $AWS_DEFAULT_REGION
+
       - name: Upload to S3
         run: |
           export CI_JOB_TIMESTAMP=$(date --utc "+%Y-%m-%dT%H:%M:%S")
