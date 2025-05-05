@@ -4,7 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Enums.NET" Version="5.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.29" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="ObjectHashing" Version="0.0.4" />
     <PackageReference Include="TimeZoneConverter" Version="6.1.0" />

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:6.0-alpine AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:8.0-alpine AS build-env
 
 WORKDIR /app/stage
 
@@ -16,7 +16,7 @@ RUN dotnet publish -c Release -o out
 RUN cp -r client-build/* ./out/wwwroot/
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:6.0-alpine
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
 
 # QR generation
 RUN apk add bash icu-libs krb5-libs libgcc libintl libssl3 libstdc++ zlib && \
