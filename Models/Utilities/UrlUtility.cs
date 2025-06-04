@@ -17,7 +17,7 @@ public static class UrlUtility
 
         if (!isUrl)
         {
-            return (default, ImmutableDictionary.Create<string, string>());
+            return (null, ImmutableDictionary.Create<string, string>());
         }
 
         var connectionStringBuilder = new Dictionary<string, string>

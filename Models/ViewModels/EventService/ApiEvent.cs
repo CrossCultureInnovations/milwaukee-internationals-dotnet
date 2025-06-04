@@ -7,11 +7,11 @@ public record ApiEvent
 {
     public string RowKey { get; set; }
 
-    public string PartitionKey { get; set; } = default!;
+    public string PartitionKey { get; set; } = null!;
     
     public DateTimeOffset RecordedDate { get; set; }
 
     public string Description { get; set; }
 
-    public DateTimeOffset? Timestamp { get; set; } = default!;
+    public DateTimeOffset? Timestamp { get; set; } = null!;
 }
