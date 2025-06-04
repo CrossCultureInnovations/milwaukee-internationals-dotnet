@@ -157,7 +157,7 @@ public class RegistrationLogic : IRegistrationLogic
         var year = DateTime.Now.Year;
         var count = await _studentLogic.Count(x => x.Year == year);
 
-        var overLimit = count < globalConfigs.MaxLimitStudentSeats;
+        var overLimit = count >= globalConfigs.MaxLimitStudentSeats;
 
         var afterTour = await IsAfterTourDay();
         
