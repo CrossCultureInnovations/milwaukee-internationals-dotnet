@@ -7,6 +7,7 @@ using System.Xml;
 using DAL.Interfaces;
 using Flurl;
 using Logic.Interfaces;
+using Logic.Utilities;
 using Models.Constants;
 using Models.Entities;
 using Models.Enums;
@@ -35,21 +36,9 @@ public class RegistrationLogic(
         var checkInPath = Url.Combine(rootUrl, "App", "CheckIn", "Student", student.GenerateHash());
 
         var qr = QrCode.EncodeText(checkInPath, QrCode.Ecc.High);
-        var svg = qr.ToSvgString(4);
+        var png = qr.ToPng(10, 3);
 
-        var doc = new XmlDocument();
-        doc.LoadXml(svg);
-
-        var svgDocument = SvgDocument.Open(doc);
-        using var smallBitmap = svgDocument.Draw();
-
-        using var bitmap = svgDocument.Draw(400, 400);
-        var ms = new MemoryStream();
-#pragma warning disable CA1416
-        bitmap.Save(ms, ImageFormat.Png);
-#pragma warning restore CA1416
-
-        var sigBase64 = Convert.ToBase64String(ms.ToArray());
+        var sigBase64 = Convert.ToBase64String(png);
         var qrUri = $"data:image/png;base64,{sigBase64}";
 
         await emailServiceApiApi.SendEmailAsync([student.Email], "Tour of Milwaukee Registration Confirmation",
