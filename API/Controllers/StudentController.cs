@@ -10,20 +10,13 @@ namespace API.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 [AuthorizeMiddleware]
 [Route("[controller]")]
-public class StudentController : Controller
+public class StudentController(IStudentLogic studentLogic) : Controller
 {
-    private readonly IStudentLogic _studentLogic;
-
-    public StudentController(IStudentLogic studentLogic)
-    {
-        _studentLogic = studentLogic;
-    }
-
     [HttpGet]
     [Route("")]
     public async Task<IActionResult> Index([FromQuery]string sortBy = null, [FromQuery]bool? descending = null)
     {
-        return View(await _studentLogic.GetAll(sortBy, descending));
+        return View(await studentLogic.GetAll(sortBy, descending));
     }
         
     /// <summary>
@@ -36,7 +29,7 @@ public class StudentController : Controller
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
     public async Task<IActionResult> Delete(int id)
     {
-        await _studentLogic.Delete(id);
+        await studentLogic.Delete(id);
 
         return RedirectToAction("Index");
     }
@@ -50,7 +43,7 @@ public class StudentController : Controller
     [Route("Edit/{id:int}")]
     public async Task<IActionResult> EditView(int id)
     {
-        var student = await _studentLogic.Get(id);
+        var student = await studentLogic.Get(id);
 
         return View("Edit", student);
     }
@@ -64,7 +57,7 @@ public class StudentController : Controller
     [Route("Edit")]
     public async Task<IActionResult> EditHandler(Student student)
     {
-        await _studentLogic.Update(student.Id, student);
+        await studentLogic.Update(student.Id, student);
 
         return RedirectToAction("Index");
     }

@@ -8,17 +8,10 @@ namespace API.Controllers.API;
 
 [AuthorizeMiddleware]
 [Route("api/[controller]")]
-public class HostController : BasicCrudController<Host>
+public class HostController(IHostLogic hostLogic) : BasicCrudController<Host>
 {
-    private readonly IHostLogic _hostLogic;
-
-    public HostController(IHostLogic hostLogic)
-    {
-        _hostLogic = hostLogic;
-    }
-
     protected override IBasicCrudLogic<Host> BasicCrudLogic()
     {
-        return _hostLogic;
+        return hostLogic;
     }
 }

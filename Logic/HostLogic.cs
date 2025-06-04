@@ -12,18 +12,10 @@ using static Logic.Utilities.RegistrationUtility;
 
 namespace Logic;
 
-public class HostLogic : BasicCrudLogicAbstract<Host>, IHostLogic
+public class HostLogic(IEfRepository repository, IConfigLogic configLogic, IApiEventService apiEventService)
+    : BasicCrudLogicAbstract<Host>, IHostLogic
 {
-    private readonly IBasicCrud<Host> _dal;
-    private readonly IConfigLogic _configLogic;
-    private readonly IApiEventService _apiEventService;
-
-    public HostLogic(IEfRepository repository, IConfigLogic configLogic, IApiEventService apiEventService)
-    {
-        _dal = repository.For<Host>();
-        _configLogic = configLogic;
-        _apiEventService = apiEventService;
-    }
+    private readonly IBasicCrud<Host> _dal = repository.For<Host>();
 
     public override Task<Host> Save(Host instance)
     {
@@ -43,12 +35,12 @@ public class HostLogic : BasicCrudLogicAbstract<Host>, IHostLogic
         
     protected override IApiEventService ApiEventService()
     {
-        return _apiEventService;
+        return apiEventService;
     }
 
     public override async Task<IEnumerable<Host>> GetAll(string sortBy = null, bool? descending = null, Func<object, string, object> sortByModifier = null, params Expression<Func<Host, bool>>[] filters)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
         
         Expression<Func<Host, bool>> yearFilterExpr = x => x.Year == globalConfigs.YearValue;
         

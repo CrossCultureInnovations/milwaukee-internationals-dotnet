@@ -8,15 +8,8 @@ namespace API.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 [AuthorizeMiddleware(UserRoleEnum.Admin)]
 [Route("[controller]")]
-public class ApiEventsController : Controller
+public class ApiEventsController(IApiEventService apiEventService) : Controller
 {
-    private readonly IApiEventService _apiEventService;
-
-    public ApiEventsController(IApiEventService apiEventService)
-    {
-        _apiEventService = apiEventService;
-    }
-
     [HttpGet]
     [Route("")]
     public IActionResult Index()
@@ -28,6 +21,6 @@ public class ApiEventsController : Controller
     [Route("latest")]
     public IActionResult GetLatestApiEvents()
     {
-        return Ok(_apiEventService.GetEvents());
+        return Ok(apiEventService.GetEvents());
     }
 }

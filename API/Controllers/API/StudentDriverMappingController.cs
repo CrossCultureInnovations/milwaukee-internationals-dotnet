@@ -10,15 +10,8 @@ namespace API.Controllers.API;
 
 [AuthorizeMiddleware]
 [Route("api/[controller]")]
-public class StudentDriverMappingController : Controller
+public class StudentDriverMappingController(IStudentDriverMappingLogic studentDriverMappingLogic) : Controller
 {
-    private readonly IStudentDriverMappingLogic _studentDriverMappingLogic;
-
-    public StudentDriverMappingController(IStudentDriverMappingLogic studentDriverMappingLogic)
-    {
-        _studentDriverMappingLogic = studentDriverMappingLogic;
-    }
-        
     /// <summary>
     /// Returns the status of mappings
     /// </summary>
@@ -28,7 +21,7 @@ public class StudentDriverMappingController : Controller
     [SwaggerOperation("StudentDriverMappingStatus")]
     public async Task<IActionResult> StudentDriverMappingStatus()
     {
-        return Ok(await _studentDriverMappingLogic.MappingStatus());
+        return Ok(await studentDriverMappingLogic.MappingStatus());
     }
         
     /// <summary>
@@ -40,7 +33,7 @@ public class StudentDriverMappingController : Controller
     [SwaggerOperation("StudentDriverMappingMap")]
     public async Task<IActionResult> StudentDriverMappingMap([FromBody] NewStudentDriverMappingViewModel newStudentDriverMappingViewModel)
     {
-        return Ok(await _studentDriverMappingLogic.MapStudentToDriver(newStudentDriverMappingViewModel));
+        return Ok(await studentDriverMappingLogic.MapStudentToDriver(newStudentDriverMappingViewModel));
     }
         
     /// <summary>
@@ -52,7 +45,7 @@ public class StudentDriverMappingController : Controller
     [SwaggerOperation("StudentDriverMappingUnMap")]
     public async Task<IActionResult> StudentDriverMappingUnMap([FromBody] NewStudentDriverMappingViewModel newStudentDriverMappingViewModel)
     {
-        return Ok(await _studentDriverMappingLogic.UnMapStudentToDriver(newStudentDriverMappingViewModel));
+        return Ok(await studentDriverMappingLogic.UnMapStudentToDriver(newStudentDriverMappingViewModel));
     }
         
     /// <summary>
@@ -65,6 +58,6 @@ public class StudentDriverMappingController : Controller
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
     public async Task<IActionResult> EmailMappings()
     {
-        return Ok(await _studentDriverMappingLogic.EmailMappings());
+        return Ok(await studentDriverMappingLogic.EmailMappings());
     }
 }

@@ -11,19 +11,11 @@ using Models.Entities;
 
 namespace Logic;
 
-public class LocationLogic : BasicCrudLogicAbstract<Location>, ILocationLogic
+public class LocationLogic(IEfRepository repository, IConfigLogic configLogic, IApiEventService apiEventService)
+    : BasicCrudLogicAbstract<Location>, ILocationLogic
 {
-    private readonly IBasicCrud<Location> _dal;
-    private readonly IConfigLogic _configLogic;
-    private readonly IApiEventService _apiEventService;
+    private readonly IBasicCrud<Location> _dal = repository.For<Location>();
 
-    public LocationLogic(IEfRepository repository, IConfigLogic configLogic, IApiEventService apiEventService)
-    {
-        _dal = repository.For<Location>();
-        _configLogic = configLogic;
-        _apiEventService = apiEventService;
-    }
-    
     protected override IBasicCrud<Location> Repository()
     {
         return _dal;
@@ -31,7 +23,7 @@ public class LocationLogic : BasicCrudLogicAbstract<Location>, ILocationLogic
 
     protected override IApiEventService ApiEventService()
     {
-        return _apiEventService;
+        return apiEventService;
     }
 
     public override async Task<Location> Save(Location instance)
@@ -46,7 +38,7 @@ public class LocationLogic : BasicCrudLogicAbstract<Location>, ILocationLogic
 
     public override async Task<IEnumerable<Location>> GetAll(string sortBy = null, bool? descending = null, Func<object, string, object> sortByModifier = null, params Expression<Func<Location, bool>>[] filters)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         Expression<Func<Location, bool>> yearFilterExpr = x => x.Year == globalConfigs.YearValue;
 

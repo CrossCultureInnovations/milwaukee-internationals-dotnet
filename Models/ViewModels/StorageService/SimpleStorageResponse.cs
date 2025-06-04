@@ -2,15 +2,9 @@ using System.Net;
 
 namespace Models.ViewModels.StorageService;
 
-public class SimpleStorageResponse
+public class SimpleStorageResponse(HttpStatusCode status, string message)
 {
-    public HttpStatusCode Status { get; }
-        
-    public string Message { get; }
+    public HttpStatusCode Status { get; } = status;
 
-    public SimpleStorageResponse(HttpStatusCode status, string message)
-    {
-        Status = status;
-        Message = message;
-    }
+    public string Message { get; } = message;
 }

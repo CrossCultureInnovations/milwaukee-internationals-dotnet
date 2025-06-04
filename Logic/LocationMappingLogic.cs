@@ -11,20 +11,14 @@ using Models.Entities;
 
 namespace Logic;
 
-public class LocationMappingLogic :  BasicCrudLogicAbstract<LocationMapping>, ILocationMappingLogic
+public class LocationMappingLogic(
+    IEfRepository repository,
+    ILocationLogic locationLogic,
+    IConfigLogic configLogic,
+    IApiEventService apiEventService)
+    : BasicCrudLogicAbstract<LocationMapping>, ILocationMappingLogic
 {
-    private readonly IBasicCrud<LocationMapping> _dal;
-    private readonly ILocationLogic _locationLogic;
-    private readonly IConfigLogic _configLogic;
-    private readonly IApiEventService _apiEventService;
-
-    public LocationMappingLogic(IEfRepository repository, ILocationLogic locationLogic, IConfigLogic configLogic, IApiEventService apiEventService)
-    {
-        _dal = repository.For<LocationMapping>();
-        _locationLogic = locationLogic;
-        _configLogic = configLogic;
-        _apiEventService = apiEventService;
-    }
+    private readonly IBasicCrud<LocationMapping> _dal = repository.For<LocationMapping>();
 
     protected override IBasicCrud<LocationMapping> Repository()
     {
@@ -33,7 +27,7 @@ public class LocationMappingLogic :  BasicCrudLogicAbstract<LocationMapping>, IL
 
     protected override IApiEventService ApiEventService()
     {
-        return _apiEventService;
+        return apiEventService;
     }
     
     private static bool IsCyclicUtil(
@@ -67,7 +61,7 @@ public class LocationMappingLogic :  BasicCrudLogicAbstract<LocationMapping>, IL
 
     private async Task<bool> IsCyclic(List<LocationMapping> mappings)
     {
-        var locations = (await _locationLogic.GetAll()).ToList();
+        var locations = (await locationLogic.GetAll()).ToList();
         var graph = locations.ToDictionary(x => x, _ => new List<Location>());
         
         foreach (var mapping in mappings)
@@ -150,7 +144,7 @@ public class LocationMappingLogic :  BasicCrudLogicAbstract<LocationMapping>, IL
     
     public override async Task<IEnumerable<LocationMapping>> GetAll(string sortBy = null, bool? descending = null, Func<object, string, object> sortByModifier = null, params Expression<Func<LocationMapping, bool>>[] filters)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         Expression<Func<LocationMapping, bool>> yearFilterExpr = x => x.Year == globalConfigs.YearValue;
 

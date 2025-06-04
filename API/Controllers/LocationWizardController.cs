@@ -12,17 +12,9 @@ namespace API.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 [AuthorizeMiddleware(UserRoleEnum.Admin)]
 [Route("[controller]")]
-public class LocationWizardController : Controller
+public class LocationWizardController(ILocationMappingLogic locationMappingLogic, ILocationLogic locationLogic)
+    : Controller
 {
-    private readonly ILocationMappingLogic _locationMappingLogic;
-    private readonly ILocationLogic _locationLogic;
-
-    public LocationWizardController(ILocationMappingLogic locationMappingLogic, ILocationLogic locationLogic)
-    {
-        _locationMappingLogic = locationMappingLogic;
-        _locationLogic = locationLogic;
-    }
- 
     /// <summary>
     /// Returns location mapping view
     /// </summary>
@@ -31,8 +23,8 @@ public class LocationWizardController : Controller
     [Route("")]
     public async Task<IActionResult> Index()
     {
-        var locationMappings = (await _locationMappingLogic.GetAll()).ToList();
-        var locations = (await _locationLogic.GetAll()).ToList();
+        var locationMappings = (await locationMappingLogic.GetAll()).ToList();
+        var locations = (await locationLogic.GetAll()).ToList();
         
         return View((locationMappings, locations));
     }
@@ -47,7 +39,7 @@ public class LocationWizardController : Controller
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
     public async Task<IActionResult> Delete(int id)
     {
-        await _locationMappingLogic.Delete(id);
+        await locationMappingLogic.Delete(id);
 
         return RedirectToAction("Index");
     }
@@ -67,8 +59,8 @@ public class LocationWizardController : Controller
             TempData.Clear();
         }
         
-        var locationMapping = await _locationMappingLogic.Get(id);
-        var locations = (await _locationLogic.GetAll()).ToList();
+        var locationMapping = await locationMappingLogic.Get(id);
+        var locations = (await locationLogic.GetAll()).ToList();
 
         return View("Edit", (locationMapping, locations));
     }
@@ -84,7 +76,7 @@ public class LocationWizardController : Controller
     {
         try
         {
-            await _locationMappingLogic.Update(locationMapping.Id, locationMapping);
+            await locationMappingLogic.Update(locationMapping.Id, locationMapping);
 
             return RedirectToAction("Index");
         }
@@ -110,7 +102,7 @@ public class LocationWizardController : Controller
             TempData.Clear();
         }
         
-        var locations = (await _locationLogic.GetAll()).ToList();
+        var locations = (await locationLogic.GetAll()).ToList();
 
         return View("Save", (new LocationMapping(), locations));
     }
@@ -126,7 +118,7 @@ public class LocationWizardController : Controller
     {
         try
         {
-            await _locationMappingLogic.Save(locationMapping);
+            await locationMappingLogic.Save(locationMapping);
 
             return RedirectToAction("Index");
         }

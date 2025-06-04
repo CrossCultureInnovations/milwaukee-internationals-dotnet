@@ -7,21 +7,13 @@ using Models.ViewModels;
 
 namespace Logic;
 
-public class AttendanceLogic : IAttendanceLogic
+public class AttendanceLogic(
+    IStudentLogic studentLogic,
+    IDriverLogic driverLogic,
+    IEmailServiceApi emailServiceApi,
+    IApiEventService apiEventService)
+    : IAttendanceLogic
 {
-    private readonly IStudentLogic _studentLogic;
-    private readonly IDriverLogic _driverLogic;
-    private readonly IEmailServiceApi _emailServiceApi;
-    private readonly IApiEventService _apiEventService;
-
-    public AttendanceLogic(IStudentLogic studentLogic, IDriverLogic driverLogic, IEmailServiceApi emailServiceApi, IApiEventService apiEventService)
-    {
-        _studentLogic = studentLogic;
-        _driverLogic = driverLogic;
-        _emailServiceApi = emailServiceApi;
-        _apiEventService = apiEventService;
-    }
-        
     /// <summary>
     /// Set the attendance for student
     /// </summary>
@@ -29,13 +21,13 @@ public class AttendanceLogic : IAttendanceLogic
     /// <returns></returns>
     public async Task<bool> StudentSetAttendance(AttendanceViewModel attendanceViewModel)
     {
-        var student = await _studentLogic.Update(attendanceViewModel.Id, x =>
+        var student = await studentLogic.Update(attendanceViewModel.Id, x =>
         {
             // Set attendance
             x.IsPresent = attendanceViewModel.Attendance;
         });
 
-        await _apiEventService.RecordEvent(
+        await apiEventService.RecordEvent(
             $"Update student [{student.Fullname}] with ID: {student.Id} attendance to {attendanceViewModel.Attendance}");
 
         return true;
@@ -49,13 +41,13 @@ public class AttendanceLogic : IAttendanceLogic
     public async Task<bool> DriverSetAttendance(AttendanceViewModel attendanceViewModel)
     {
         // Set attendance
-        var driver = await _driverLogic.Update(attendanceViewModel.Id, x =>
+        var driver = await driverLogic.Update(attendanceViewModel.Id, x =>
         {
             // Set attendance
             x.IsPresent = attendanceViewModel.Attendance;
         });
 
-        await _apiEventService.RecordEvent(
+        await apiEventService.RecordEvent(
             $"Update driver [{driver.Fullname}] with ID: {driver.Id} attendance to {attendanceViewModel.Attendance}");
             
         return true;
@@ -67,11 +59,11 @@ public class AttendanceLogic : IAttendanceLogic
     /// <returns></returns>
     public async Task<bool> HandleStudentSendCheckIn()
     {
-        foreach (var x in await _studentLogic.GetAll())
+        foreach (var x in await studentLogic.GetAll())
         {
             var url = $"{ApiConstants.SiteUrl}/utility/EmailCheckIn/Student/{x.GenerateHash()}";
                 
-            await _emailServiceApi.SendEmailAsync([x.Email], "Tour Check-In", $@"
+            await emailServiceApi.SendEmailAsync([x.Email], "Tour Check-In", $@"
                     <h4>Please use this link to check-in</h4>
                     <br>
                     <p><a href=""{url}"">Link</a> ({url})</p>
@@ -80,7 +72,7 @@ public class AttendanceLogic : IAttendanceLogic
                 ");
         }
 
-        await _apiEventService.RecordEvent("Sent student check-in emails");
+        await apiEventService.RecordEvent("Sent student check-in emails");
             
         return true;
     }
@@ -91,11 +83,11 @@ public class AttendanceLogic : IAttendanceLogic
     /// <returns></returns>
     public async Task<bool> HandleDriverSendCheckIn()
     {
-        foreach (var x in await _driverLogic.GetAll())
+        foreach (var x in await driverLogic.GetAll())
         {
             var url = $"{ApiConstants.SiteUrl}/utility/EmailCheckIn/Driver/{x.GenerateHash()}";
                 
-            await _emailServiceApi.SendEmailAsync([x.Email], $"Tour Driver Check-In and Host Info ({DateTime.UtcNow.Year})", $@"
+            await emailServiceApi.SendEmailAsync([x.Email], $"Tour Driver Check-In and Host Info ({DateTime.UtcNow.Year})", $@"
                     <h4>Hello {x.Fullname},</h4>
                     <h4>Please use the following link to see details and to check-in</h4>
                     <p><a href=""{url}"">{url}</a></p>
@@ -108,7 +100,7 @@ public class AttendanceLogic : IAttendanceLogic
                 ");
         }
 
-        await _apiEventService.RecordEvent("Sent driver check-in emails");
+        await apiEventService.RecordEvent("Sent driver check-in emails");
 
         return true;
     }

@@ -10,15 +10,8 @@ namespace API.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 [AuthorizeMiddleware]
 [Route("[controller]")]
-public class DriverController : Controller
+public class DriverController(IDriverLogic driverLogic) : Controller
 {
-    private readonly IDriverLogic _driverLogic;
-
-    public DriverController(IDriverLogic driverLogic)
-    {
-        _driverLogic = driverLogic;
-    }
-        
     /// <summary>
     /// Returns driver view
     /// </summary>
@@ -27,7 +20,7 @@ public class DriverController : Controller
     [Route("")]
     public async Task<IActionResult> Index([FromQuery]string sortBy = null, [FromQuery]bool? descending = null)
     {
-        return View(await _driverLogic.GetAll(sortBy, descending));
+        return View(await driverLogic.GetAll(sortBy, descending));
     }
         
     /// <summary>
@@ -40,7 +33,7 @@ public class DriverController : Controller
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
     public async Task<IActionResult> Delete(int id)
     {
-        await _driverLogic.Delete(id);
+        await driverLogic.Delete(id);
 
         return RedirectToAction("Index");
     }
@@ -54,7 +47,7 @@ public class DriverController : Controller
     [Route("Edit/{id:int}")]
     public async Task<IActionResult> EditView(int id)
     {
-        var driver = await _driverLogic.Get(id);
+        var driver = await driverLogic.Get(id);
 
         return View("Edit", driver);
     }
@@ -68,7 +61,7 @@ public class DriverController : Controller
     [Route("Edit")]
     public async Task<IActionResult> EditHandler(Driver driver)
     {
-        await _driverLogic.Update(driver.Id, driver);
+        await driverLogic.Update(driver.Id, driver);
 
         return RedirectToAction("Index");
     }

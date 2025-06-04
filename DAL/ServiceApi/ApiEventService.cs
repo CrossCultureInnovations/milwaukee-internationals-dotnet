@@ -10,24 +10,18 @@ using Models.ViewModels.EventService;
 
 namespace DAL.ServiceApi;
 
-public class ApiEventService : IApiEventService
+public class ApiEventService(
+    IConfigLogic configLogic,
+    IHubContext<MessageHub> hubContext,
+    ILogger<ApiEventService> logger)
+    : IApiEventService
 {
-    private readonly IConfigLogic _configLogic;
-    private readonly IHubContext<MessageHub> _hubContext;
-    private readonly ILogger<ApiEventService> _logger;
     private LinkedList<ApiEvent> _events = [];
     private const int QueryLimit = 35;
 
-    public ApiEventService(IConfigLogic configLogic, IHubContext<MessageHub> hubContext, ILogger<ApiEventService> logger)
-    {
-        _configLogic = configLogic;
-        _hubContext = hubContext;
-        _logger = logger;
-    }
-
     public async Task RecordEvent(string description)
     {
-        _logger.LogTrace("{}", description);
+        logger.LogTrace("{}", description);
         
         var entity = new ApiEvent
         {
@@ -38,8 +32,8 @@ public class ApiEventService : IApiEventService
             PartitionKey = DateTimeOffset.Now.ToString("yyyy-MM-dd")
         };
 
-        await _hubContext.Clients.All.SendAsync("events", entity);
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        await hubContext.Clients.All.SendAsync("events", entity);
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         if (globalConfigs.RecordApiEvents)
         {

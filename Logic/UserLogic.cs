@@ -13,24 +13,16 @@ using Models.Enums;
 
 namespace Logic;
 
-public class UserLogic : BasicCrudLogicAbstract<User>, IUserLogic
+public class UserLogic(IEfRepository repository, UserManager<User> userManager, IApiEventService apiEventService)
+    : BasicCrudLogicAbstract<User>, IUserLogic
 {
-    private readonly IBasicCrud<User> _dal;
-    private readonly UserManager<User> _userManager;
-    private readonly IApiEventService _apiEventService;
-
-    public UserLogic(IEfRepository repository, UserManager<User> userManager, IApiEventService apiEventService)
-    {
-        _dal = repository.For<User>();
-        _userManager = userManager;
-        _apiEventService = apiEventService;
-    }
+    private readonly IBasicCrud<User> _dal = repository.For<User>();
 
     public override async Task<User> Get(int id)
     {
         var user = await base.Get(id);
         
-        var roles = await _userManager.GetRolesAsync(user);
+        var roles = await userManager.GetRolesAsync(user);
 
         user.UserRoleEnum = roles.Contains(UserRoleEnum.Admin.ToString())
             ? UserRoleEnum.Admin
@@ -56,7 +48,7 @@ public class UserLogic : BasicCrudLogicAbstract<User>, IUserLogic
         
     protected override IApiEventService ApiEventService()
     {
-        return _apiEventService;
+        return apiEventService;
     }
 
     public override async Task<IEnumerable<User>> GetAll(string sortBy = null, bool? descending = null, Func<object, string, object> sortByModifier = null, params Expression<Func<User, bool>>[] filters)
@@ -65,7 +57,7 @@ public class UserLogic : BasicCrudLogicAbstract<User>, IUserLogic
 
         foreach (var user in users)
         {
-            var roles = await _userManager.GetRolesAsync(user);
+            var roles = await userManager.GetRolesAsync(user);
 
             user.UserRoleEnum = roles.Contains(UserRoleEnum.Admin.ToString())
                 ? UserRoleEnum.Admin

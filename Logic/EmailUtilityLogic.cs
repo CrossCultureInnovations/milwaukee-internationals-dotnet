@@ -11,59 +11,39 @@ using Models.ViewModels;
 
 namespace Logic;
 
-public class EmailUtilityLogic :  IEmailUtilityLogic
+public class EmailUtilityLogic(
+    IConfigLogic configLogic,
+    IStudentLogic studentLogic,
+    IDriverLogic driverLogic,
+    IHostLogic hostLogic,
+    IUserLogic userLogic,
+    IEmailServiceApi emailServiceApiApi,
+    IApiEventService apiEventService,
+    IRegistrationLogic registrationLogic)
+    : IEmailUtilityLogic
 {
-    private readonly IConfigLogic _configLogic;
-    private readonly IUserLogic _userLogic;
-    private readonly IEmailServiceApi _emailServiceApiApi;
-    private readonly IApiEventService _apiEventService;
-    private readonly IRegistrationLogic _registrationLogic;
-    private readonly IStudentLogic _studentLogic;
-    private readonly IHostLogic _hostLogic;
-    private readonly IDriverLogic _driverLogic;
-
-    public EmailUtilityLogic(
-        IConfigLogic configLogic,
-        IStudentLogic studentLogic,
-        IDriverLogic driverLogic,
-        IHostLogic hostLogic,
-        IUserLogic userLogic,
-        IEmailServiceApi emailServiceApiApi,
-        IApiEventService apiEventService,
-        IRegistrationLogic registrationLogic)
-    {
-        _configLogic = configLogic;
-        _studentLogic = studentLogic;
-        _driverLogic = driverLogic;
-        _hostLogic = hostLogic;
-        _userLogic = userLogic;
-        _emailServiceApiApi = emailServiceApiApi;
-        _apiEventService = apiEventService;
-        _registrationLogic = registrationLogic;
-    }
-
     public async Task<EmailFormViewModel> GetEmailForm()
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
         
         var year = globalConfigs.YearValue;
             
         return new EmailFormViewModel
         {
-            AdminCount = (await _userLogic.GetAll()).Count(x => x.UserRoleEnum == UserRoleEnum.Admin),
-            StudentCount = (await _studentLogic.GetAll(year)).Count(),
-            DriverCount = (await _driverLogic.GetAll(year)).Count(),
-            HostCount = (await _hostLogic.GetAll(year)).Count(),
-            UserCount = (await _userLogic.GetAll()).Count()
+            AdminCount = (await userLogic.GetAll()).Count(x => x.UserRoleEnum == UserRoleEnum.Admin),
+            StudentCount = (await studentLogic.GetAll(year)).Count(),
+            DriverCount = (await driverLogic.GetAll(year)).Count(),
+            HostCount = (await hostLogic.GetAll(year)).Count(),
+            UserCount = (await userLogic.GetAll()).Count()
         };
     }
 
     public async Task<bool> HandleEventEmail(EmailEventViewModel emailEventViewModel)
     {
         // Send the email
-        await _emailServiceApiApi.SendEmailAsync(emailEventViewModel.Emails, emailEventViewModel.Subject, emailEventViewModel.Body);
+        await emailServiceApiApi.SendEmailAsync(emailEventViewModel.Emails, emailEventViewModel.Subject, emailEventViewModel.Body);
 
-        await _apiEventService.RecordEvent($"Sent form email [{emailEventViewModel.Subject}] to {string.Join(',', emailEventViewModel.Emails)}");
+        await apiEventService.RecordEvent($"Sent form email [{emailEventViewModel.Subject}] to {string.Join(',', emailEventViewModel.Emails)}");
 
         return true;
     }
@@ -75,7 +55,7 @@ public class EmailUtilityLogic :  IEmailUtilityLogic
     /// <returns></returns>
     public async Task<bool> HandleAdHocEmail(EmailFormViewModel emailFormViewModel)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         var year = globalConfigs.YearValue;
             
@@ -84,7 +64,7 @@ public class EmailUtilityLogic :  IEmailUtilityLogic
         // Add admin email
         if (emailFormViewModel.Admin)
         {
-            var admins = (await _userLogic.GetAll()).Where(x => x.UserRoleEnum == UserRoleEnum.Admin)
+            var admins = (await userLogic.GetAll()).Where(x => x.UserRoleEnum == UserRoleEnum.Admin)
                 .Select(x => x.Email)
                 .ToList();
 
@@ -94,28 +74,28 @@ public class EmailUtilityLogic :  IEmailUtilityLogic
         // Add student emails
         if (emailFormViewModel.Students)
         {
-            var students = await _studentLogic.GetAll(year);
+            var students = await studentLogic.GetAll(year);
             emailAddresses.AddRange(students.Select(x => x.Email).Where(x => !string.IsNullOrWhiteSpace(x)));
         }
 
         // Add driver emails
         if (emailFormViewModel.Drivers)
         {
-            var drivers = await _driverLogic.GetAll(year);
+            var drivers = await driverLogic.GetAll(year);
             emailAddresses.AddRange(drivers.Select(x => x.Email).Where(x => !string.IsNullOrWhiteSpace(x)));
         }
             
         // Add host emails
         if (emailFormViewModel.Hosts)
         {
-            var hosts = await _hostLogic.GetAll(year);
+            var hosts = await hostLogic.GetAll(year);
             emailAddresses.AddRange(hosts.Select(x => x.Email).Where(x => !string.IsNullOrWhiteSpace(x)));
         }
             
         // Add user emails
         if (emailFormViewModel.Users)
         {
-            var users = await _userLogic.GetAll();
+            var users = await userLogic.GetAll();
             emailAddresses.AddRange(users.Select(x => x.Email).Where(x => !string.IsNullOrWhiteSpace(x)));
         }
 
@@ -130,7 +110,7 @@ public class EmailUtilityLogic :  IEmailUtilityLogic
         emailAddresses = emailAddresses.Distinct().ToList();
 
         // Send the email
-        await _emailServiceApiApi.SendEmailAsync(
+        await emailServiceApiApi.SendEmailAsync(
             emailAddresses,
             emailFormViewModel.Subject, 
             emailFormViewModel.Message,
@@ -143,7 +123,7 @@ public class EmailUtilityLogic :  IEmailUtilityLogic
                 return (f.FileName, f.ContentType, base64File);
             })));
 
-        await _apiEventService.RecordEvent($"Sent ad-hoc email [{emailFormViewModel.Subject}] to {string.Join(',', emailAddresses)}");
+        await apiEventService.RecordEvent($"Sent ad-hoc email [{emailFormViewModel.Subject}] to {string.Join(',', emailAddresses)}");
 
         return true;
     }
@@ -160,14 +140,14 @@ public class EmailUtilityLogic :  IEmailUtilityLogic
         switch (entitiesEnum)
         {
             case EntitiesEnum.Student:
-                await _studentLogic.Update(id, student =>
+                await studentLogic.Update(id, student =>
                 {
                     // Checked-in
                     student.IsPresent = present;
                 });
                 break;
             case EntitiesEnum.Driver:
-                await _driverLogic.Update(id, driver =>
+                await driverLogic.Update(id, driver =>
                 {
                     // Checked-in
                     driver.IsPresent = present;
@@ -177,32 +157,32 @@ public class EmailUtilityLogic :  IEmailUtilityLogic
                 throw new ArgumentOutOfRangeException(nameof(entitiesEnum), entitiesEnum, null);
         }
             
-        await _apiEventService.RecordEvent($"Handled [{entitiesEnum.GetName()}] check-in email response with ID: {id}");
+        await apiEventService.RecordEvent($"Handled [{entitiesEnum.GetName()}] check-in email response with ID: {id}");
 
         return true;
     }
 
     public async Task SendConfirmationEmail(EntitiesEnum rolesEnum)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         var year = globalConfigs.YearValue;
 
         switch (rolesEnum)
         {
             case EntitiesEnum.Student:
-                await Task.WhenAll((await _studentLogic.GetAll(year))
-                    .Select(student => _registrationLogic.SendStudentEmail(student)));
+                await Task.WhenAll((await studentLogic.GetAll(year))
+                    .Select(student => registrationLogic.SendStudentEmail(student)));
 
                 break;
             case EntitiesEnum.Driver:
-                await Task.WhenAll((await _driverLogic.GetAll(year))
-                    .Select(driver => _registrationLogic.SendDriverEmail(driver)));
+                await Task.WhenAll((await driverLogic.GetAll(year))
+                    .Select(driver => registrationLogic.SendDriverEmail(driver)));
 
                 break;
             case EntitiesEnum.Host:
-                await Task.WhenAll((await _hostLogic.GetAll(year))
-                    .Select(host => _registrationLogic.SendHostEmail(host)));
+                await Task.WhenAll((await hostLogic.GetAll(year))
+                    .Select(host => registrationLogic.SendHostEmail(host)));
 
                 break;
             default:

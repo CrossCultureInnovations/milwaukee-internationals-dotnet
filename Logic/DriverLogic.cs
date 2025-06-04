@@ -14,18 +14,10 @@ using static Logic.Utilities.RegistrationUtility;
 
 namespace Logic;
 
-public class DriverLogic : BasicCrudLogicAbstract<Driver>, IDriverLogic
+public class DriverLogic(IEfRepository repository, IConfigLogic configLogic, IApiEventService apiEventService)
+    : BasicCrudLogicAbstract<Driver>, IDriverLogic
 {
-    private readonly IBasicCrud<Driver> _dal;
-    private readonly IConfigLogic _configLogic;
-    private readonly IApiEventService _apiEventService;
-
-    public DriverLogic(IEfRepository repository, IConfigLogic configLogic, IApiEventService apiEventService)
-    {
-        _dal = repository.For<Driver>();
-        _configLogic = configLogic;
-        _apiEventService = apiEventService;
-    }
+    private readonly IBasicCrud<Driver> _dal = repository.For<Driver>();
 
     /// <summary>
     /// Make sure display ID is not null or empty
@@ -98,12 +90,12 @@ public class DriverLogic : BasicCrudLogicAbstract<Driver>, IDriverLogic
 
     protected override IApiEventService ApiEventService()
     {
-        return _apiEventService;
+        return apiEventService;
     }
 
     public override async Task<IEnumerable<Driver>> GetAll(string sortBy = null, bool? descending = null, Func<object, string, object> sortByModifier = null, params Expression<Func<Driver, bool>>[] filters)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
         
         Expression<Func<Driver, bool>> yearFilterExpr = x => x.Year == globalConfigs.YearValue;
 

@@ -11,24 +11,15 @@ namespace API.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 [AuthorizeMiddleware]
 [Route("[controller]")]
-public class ProfileController : Controller
+public class ProfileController(UserManager<User> userManager, IProfileLogic profileLogic) : Controller
 {
-    private readonly UserManager<User> _userManager;
-    private readonly IProfileLogic _profileLogic;
-
-    public ProfileController(UserManager<User> userManager, IProfileLogic profileLogic)
-    {
-        _userManager = userManager;
-        _profileLogic = profileLogic;
-    }
-
     [HttpGet]
     [Route("")]
     public async Task<IActionResult> Index()
     {
         if (User.Identity is { IsAuthenticated: true })
         {
-            return View(_profileLogic.ResolveProfile(await _userManager.FindByNameAsync(User.Identity.Name)));
+            return View(profileLogic.ResolveProfile(await userManager.FindByNameAsync(User.Identity.Name)));
         }
 
         return new RedirectResult("~/");
@@ -38,7 +29,7 @@ public class ProfileController : Controller
     [Route("")]
     public async Task<IActionResult> Update(ProfileViewModel profileViewModel)
     {
-        await _profileLogic.UpdateUser(profileViewModel);
+        await profileLogic.UpdateUser(profileViewModel);
 
         return new RedirectResult("~/");
     }

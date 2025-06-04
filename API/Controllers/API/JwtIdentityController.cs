@@ -16,26 +16,15 @@ namespace API.Controllers.API;
 
 [AllowAnonymous]
 [Route("api/[controller]")]
-public class JwtIdentityController : AbstractIdentityController
+public class JwtIdentityController(
+    JwtSettings jwtSettings,
+    UserManager<User> userManager,
+    SignInManager<User> signManager,
+    RoleManager<IdentityRole<int>> roleManager,
+    IUserLogic userLogic,
+    IApiEventService apiEventService)
+    : AbstractIdentityController
 {
-    private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signManager;
-    private readonly RoleManager<IdentityRole<int>> _roleManager;
-    private readonly JwtSettings _jwtSettings;
-    private readonly IUserLogic _userLogic;
-    private readonly IApiEventService _apiEventService;
-
-    public JwtIdentityController(JwtSettings jwtSettings, UserManager<User> userManager,
-        SignInManager<User> signManager, RoleManager<IdentityRole<int>> roleManager, IUserLogic userLogic, IApiEventService apiEventService)
-    {
-        _jwtSettings = jwtSettings;
-        _userManager = userManager;
-        _signManager = signManager;
-        _roleManager = roleManager;
-        _userLogic = userLogic;
-        _apiEventService = apiEventService;
-    }
-
     [HttpGet]
     [Route("")]
     [SwaggerOperation("AccountInfo")]
@@ -43,7 +32,7 @@ public class JwtIdentityController : AbstractIdentityController
     {
         if (User.Identity is { IsAuthenticated: true })
         {
-            var user = await _userManager.FindByEmailAsync(User.Identity.Name);
+            var user = await userManager.FindByEmailAsync(User.Identity.Name);
                 
             return Ok(user);
         }
@@ -54,25 +43,25 @@ public class JwtIdentityController : AbstractIdentityController
     [NonAction]
     protected override UserManager<User> ResolveUserManager()
     {
-        return _userManager;
+        return userManager;
     }
 
     [NonAction]
     protected override SignInManager<User> ResolveSignInManager()
     {
-        return _signManager;
+        return signManager;
     }
 
     [NonAction]
     protected override RoleManager<IdentityRole<int>> ResolveRoleManager()
     {
-        return _roleManager;
+        return roleManager;
     }
 
     [NonAction]
     protected override JwtSettings ResolveJwtSettings()
     {
-        return _jwtSettings;
+        return jwtSettings;
     }
 
     [HttpPost]
@@ -94,12 +83,12 @@ public class JwtIdentityController : AbstractIdentityController
 
         if (result)
         {
-            await _apiEventService.RecordEvent($"User [{registerViewModel.Username}] successfully register");
+            await apiEventService.RecordEvent($"User [{registerViewModel.Username}] successfully register");
 
             return Ok("Successfully registered");
         }
             
-        await _apiEventService.RecordEvent($"User [{registerViewModel.Username}] failed to register");
+        await apiEventService.RecordEvent($"User [{registerViewModel.Username}] failed to register");
 
         return BadRequest("Failed to register");
     }
@@ -115,14 +104,14 @@ public class JwtIdentityController : AbstractIdentityController
             
         if (result)
         {
-            await _apiEventService.RecordEvent($"User [{loginViewModel.Username}] logged in successfully");
+            await apiEventService.RecordEvent($"User [{loginViewModel.Username}] logged in successfully");
 
-            var user = (await _userLogic.GetAll()).First(x =>
+            var user = (await userLogic.GetAll()).First(x =>
                 x.UserName.Equals(loginViewModel.Username, StringComparison.OrdinalIgnoreCase));
 
             user.LastLoggedInDate = DateTimeOffset.Now;
 
-            await _userLogic.Update(user.Id, user);
+            await userLogic.Update(user.Id, user);
 
             var token = ResolveToken(user);
 
@@ -134,7 +123,7 @@ public class JwtIdentityController : AbstractIdentityController
             });
         }
 
-        await _apiEventService.RecordEvent($"User [{loginViewModel.Username}] failed to login because of {message}");
+        await apiEventService.RecordEvent($"User [{loginViewModel.Username}] failed to login because of {message}");
 
         return Unauthorized();
     }
@@ -149,7 +138,7 @@ public class JwtIdentityController : AbstractIdentityController
             
         await base.Logout();
             
-        await _apiEventService.RecordEvent($"User [{result.UserName}] successfully logged-out");
+        await apiEventService.RecordEvent($"User [{result.UserName}] successfully logged-out");
 
         return Ok("Successfully logged out");
     }
@@ -162,7 +151,7 @@ public class JwtIdentityController : AbstractIdentityController
     {
         if (User.Identity != null)
         {
-            var user = await _userManager.FindByEmailAsync(User.Identity.Name);
+            var user = await userManager.FindByEmailAsync(User.Identity.Name);
                 
             var token = base.ResolveToken(user);
 

@@ -5,15 +5,8 @@ using Models.ViewModels;
 
 namespace Logic;
 
-public class ProfileLogic : IProfileLogic
+public class ProfileLogic(IUserLogic userLogic) : IProfileLogic
 {
-    private readonly IUserLogic _userLogic;
-
-    public ProfileLogic(IUserLogic userLogic)
-    {
-        _userLogic = userLogic;
-    }
-        
     public ProfileViewModel ResolveProfile(User user)
     {
         // Empty profile
@@ -35,7 +28,7 @@ public class ProfileLogic : IProfileLogic
 
     public async Task UpdateUser(ProfileViewModel profile)
     {
-        await _userLogic.Update(profile.Id, user =>
+        await userLogic.Update(profile.Id, user =>
         {
             user.Fullname = profile.Fullname;
             user.Email = profile.Email;

@@ -12,18 +12,11 @@ namespace API.Controllers.API;
 
 [AuthorizeMiddleware]
 [Route("api/[controller]")]
-public class LocationController : BasicCrudController<Location>
+public class LocationController(ILocationLogic locationLogic) : BasicCrudController<Location>
 {
-    private readonly ILocationLogic _locationLogic;
-
-    public LocationController(ILocationLogic locationLogic)
-    {
-        _locationLogic = locationLogic;
-    }
-
     protected override IBasicCrudLogic<Location> BasicCrudLogic()
     {
-        return _locationLogic;
+        return locationLogic;
     }
     
     [AllowAnonymous]

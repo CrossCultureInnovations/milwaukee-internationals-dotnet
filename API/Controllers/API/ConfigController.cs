@@ -8,20 +8,13 @@ namespace API.Controllers.API;
 
 [AuthorizeMiddleware]
 [Route("api/[controller]")]
-public class ConfigController : Controller
+public class ConfigController(IConfigLogic configLogic) : Controller
 {
-    private readonly IConfigLogic _configLogic;
-
-    public ConfigController(IConfigLogic configLogic)
-    {
-        _configLogic = configLogic;
-    }
-        
     [HttpGet]
     [Route("")]
     [SwaggerOperation("Status")]
     public async Task<IActionResult> Status()
     {
-        return Ok(await _configLogic.ResolveGlobalConfig());
+        return Ok(await configLogic.ResolveGlobalConfig());
     }
 }

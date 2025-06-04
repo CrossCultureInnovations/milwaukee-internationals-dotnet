@@ -4,17 +4,10 @@ using Models.Entities;
 
 namespace DAL.Utilities;
 
-public class CustomUserIdProvider : IUserIdProvider
+public class CustomUserIdProvider(UserManager<User> userManager) : IUserIdProvider
 {
-    private readonly UserManager<User> _userManager;
-
-    public CustomUserIdProvider(UserManager<User> userManager)
-    {
-        _userManager = userManager;
-    }
-
     public string GetUserId(HubConnectionContext connection)
     {
-        return _userManager.FindByNameAsync(connection.User.Identity!.Name).Result.Id.ToString();
+        return userManager.FindByNameAsync(connection.User.Identity!.Name).Result.Id.ToString();
     }
 }

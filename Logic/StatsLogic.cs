@@ -11,27 +11,18 @@ using Models.ViewModels;
 
 namespace Logic;
 
-public class StatsLogic : IStatsLogic
+public class StatsLogic(IEfRepository repository, IConfigLogic configLogic) : IStatsLogic
 {
-    private readonly IConfigLogic _configLogic;
-    private readonly IBasicCrud<Student> _studentDal;
-    private readonly IBasicCrud<Driver> _driverDal;
-    private readonly IBasicCrud<Host> _hostDal;
+    private readonly IBasicCrud<Student> _studentDal = repository.For<Student>();
+    private readonly IBasicCrud<Driver> _driverDal = repository.For<Driver>();
+    private readonly IBasicCrud<Host> _hostDal = repository.For<Host>();
 
-    public StatsLogic(IEfRepository repository, IConfigLogic configLogic)
-    {
-        _configLogic = configLogic;
-        _studentDal = repository.For<Student>();
-        _driverDal = repository.For<Driver>();
-        _hostDal = repository.For<Host>();
-    }
-    
     public async Task<List<StatsViewModel>> GetStats()
     {
         var result = new List<StatsViewModel>();
         var countryDistribution = await GetCountryDistribution();
         
-        foreach (var year in _configLogic.GetYears())
+        foreach (var year in configLogic.GetYears())
         {
             var students = (await _studentDal.GetAll<Student>(filterExprs: [
                 x => x.Year == year
@@ -71,7 +62,7 @@ public class StatsLogic : IStatsLogic
     {
         var result = new Dictionary<string, Dictionary<string, int>>();
         
-        foreach (var year in _configLogic.GetYears())
+        foreach (var year in configLogic.GetYears())
         {
             var countDrivers = await _driverDal.Count([x => x.Year == year && x.Role == RolesEnum.Driver]);
 

@@ -9,19 +9,9 @@ namespace API.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 [AuthorizeMiddleware]
 [Route("[controller]")]
-public class MappingController : Controller
+public class MappingController(IStudentLogic studentLogic, IDriverLogic driverLogic, ISmsUtilityLogic smsUtilityLogic)
+    : Controller
 {
-    private readonly IStudentLogic _studentLogic;
-    private readonly IDriverLogic _driverLogic;
-    private readonly ISmsUtilityLogic _smsUtilityLogic;
-
-    public MappingController(IStudentLogic studentLogic, IDriverLogic driverLogic, ISmsUtilityLogic smsUtilityLogic)
-    {
-        _studentLogic = studentLogic;
-        _driverLogic = driverLogic;
-        _smsUtilityLogic = smsUtilityLogic;
-    }
-        
     // GET the view
     [HttpGet]
     public IActionResult Index()
@@ -37,7 +27,7 @@ public class MappingController : Controller
     [Route("StudentDriverMapping")]
     public async Task<IActionResult> StudentDriverMapping()
     {
-        var students = (await _studentLogic.GetAll()).ToList();
+        var students = (await studentLogic.GetAll()).ToList();
             
         return View(students);
     }
@@ -50,7 +40,7 @@ public class MappingController : Controller
     [Route("DriverHostMapping")]
     public async Task<IActionResult> DriverHostMapping()
     {
-        var drivers = (await _driverLogic.GetAll()).ToList();
+        var drivers = (await driverLogic.GetAll()).ToList();
 
         return View(drivers);
     }
@@ -63,7 +53,7 @@ public class MappingController : Controller
     [Route("HostHeadsUpSms")]
     public async Task<IActionResult> HostHeadsUpSms()
     {
-        await _smsUtilityLogic.HandleHostSms();
+        await smsUtilityLogic.HandleHostSms();
 
         return RedirectToAction("DriverHostMapping");
     }

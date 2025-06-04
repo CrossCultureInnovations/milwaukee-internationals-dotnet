@@ -10,15 +10,8 @@ namespace API.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 [AuthorizeMiddleware]
 [Route("[controller]")]
-public class EventController : Controller
+public class EventController(IEventLogic eventLogic) : Controller
 {
-    private readonly IEventLogic _eventLogic;
-
-    public EventController(IEventLogic eventLogic)
-    {
-        _eventLogic = eventLogic;
-    }
-        
     /// <summary>
     /// Returns driver view
     /// </summary>
@@ -27,7 +20,7 @@ public class EventController : Controller
     [Route("")]
     public async Task<IActionResult> Index()
     {
-        var events = await _eventLogic.GetAll();
+        var events = await eventLogic.GetAll();
             
         return View(events);
     }
@@ -41,7 +34,7 @@ public class EventController : Controller
     [Route("Delete/{id:int}")]
     public async Task<IActionResult> Delete([FromRoute] int id)
     {
-        await _eventLogic.Delete(id);
+        await eventLogic.Delete(id);
 
         return RedirectToAction("Index");
     }
@@ -55,7 +48,7 @@ public class EventController : Controller
     [Route("Edit/{id:int}")]
     public async Task<IActionResult> Edit([FromRoute] int id)
     {
-        var @event = await _eventLogic.Get(id);
+        var @event = await eventLogic.Get(id);
 
         return View(@event);
     }
@@ -69,7 +62,7 @@ public class EventController : Controller
     [Route("Edit/{id:int}")]
     public async Task<IActionResult> EditHandler([FromRoute]int id, [FromBody]Event @event)
     {
-        await _eventLogic.Update(id, @event);
+        await eventLogic.Update(id, @event);
 
         return RedirectToAction("Index");
     }

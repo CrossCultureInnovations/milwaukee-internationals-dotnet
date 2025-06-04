@@ -10,21 +10,14 @@ namespace API.Controllers.API;
 
 [AuthorizeMiddleware]
 [Route("api/[controller]")]
-public class DriverHostMappingController : Controller
+public class DriverHostMappingController(IDriverHostMappingLogic driverHostMappingLogic) : Controller
 {
-    private readonly IDriverHostMappingLogic _driverHostMappingLogic;
-
-    public DriverHostMappingController(IDriverHostMappingLogic driverHostMappingLogic)
-    {
-        _driverHostMappingLogic = driverHostMappingLogic;
-    }
-
     [HttpGet]
     [Route("Status")]
     [SwaggerOperation("DriverHostMappingStatus")]
     public async Task<IActionResult> DriverHostMappingStatus()
     {
-        return Ok(await _driverHostMappingLogic.MappingStatus());
+        return Ok(await driverHostMappingLogic.MappingStatus());
     }
         
     /// <summary>
@@ -36,7 +29,7 @@ public class DriverHostMappingController : Controller
     [SwaggerOperation("DriverHostMappingMap")]
     public async Task<IActionResult> DriverHostMappingMap([FromBody] NewDriverHostMappingViewModel newDriverHostMappingViewModel)
     {
-        return Ok(await _driverHostMappingLogic.MapDriverToHost(newDriverHostMappingViewModel));
+        return Ok(await driverHostMappingLogic.MapDriverToHost(newDriverHostMappingViewModel));
     }
         
     /// <summary>
@@ -48,7 +41,7 @@ public class DriverHostMappingController : Controller
     [SwaggerOperation("DriverHostMappingUnMap")]
     public async Task<IActionResult> DriverHostMappingUnMap([FromBody] NewDriverHostMappingViewModel newDriverHostMappingViewModel)
     {
-        return Ok(await _driverHostMappingLogic.UnMapDriverToHost(newDriverHostMappingViewModel));
+        return Ok(await driverHostMappingLogic.UnMapDriverToHost(newDriverHostMappingViewModel));
     }
         
     /// <summary>
@@ -61,6 +54,6 @@ public class DriverHostMappingController : Controller
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
     public async Task<IActionResult> EmailMappings()
     {
-        return Ok(await _driverHostMappingLogic.EmailMappings());
+        return Ok(await driverHostMappingLogic.EmailMappings());
     }
 }

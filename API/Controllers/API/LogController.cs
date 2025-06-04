@@ -9,22 +9,16 @@ namespace API.Controllers.API;
 
 [AllowAnonymous]
 [Route("api/[controller]")]
-public class LogController : Controller
+public class LogController(IApiEventService apiEventService, ILogger<LogController> logger)
+    : Controller
 {
-    private readonly IApiEventService _apiEventService;
-    private readonly ILogger<LogController> _logger;
-
-    public LogController(IApiEventService apiEventService, ILogger<LogController> logger)
-    {
-        _apiEventService = apiEventService;
-        _logger = logger;
-    }
+    private readonly ILogger<LogController> _logger = logger;
 
     [HttpPost]
     [Route("")]
     public async Task<IActionResult> Record([FromBody]object log)
     {
-        await _apiEventService.RecordEvent($"Fallback http Mobile app log: {JsonConvert.SerializeObject(log)}");
+        await apiEventService.RecordEvent($"Fallback http Mobile app log: {JsonConvert.SerializeObject(log)}");
         
         return Ok("Recorded");
     }

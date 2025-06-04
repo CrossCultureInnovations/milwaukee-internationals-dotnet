@@ -8,19 +8,14 @@ using Models.Entities;
 
 namespace DAL;
 
-public class ConfigLogic : IConfigLogic
+public class ConfigLogic(IEfRepository efRepository) : IConfigLogic
 {
     /// <summary>
     /// This is the year when milwaukee-internationals started
     /// </summary>
     private const int StartYear = 2017; // DO-NOT CHANGE!
 
-    private readonly IBasicCrud<GlobalConfigs> _globalConfigCrud;
-
-    public ConfigLogic(IEfRepository efRepository)
-    {
-        _globalConfigCrud = efRepository.For<GlobalConfigs>();
-    }
+    private readonly IBasicCrud<GlobalConfigs> _globalConfigCrud = efRepository.For<GlobalConfigs>();
 
     public async Task<GlobalConfigs> ResolveGlobalConfig()
     {

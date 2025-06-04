@@ -11,21 +11,14 @@ using Models.ViewModels;
 namespace API.Controllers;
 
 [Route("[controller]")]
-public class SmsController : Controller
+public class SmsController(ISmsUtilityLogic smsUtilityLogic) : Controller
 {
-    private readonly ISmsUtilityLogic _smsUtilityLogic;
-
-    public SmsController(ISmsUtilityLogic smsUtilityLogic)
-    {
-        _smsUtilityLogic = smsUtilityLogic;
-    }
-
     [HttpGet]
     [Route("Driver")]
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
     public async Task<ActionResult> SendDriverSms()
     {
-        await _smsUtilityLogic.HandleDriverSms();
+        await smsUtilityLogic.HandleDriverSms();
 
         return RedirectToAction("Driver", "Attendance");
     }
@@ -35,7 +28,7 @@ public class SmsController : Controller
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
     public async Task<ActionResult> SendStudentSms()
     {
-        await _smsUtilityLogic.HandleStudentSms();
+        await smsUtilityLogic.HandleStudentSms();
 
         return RedirectToAction("Student", "Attendance");
     }
@@ -45,7 +38,7 @@ public class SmsController : Controller
     [AllowAnonymous]
     public async Task<ActionResult> IncomingSms([FromBody]IncomingSmsViewModel body)
     {
-        await _smsUtilityLogic.IncomingSms(body);
+        await smsUtilityLogic.IncomingSms(body);
 
         return Ok("received");
     }

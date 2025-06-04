@@ -12,20 +12,14 @@ using Models.ViewModels;
 
 namespace Logic;
 
-public class EventLogic : BasicCrudLogicAbstract<Event>, IEventLogic
+public class EventLogic(
+    IEfRepository repository,
+    IStudentLogic studentLogic,
+    IConfigLogic configLogic,
+    IApiEventService apiEventService)
+    : BasicCrudLogicAbstract<Event>, IEventLogic
 {
-    private readonly IBasicCrud<Event> _dal;
-    private readonly IStudentLogic _studentLogic;
-    private readonly IConfigLogic _configLogic;
-    private readonly IApiEventService _apiEventService;
-
-    public EventLogic(IEfRepository repository, IStudentLogic studentLogic, IConfigLogic configLogic, IApiEventService apiEventService)
-    {
-        _dal = repository.For<Event>();
-        _studentLogic = studentLogic;
-        _configLogic = configLogic;
-        _apiEventService = apiEventService;
-    }
+    private readonly IBasicCrud<Event> _dal = repository.For<Event>();
 
     protected override IBasicCrud<Event> Repository()
     {
@@ -34,12 +28,12 @@ public class EventLogic : BasicCrudLogicAbstract<Event>, IEventLogic
         
     protected override IApiEventService ApiEventService()
     {
-        return _apiEventService;
+        return apiEventService;
     }
 
     public override async Task<IEnumerable<Event>> GetAll(string sortBy = null, bool? descending = null, Func<object, string, object> sortByModifier = null, params Expression<Func<Event, bool>>[] filters)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         Expression<Func<Event, bool>> yearFilterExpr = x => x.Year == globalConfigs.YearValue;
 
@@ -69,7 +63,7 @@ public class EventLogic : BasicCrudLogicAbstract<Event>, IEventLogic
         return new EventManagementViewModel
         {
             Event = @event,
-            AvailableStudents = (await _studentLogic.GetAll())
+            AvailableStudents = (await studentLogic.GetAll())
                 .Where(x => @event.Students.All(y => y.Student != x))
         };
     }
@@ -83,7 +77,7 @@ public class EventLogic : BasicCrudLogicAbstract<Event>, IEventLogic
     public async Task<bool> MapStudent(int eventId, int studentId)
     {
         // Gets the student by Id
-        var student = await _studentLogic.Get(studentId);
+        var student = await studentLogic.Get(studentId);
 
         var eventOriginal = await Get(eventId);
 

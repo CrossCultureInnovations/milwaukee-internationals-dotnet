@@ -8,19 +8,12 @@ using Newtonsoft.Json;
 namespace DAL.Utilities;
 
 [AllowAnonymous]
-public class LogHub : Hub
+public class LogHub(ILogger<LogHub> logger, IApiEventService apiEventService) : Hub
 {
-    private readonly ILogger<LogHub> _logger;
-    private readonly IApiEventService _apiEventService;
+    private readonly ILogger<LogHub> _logger = logger;
 
-    public LogHub(ILogger<LogHub> logger, IApiEventService apiEventService)
-    {
-        _logger = logger;
-        _apiEventService = apiEventService;
-    }
-    
     public async Task Sink(object props)
     {
-        await _apiEventService.RecordEvent($"Mobile app log: {JsonConvert.SerializeObject(props)}");
+        await apiEventService.RecordEvent($"Mobile app log: {JsonConvert.SerializeObject(props)}");
     }
 }

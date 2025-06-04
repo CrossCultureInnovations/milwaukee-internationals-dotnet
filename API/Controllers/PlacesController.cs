@@ -10,22 +10,15 @@ namespace API.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 [AllowAnonymous]
 [Route("[controller]")]
-public class PlacesController : Controller
+public class PlacesController(ILocationLogic locationLogic) : Controller
 {
-    private readonly ILocationLogic _locationLogic;
-
-    public PlacesController(ILocationLogic locationLogic)
-    {
-        _locationLogic = locationLogic;
-    }
-    
     [HttpGet]
     [Route("{year:int?}")]
     public async Task<IActionResult> Place(int? year)
     {
         year ??= DateTime.Now.Year;
         
-        var model = ((await _locationLogic.GetAll(year.Value)).ToList(), year.Value);
+        var model = ((await locationLogic.GetAll(year.Value)).ToList(), year.Value);
         
         return View(model);
     }

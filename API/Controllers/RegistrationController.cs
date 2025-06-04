@@ -18,17 +18,9 @@ namespace API.Controllers;
 [AllowAnonymous]
 [ApiExplorerSettings(IgnoreApi = true)]
 [Route("[controller]")]
-public class RegistrationController : Controller
+public class RegistrationController(IRegistrationLogic registrationLogic, IConfiguration configuration)
+    : Controller
 {
-    private readonly IRegistrationLogic _registrationLogic;
-    private readonly IConfiguration _configuration;
-
-    public RegistrationController(IRegistrationLogic registrationLogic, IConfiguration configuration)
-    {
-        _registrationLogic = registrationLogic;
-        _configuration = configuration;
-    }
-        
     /// <summary>
     /// Returns registration page for drivers
     /// </summary>
@@ -59,7 +51,7 @@ public class RegistrationController : Controller
     [Route("Driver")]
     public async Task<IActionResult> Driver()
     {
-        if (User.Identity is { IsAuthenticated: false } && !await _registrationLogic.IsRegisterDriverOpen())
+        if (User.Identity is { IsAuthenticated: false } && !await registrationLogic.IsRegisterDriverOpen())
         {
             return View("DriverSorryClosed");
         }
@@ -83,7 +75,7 @@ public class RegistrationController : Controller
     {
         try
         {
-            await _registrationLogic.RegisterDriver(driver);
+            await registrationLogic.RegisterDriver(driver);
 
             ModelState.ClearModelStateErrors();
 
@@ -101,7 +93,7 @@ public class RegistrationController : Controller
     [Route("Student")]
     public async Task<IActionResult> Student()
     {
-        if (User.Identity is { IsAuthenticated: false } && !await _registrationLogic.IsRegisterStudentOpen())
+        if (User.Identity is { IsAuthenticated: false } && !await registrationLogic.IsRegisterStudentOpen())
         {
             return View("StudentSorryClosed");
         }
@@ -135,7 +127,7 @@ public class RegistrationController : Controller
                 // collect data for post request
                 var dicData = new Dictionary<string, string>
                 {
-                    ["secret"] = _configuration.GetValue<string>("HCPATHCA_SECRET"),
+                    ["secret"] = configuration.GetValue<string>("HCPATHCA_SECRET"),
                     ["response"] = hCaptchaToken
                 };
 
@@ -157,7 +149,7 @@ public class RegistrationController : Controller
                 }
             }
 
-            await _registrationLogic.RegisterStudent(student);
+            await registrationLogic.RegisterStudent(student);
 
             ModelState.ClearModelStateErrors();
 
@@ -196,7 +188,7 @@ public class RegistrationController : Controller
     {
         try
         {
-            await _registrationLogic.RegisterHost(host);
+            await registrationLogic.RegisterHost(host);
 
             ModelState.ClearModelStateErrors();
 
@@ -229,7 +221,7 @@ public class RegistrationController : Controller
     {
         try
         {
-            await _registrationLogic.RegisterEvent(@event);
+            await registrationLogic.RegisterEvent(@event);
 
             ModelState.ClearModelStateErrors();
 
@@ -262,7 +254,7 @@ public class RegistrationController : Controller
     {
         try
         {
-            await _registrationLogic.RegisterLocation(location);
+            await registrationLogic.RegisterLocation(location);
 
             ModelState.ClearModelStateErrors();
 

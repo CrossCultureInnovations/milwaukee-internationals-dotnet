@@ -13,19 +13,12 @@ namespace API.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 [AllowAnonymous]
 [Route("[controller]")]
-public class PasswordResetController : Controller
+public class PasswordResetController(
+    UserManager<User> userManager,
+    IUserLogic userLogic,
+    IPasswordResetLogic passwordResetLogic)
+    : Controller
 {
-    private readonly UserManager<User> _userManager;
-    private readonly IUserLogic _userLogic;
-    private readonly IPasswordResetLogic _passwordResetLogic;
-
-    public PasswordResetController(UserManager<User> userManager, IUserLogic userLogic, IPasswordResetLogic passwordResetLogic)
-    {
-        _userManager = userManager;
-        _userLogic = userLogic;
-        _passwordResetLogic = passwordResetLogic;
-    }
-
     [HttpGet]
     [Route("")]
     public IActionResult PasswordResetRequest()
@@ -49,7 +42,7 @@ public class PasswordResetController : Controller
     [Route("")]
     public async Task<IActionResult> PasswordResetRequestHandler(PasswordResetRequestViewModel requestViewModel)
     {
-        var user = (await _userLogic.GetAll()).FirstOrDefault(x =>
+        var user = (await userLogic.GetAll()).FirstOrDefault(x =>
             string.Equals(x.Email, requestViewModel.Email, StringComparison.OrdinalIgnoreCase) &&
             string.Equals(x.UserName, requestViewModel.Username, StringComparison.OrdinalIgnoreCase));
 
@@ -60,9 +53,9 @@ public class PasswordResetController : Controller
             return RedirectToAction("PasswordResetRequest");
         }
 
-        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
 
-        await _passwordResetLogic.SendPasswordResetEmail(user, token);
+        await passwordResetLogic.SendPasswordResetEmail(user, token);
             
         TempData["Message"] = "Successfully sent the password reset email. Please check your email!";
 
@@ -85,9 +78,9 @@ public class PasswordResetController : Controller
             
         TempData.Clear();
 
-        var user = await _userLogic.Get(userId);
+        var user = await userLogic.Get(userId);
             
-        var isResetTokenValid = await _userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultProvider, "ResetPassword", token);
+        var isResetTokenValid = await userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultProvider, "ResetPassword", token);
             
         if (!isResetTokenValid)
         {
@@ -118,9 +111,9 @@ public class PasswordResetController : Controller
             return RedirectToAction("PasswordReset");
         }
 
-        var user = await _userManager.FindByIdAsync(passwordResetViewModel.Id.ToString());
+        var user = await userManager.FindByIdAsync(passwordResetViewModel.Id.ToString());
             
-        var isResetTokenValid = await _userManager.ResetPasswordAsync(user, passwordResetViewModel.Token, passwordResetViewModel.Password);
+        var isResetTokenValid = await userManager.ResetPasswordAsync(user, passwordResetViewModel.Token, passwordResetViewModel.Password);
             
         if (isResetTokenValid.Succeeded)
         {

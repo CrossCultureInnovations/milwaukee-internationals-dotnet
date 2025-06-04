@@ -10,15 +10,8 @@ namespace API.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 [AuthorizeMiddleware(UserRoleEnum.Admin)]
 [Route("[controller]")]
-public class LocationController : Controller
+public class LocationController(ILocationLogic locationLogic) : Controller
 {
-    private readonly ILocationLogic _locationLogic;
-
-    public LocationController(ILocationLogic locationLogic)
-    {
-        _locationLogic = locationLogic;
-    }
- 
     /// <summary>
     /// Returns location view
     /// </summary>
@@ -27,7 +20,7 @@ public class LocationController : Controller
     [Route("")]
     public async Task<IActionResult> Index([FromQuery]string sortBy = null, [FromQuery]bool? descending = null)
     {
-        return View(await _locationLogic.GetAll(sortBy, descending));
+        return View(await locationLogic.GetAll(sortBy, descending));
     }
         
     /// <summary>
@@ -40,7 +33,7 @@ public class LocationController : Controller
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
     public async Task<IActionResult> Delete(int id)
     {
-        await _locationLogic.Delete(id);
+        await locationLogic.Delete(id);
 
         return RedirectToAction("Index");
     }
@@ -54,7 +47,7 @@ public class LocationController : Controller
     [Route("Edit/{id:int}")]
     public async Task<IActionResult> EditView(int id)
     {
-        var driver = await _locationLogic.Get(id);
+        var driver = await locationLogic.Get(id);
 
         return View("Edit", driver);
     }
@@ -68,7 +61,7 @@ public class LocationController : Controller
     [Route("Edit")]
     public async Task<IActionResult> EditHandler(Location location)
     {
-        await _locationLogic.Update(location.Id, location);
+        await locationLogic.Update(location.Id, location);
 
         return RedirectToAction("Index");
     }
@@ -77,7 +70,7 @@ public class LocationController : Controller
     [Route("Edit/{id:int}/Rank/Up")]
     public async Task<IActionResult> MoveRankUp([FromRoute] int id)
     {
-        await _locationLogic.MoveRankUp(id);
+        await locationLogic.MoveRankUp(id);
 
         return RedirectToAction("Index");
     }
@@ -86,7 +79,7 @@ public class LocationController : Controller
     [Route("Edit/{id:int}/Rank/Down")]
     public async Task<IActionResult> MoveRankDown([FromRoute] int id)
     {
-        await _locationLogic.MoveRankDown(id);
+        await locationLogic.MoveRankDown(id);
 
         return RedirectToAction("Index");
     }

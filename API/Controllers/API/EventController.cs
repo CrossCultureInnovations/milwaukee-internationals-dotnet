@@ -12,25 +12,16 @@ namespace API.Controllers.API;
 
 [AuthorizeMiddleware(UserRoleEnum.Admin)]
 [Route("api/[controller]")]
-public class EventController : BasicCrudController<Event>
+public class EventController(IEventLogic eventLogic, IEmailUtilityLogic emailUtilityLogic)
+    : BasicCrudController<Event>
 {
-    private readonly IEventLogic _eventLogic;
-        
-    private readonly IEmailUtilityLogic _emailUtilityLogic;
-
-    public EventController(IEventLogic eventLogic, IEmailUtilityLogic emailUtilityLogic)
-    {
-        _eventLogic = eventLogic;
-        _emailUtilityLogic = emailUtilityLogic;
-    }
-
     /// <summary>
     /// Returns instance of logic
     /// </summary>
     /// <returns></returns>
     protected override IBasicCrudLogic<Event> BasicCrudLogic()
     {
-        return _eventLogic;
+        return eventLogic;
     }
 
     /// <summary>
@@ -42,7 +33,7 @@ public class EventController : BasicCrudController<Event>
     [SwaggerOperation("MapStudentToEvent")]
     public async Task<IActionResult> MapStudent([FromRoute] int eventId, [FromRoute] int studentId)
     {
-        var result = await _eventLogic.MapStudent(eventId, studentId);
+        var result = await eventLogic.MapStudent(eventId, studentId);
 
         return Ok(result);
     }
@@ -56,7 +47,7 @@ public class EventController : BasicCrudController<Event>
     [SwaggerOperation("MapStudentToEvent")]
     public async Task<IActionResult> UnMapStudent([FromRoute] int eventId, [FromRoute] int studentId)
     {
-        var result = await _eventLogic.UnMapStudent(eventId, studentId);
+        var result = await eventLogic.UnMapStudent(eventId, studentId);
 
         return Ok(result);
     }
@@ -70,7 +61,7 @@ public class EventController : BasicCrudController<Event>
     [Route("Info/{id:int}")]
     public async Task<IActionResult> Info([FromRoute] int id)
     {
-        var eventInfo = await _eventLogic.GetEventInfo(id);
+        var eventInfo = await eventLogic.GetEventInfo(id);
 
         return Ok(eventInfo);
     }
@@ -83,7 +74,7 @@ public class EventController : BasicCrudController<Event>
     [Route("Email")]
     public async Task<IActionResult> EventEmail(EmailEventViewModel emailEventViewModel)
     {
-        var result = await _emailUtilityLogic.HandleEventEmail(emailEventViewModel);
+        var result = await emailUtilityLogic.HandleEventEmail(emailEventViewModel);
 
         return Ok(result);
     }

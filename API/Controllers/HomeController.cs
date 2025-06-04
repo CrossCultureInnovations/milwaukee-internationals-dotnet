@@ -8,15 +8,8 @@ namespace API.Controllers;
 [AllowAnonymous]
 [Route("")]
 [ApiExplorerSettings(IgnoreApi = true)]
-public class HomeController : Controller
+public class HomeController(IHttpRequestUtilityBuilder httpRequestUtilityBuilder) : Controller
 {
-    private readonly IHttpRequestUtilityBuilder _httpRequestUtilityBuilder;
-
-    public HomeController(IHttpRequestUtilityBuilder httpRequestUtilityBuilder)
-    {
-        _httpRequestUtilityBuilder = httpRequestUtilityBuilder;
-    }
-        
     public IActionResult Index()
     {
         return RedirectToAction("Student", "Registration");
@@ -42,6 +35,6 @@ public class HomeController : Controller
     [Route("Echo")]
     public async Task<IActionResult> Echo()
     {
-        return Ok(await _httpRequestUtilityBuilder.For(HttpContext).GetUserInfo());
+        return Ok(await httpRequestUtilityBuilder.For(HttpContext).GetUserInfo());
     }
 }

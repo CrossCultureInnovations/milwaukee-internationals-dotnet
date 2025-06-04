@@ -10,23 +10,16 @@ using Models.Entities;
 namespace DAL.Utilities;
 
 [Authorize]
-public class MessageHub : Hub
+public class MessageHub(UserManager<User> userManager) : Hub
 {
-    private readonly UserManager<User> _userManager;
-
     // Connected IDs
     private static readonly IDictionary<string, User> UserTable = new ConcurrentDictionary<string, User>();
-
-    public MessageHub(UserManager<User> userManager)
-    {
-        _userManager = userManager;
-    }
 
     public override async Task OnConnectedAsync()
     {
         if (Context.User != null)
         {
-            var user = await _userManager.FindByNameAsync(Context.User.Identity!.Name);
+            var user = await userManager.FindByNameAsync(Context.User.Identity!.Name);
 
             UserTable[Context.ConnectionId] = user;
 

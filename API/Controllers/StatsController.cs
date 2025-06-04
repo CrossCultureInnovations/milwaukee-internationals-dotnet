@@ -9,26 +9,19 @@ namespace API.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 [AuthorizeMiddleware(UserRoleEnum.Admin)]
 [Route("[controller]")]
-public class StatsController : Controller
+public class StatsController(IStatsLogic statsLogic) : Controller
 {
-    private readonly IStatsLogic _statsLogic;
-
-    public StatsController(IStatsLogic statsLogic)
-    {
-        _statsLogic = statsLogic;
-    }
-
     [HttpGet]
     [Route("")]
     public async Task<IActionResult> Index()
     {
-        return View(await _statsLogic.GetStats());
+        return View(await statsLogic.GetStats());
     }
 
     [HttpGet]
     [Route("CountryDistribution")]
     public async Task<IActionResult> GetCountryDistribution()
     {
-        return Ok(await _statsLogic.GetCountryDistribution());
+        return Ok(await statsLogic.GetCountryDistribution());
     }
 }

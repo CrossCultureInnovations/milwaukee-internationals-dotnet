@@ -12,22 +12,15 @@ namespace API.Controllers.API;
 
 [AuthorizeMiddleware]
 [Route("api/[controller]")]
-public class DriverController : BasicCrudController<Driver>
+public class DriverController(IDriverLogic driverLogic) : BasicCrudController<Driver>
 {
-    private readonly IDriverLogic _driverLogic;
-
-    public DriverController(IDriverLogic driverLogic)
-    {
-        _driverLogic = driverLogic;
-    }
-
     [AllowAnonymous]
     [HttpPost]
     [Route("login")]
     [SwaggerOperation("DriverLogin")]
     public async Task<IActionResult> DriverLogin([FromBody] DriverLoginViewModel driverLoginViewModel)
     {
-        var driver = await _driverLogic.DriverLogin(driverLoginViewModel);
+        var driver = await driverLogic.DriverLogin(driverLoginViewModel);
 
         if (driver == null)
         {
@@ -39,6 +32,6 @@ public class DriverController : BasicCrudController<Driver>
 
     protected override IBasicCrudLogic<Driver> BasicCrudLogic()
     {
-        return _driverLogic;
+        return driverLogic;
     }
 }

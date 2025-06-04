@@ -12,43 +12,21 @@ using Models.ViewModels;
 
 namespace Logic;
 
-public class SmsUtilityLogic : ISmsUtilityLogic
+public class SmsUtilityLogic(
+    IConfigLogic configLogic,
+    ISmsService smsService,
+    IStudentLogic studentLogic,
+    IDriverLogic driverLogic,
+    IHostLogic hostLogic,
+    IUserLogic userLogic,
+    IEmailServiceApi emailServiceApi,
+    IApiEventService apiEventService,
+    IRegistrationLogic registrationLogic)
+    : ISmsUtilityLogic
 {
-    private readonly IConfigLogic _configLogic;
-    private readonly ISmsService _smsService;
-    private readonly IStudentLogic _studentLogic;
-    private readonly IDriverLogic _driverLogic;
-    private readonly IHostLogic _hostLogic;
-    private readonly IUserLogic _userLogic;
-    private readonly IEmailServiceApi _emailServiceApi;
-    private readonly IApiEventService _apiEventService;
-    private readonly IRegistrationLogic _registrationLogic;
-
-    public SmsUtilityLogic(
-        IConfigLogic configLogic,
-        ISmsService smsService,
-        IStudentLogic studentLogic,
-        IDriverLogic driverLogic,
-        IHostLogic hostLogic,
-        IUserLogic userLogic,
-        IEmailServiceApi emailServiceApi,
-        IApiEventService apiEventService,
-        IRegistrationLogic registrationLogic)
-    {
-        _configLogic = configLogic;
-        _smsService = smsService;
-        _studentLogic = studentLogic;
-        _driverLogic = driverLogic;
-        _hostLogic = hostLogic;
-        _userLogic = userLogic;
-        _emailServiceApi = emailServiceApi;
-        _apiEventService = apiEventService;
-        _registrationLogic = registrationLogic;
-    }
-    
     public async Task<bool> HandleAdHocSms(SmsFormViewModel smsFormViewModel)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         var year = globalConfigs.YearValue;
             
@@ -57,7 +35,7 @@ public class SmsUtilityLogic : ISmsUtilityLogic
         // Add admin email
         if (smsFormViewModel.Admin)
         {
-            var admins = (await _userLogic.GetAll())
+            var admins = (await userLogic.GetAll())
                 .Where(x => x.UserRoleEnum == UserRoleEnum.Admin)
                 .Select(x => x.PhoneNumber)
                 .ToList();
@@ -68,28 +46,28 @@ public class SmsUtilityLogic : ISmsUtilityLogic
         // Add student emails
         if (smsFormViewModel.Students)
         {
-            var students = await _studentLogic.GetAll(year);
+            var students = await studentLogic.GetAll(year);
             phoneNumbers.AddRange(students.Select(x => x.Phone).Where(x => !string.IsNullOrWhiteSpace(x)));
         }
 
         // Add driver emails
         if (smsFormViewModel.Drivers)
         {
-            var drivers = await _driverLogic.GetAll(year);
+            var drivers = await driverLogic.GetAll(year);
             phoneNumbers.AddRange(drivers.Select(x => x.Phone).Where(x => !string.IsNullOrWhiteSpace(x)));
         }
             
         // Add host emails
         if (smsFormViewModel.Hosts)
         {
-            var hosts = await _hostLogic.GetAll(year);
+            var hosts = await hostLogic.GetAll(year);
             phoneNumbers.AddRange(hosts.Select(x => x.Phone).Where(x => !string.IsNullOrWhiteSpace(x)));
         }
             
         // Add user emails
         if (smsFormViewModel.Users)
         {
-            var users = await _userLogic.GetAll();
+            var users = await userLogic.GetAll();
             phoneNumbers.AddRange(users.Select(x => x.PhoneNumber).Where(x => !string.IsNullOrWhiteSpace(x)));
         }
 
@@ -107,62 +85,62 @@ public class SmsUtilityLogic : ISmsUtilityLogic
         phoneNumbers = phoneNumbers.Distinct().ToList();
 
         // Send the email
-        await _smsService.SendMessage(phoneNumbers, smsFormViewModel.Message);
+        await smsService.SendMessage(phoneNumbers, smsFormViewModel.Message);
 
-        await _apiEventService.RecordEvent($"Sent ad-hoc SMS to {string.Join(',', phoneNumbers)}");
+        await apiEventService.RecordEvent($"Sent ad-hoc SMS to {string.Join(',', phoneNumbers)}");
 
         return true;
     }
 
     public async Task<SmsFormViewModel> GetSmsForm()
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         var year = globalConfigs.YearValue;
             
         return new SmsFormViewModel
         {
-            AdminCount = (await _userLogic.GetAll()).Count(x => x.UserRoleEnum == UserRoleEnum.Admin),
-            StudentCount = (await _studentLogic.GetAll(year)).Count(),
-            DriverCount = (await _driverLogic.GetAll(year)).Count(),
-            HostCount = (await _hostLogic.GetAll(year)).Count(),
-            UserCount = (await _userLogic.GetAll()).Count()
+            AdminCount = (await userLogic.GetAll()).Count(x => x.UserRoleEnum == UserRoleEnum.Admin),
+            StudentCount = (await studentLogic.GetAll(year)).Count(),
+            DriverCount = (await driverLogic.GetAll(year)).Count(),
+            HostCount = (await hostLogic.GetAll(year)).Count(),
+            UserCount = (await userLogic.GetAll()).Count()
         };
     }
 
     public async Task HandleDriverSms()
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         var year = globalConfigs.YearValue;
 
-        foreach (var driver in await _driverLogic.GetAll(year))
+        foreach (var driver in await driverLogic.GetAll(year))
         {
-            await _registrationLogic.SendDriverSms(driver);
+            await registrationLogic.SendDriverSms(driver);
         }
     }
 
     public async Task HandleStudentSms()
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         var year = globalConfigs.YearValue;
 
-        foreach (var student in await _studentLogic.GetAll(year))
+        foreach (var student in await studentLogic.GetAll(year))
         {
-            await _registrationLogic.SendStudentSms(student);
+            await registrationLogic.SendStudentSms(student);
         }
     }
 
     public async Task HandleHostSms()
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
         
         var year = globalConfigs.YearValue;
 
-        foreach (var host in await _hostLogic.GetAll(year))
+        foreach (var host in await hostLogic.GetAll(year))
         {
-            await _registrationLogic.SendHostSms(host);
+            await registrationLogic.SendHostSms(host);
         }
     }
     
@@ -174,10 +152,10 @@ public class SmsUtilityLogic : ISmsUtilityLogic
             return;
         }
 
-        var users = (await _userLogic.GetAll()).Select(x => (Role: "user", x.Fullname, Phone: x.PhoneNumber));
-        var students = (await _studentLogic.GetAll()).Select(x => (Role: "student", x.Fullname, x.Phone));
-        var drivers = (await _driverLogic.GetAll()).Select(x => (Role: "driver", x.Fullname, x.Phone));
-        var hosts = (await _hostLogic.GetAll()).Select(x => (Role: "host", x.Fullname, x.Phone));
+        var users = (await userLogic.GetAll()).Select(x => (Role: "user", x.Fullname, Phone: x.PhoneNumber));
+        var students = (await studentLogic.GetAll()).Select(x => (Role: "student", x.Fullname, x.Phone));
+        var drivers = (await driverLogic.GetAll()).Select(x => (Role: "driver", x.Fullname, x.Phone));
+        var hosts = (await hostLogic.GetAll()).Select(x => (Role: "host", x.Fullname, x.Phone));
         var everyone = users.Concat(students).Concat(drivers).Concat(hosts);
 
         var from = request.data?.payload?.from?.phone_number;
@@ -209,7 +187,7 @@ public class SmsUtilityLogic : ISmsUtilityLogic
             return (media.url.LocalPath.Split('/').Last(), media.content_type, base64File);
         }));
         
-        await _emailServiceApi.SendEmailAsync(
+        await emailServiceApi.SendEmailAsync(
             [ApiConstants.SiteEmail], 
             $"SMS received {middle}", 
             text,

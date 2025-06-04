@@ -17,48 +17,36 @@ namespace API.Controllers;
 
 [ApiExplorerSettings(IgnoreApi = true)]
 [Route("[controller]")]
-public class IdentityController : AbstractIdentityController
+public class IdentityController(
+    IUserLogic userLogic,
+    UserManager<User> userManager,
+    SignInManager<User> signInManager,
+    RoleManager<IdentityRole<int>> roleManager,
+    IApiEventService apiEventService,
+    JwtSettings jwtSettings,
+    ILogger<IdentityController> logger)
+    : AbstractIdentityController
 {
-    private readonly IUserLogic _userLogic;
-    private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signInManager;
-    private readonly RoleManager<IdentityRole<int>> _roleManager;
-    private readonly IApiEventService _apiEventService;
-    private readonly JwtSettings _jwtSettings;
-    private readonly ILogger<IdentityController> _logger;
-
-    public IdentityController(IUserLogic userLogic, UserManager<User> userManager,
-        SignInManager<User> signInManager, RoleManager<IdentityRole<int>> roleManager, IApiEventService apiEventService,
-        JwtSettings jwtSettings,
-        ILogger<IdentityController> logger)
-    {
-        _userLogic = userLogic;
-        _userManager = userManager;
-        _signInManager = signInManager;
-        _roleManager = roleManager;
-        _apiEventService = apiEventService;
-        _jwtSettings = jwtSettings;
-        _logger = logger;
-    }
+    private readonly ILogger<IdentityController> _logger = logger;
 
     protected override UserManager<User> ResolveUserManager()
     {
-        return _userManager;
+        return userManager;
     }
 
     protected override SignInManager<User> ResolveSignInManager()
     {
-        return _signInManager;
+        return signInManager;
     }
 
     protected override RoleManager<IdentityRole<int>> ResolveRoleManager()
     {
-        return _roleManager;
+        return roleManager;
     }
 
     protected override JwtSettings ResolveJwtSettings()
     {
-        return _jwtSettings;
+        return jwtSettings;
     }
 
     /// <summary>
@@ -97,19 +85,19 @@ public class IdentityController : AbstractIdentityController
             
         if (result)
         {
-            await _apiEventService.RecordEvent($"User [{loginViewModel.Username}] logged in successfully");
+            await apiEventService.RecordEvent($"User [{loginViewModel.Username}] logged in successfully");
 
-            var user = (await _userLogic.GetAll()).First(x =>
+            var user = (await userLogic.GetAll()).First(x =>
                 x.UserName.Equals(loginViewModel.Username, StringComparison.OrdinalIgnoreCase));
 
             user.LastLoggedInDate = DateTimeOffset.Now;
 
-            await _userLogic.Update(user.Id, user);
+            await userLogic.Update(user.Id, user);
 
             return RedirectToAction("Index", "Home");
         }
 
-        await _apiEventService.RecordEvent($"User [{loginViewModel.Username}] failed to login because of {message}");
+        await apiEventService.RecordEvent($"User [{loginViewModel.Username}] failed to login because of {message}");
             
         TempData["Error"] = message;
 
@@ -160,14 +148,14 @@ public class IdentityController : AbstractIdentityController
 
         if (result)
         {
-            await _apiEventService.RecordEvent($"User [{registerViewModel.Username}] successfully register");
+            await apiEventService.RecordEvent($"User [{registerViewModel.Username}] successfully register");
 
             return RedirectToAction("Login");
         }
 
         TempData["Error"] = $"Failed to register: {string.Join(',', errors)}";
             
-        await _apiEventService.RecordEvent($"User [{registerViewModel.Username}] failed to register");
+        await apiEventService.RecordEvent($"User [{registerViewModel.Username}] failed to register");
 
         return RedirectToAction("Register");
     }
@@ -205,7 +193,7 @@ public class IdentityController : AbstractIdentityController
             
         await Logout();
             
-        await _apiEventService.RecordEvent($"User [{result.UserName}] successfully logged-out");
+        await apiEventService.RecordEvent($"User [{result.UserName}] successfully logged-out");
 
         return RedirectToAction("Login");
     }
@@ -215,7 +203,7 @@ public class IdentityController : AbstractIdentityController
     [Route("Token")]
     public async Task<IActionResult> Token()
     {
-        var user = await _userManager.FindByNameAsync(User.Identity!.Name);
+        var user = await userManager.FindByNameAsync(User.Identity!.Name);
                 
         var token = ResolveToken(user);
 

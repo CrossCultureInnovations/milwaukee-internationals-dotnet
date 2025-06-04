@@ -8,17 +8,10 @@ namespace API.Controllers.API;
 
 [AuthorizeMiddleware]
 [Route("api/[controller]")]
-public class StudentController : BasicCrudController<Student>
+public class StudentController(IStudentLogic studentLogic) : BasicCrudController<Student>
 {
-    private readonly IStudentLogic _studentLogic;
-
-    public StudentController(IStudentLogic studentLogic)
-    {
-        _studentLogic = studentLogic;
-    }
-
     protected override IBasicCrudLogic<Student> BasicCrudLogic()
     {
-        return _studentLogic;
+        return studentLogic;
     }
 }

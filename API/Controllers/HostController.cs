@@ -10,15 +10,8 @@ namespace API.Controllers;
 [ApiExplorerSettings(IgnoreApi = true)]
 [AuthorizeMiddleware]
 [Route("[controller]")]
-public class HostController : Controller
+public class HostController(IHostLogic hostLogic) : Controller
 {
-    private readonly IHostLogic _hostLogic;
-
-    public HostController(IHostLogic hostLogic)
-    {
-        _hostLogic = hostLogic;
-    }
-        
     /// <summary>
     /// Returns driver view
     /// </summary>
@@ -27,7 +20,7 @@ public class HostController : Controller
     [Route("")]
     public async Task<IActionResult> Index([FromQuery]string sortBy = null, [FromQuery]bool? descending = null)
     {
-        return View(await _hostLogic.GetAll(sortBy, descending));
+        return View(await hostLogic.GetAll(sortBy, descending));
     }
         
     /// <summary>
@@ -40,7 +33,7 @@ public class HostController : Controller
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
     public async Task<IActionResult> Delete(int id)
     {
-        await _hostLogic.Delete(id);
+        await hostLogic.Delete(id);
 
         return RedirectToAction("Index");
     }
@@ -55,7 +48,7 @@ public class HostController : Controller
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
     public async Task<IActionResult> EditView(int id)
     {
-        var driver = await _hostLogic.Get(id);
+        var driver = await hostLogic.Get(id);
 
         return View("Edit", driver);
     }
@@ -70,7 +63,7 @@ public class HostController : Controller
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
     public async Task<IActionResult> EditHandler(Host host)
     {
-        await _hostLogic.Update(host.Id, host);
+        await hostLogic.Update(host.Id, host);
 
         return RedirectToAction("Index");
     }

@@ -3,15 +3,8 @@ using Microsoft.AspNetCore.Http;
 
 namespace API.Middlewares;
 
-public class EnableRequestRewindMiddleware
+public class EnableRequestRewindMiddleware(RequestDelegate next)
 {
-    private readonly RequestDelegate _next;
-        
-    public EnableRequestRewindMiddleware(RequestDelegate next)
-    {
-        _next = next;
-    }
-
     /// <summary>
     ///     On any action ...
     /// </summary>
@@ -22,6 +15,6 @@ public class EnableRequestRewindMiddleware
     {
         context.Request.EnableBuffering();
 
-        await _next(context);
+        await next(context);
     }
 }

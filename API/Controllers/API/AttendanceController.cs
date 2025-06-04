@@ -9,21 +9,14 @@ namespace API.Controllers.API;
 
 [AuthorizeMiddleware]
 [Route("api/[controller]")]
-public class AttendanceController : Controller
+public class AttendanceController(IAttendanceLogic attendanceLogic) : Controller
 {
-    private readonly IAttendanceLogic _attendanceLogic;
-
-    public AttendanceController(IAttendanceLogic attendanceLogic)
-    {
-        _attendanceLogic = attendanceLogic;
-    }
-
     [HttpPost]
     [Route("Student/SetAttendance")]
     [SwaggerOperation("SetAttendance")]
     public async Task<IActionResult> StudentSetAttendance([FromBody] AttendanceViewModel attendanceViewModel)
     {
-        return Ok(await _attendanceLogic.StudentSetAttendance(attendanceViewModel));
+        return Ok(await attendanceLogic.StudentSetAttendance(attendanceViewModel));
     }
 
     [HttpPost]
@@ -31,7 +24,7 @@ public class AttendanceController : Controller
     [SwaggerOperation("SetAttendance")]
     public async Task<IActionResult> DriverSetAttendance([FromBody] AttendanceViewModel attendanceViewModel)
     {
-        return Ok(await _attendanceLogic.DriverSetAttendance(attendanceViewModel));
+        return Ok(await attendanceLogic.DriverSetAttendance(attendanceViewModel));
     }
 
     [HttpPost]
@@ -39,7 +32,7 @@ public class AttendanceController : Controller
     [SwaggerOperation("DriverSendCheckIn")]
     public async Task<IActionResult> DriverSendCheckIn()
     {
-        return Ok(await _attendanceLogic.HandleDriverSendCheckIn());
+        return Ok(await attendanceLogic.HandleDriverSendCheckIn());
     }
 
     [HttpPost]
@@ -47,6 +40,6 @@ public class AttendanceController : Controller
     [SwaggerOperation("StudentSendCheckIn")]
     public async Task<IActionResult> StudentSendCheckIn()
     {
-        return Ok(await _attendanceLogic.HandleStudentSendCheckIn());
+        return Ok(await attendanceLogic.HandleStudentSendCheckIn());
     }
 }

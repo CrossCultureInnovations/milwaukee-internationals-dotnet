@@ -12,19 +12,11 @@ using static Logic.Utilities.RegistrationUtility;
 
 namespace Logic;
 
-public class StudentLogic : BasicCrudLogicAbstract<Student>, IStudentLogic
+public class StudentLogic(IEfRepository repository, IConfigLogic configLogic, IApiEventService apiEventService)
+    : BasicCrudLogicAbstract<Student>, IStudentLogic
 {
-    private readonly IBasicCrud<Student> _dal;
-    private readonly IConfigLogic _configLogic;
-    private readonly IApiEventService _apiEventService;
+    private readonly IBasicCrud<Student> _dal = repository.For<Student>();
 
-    public StudentLogic(IEfRepository repository, IConfigLogic configLogic, IApiEventService apiEventService)
-    {
-        _dal = repository.For<Student>();
-        _configLogic = configLogic;
-        _apiEventService = apiEventService;
-    }
-        
 
     /// <inheritdoc />
     /// <summary>
@@ -34,7 +26,7 @@ public class StudentLogic : BasicCrudLogicAbstract<Student>, IStudentLogic
     /// <returns></returns>
     public override async Task<Student> Save(Student student)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
         var allStudents = (await GetAll(DateTime.UtcNow.Year)).ToList();
 
         if (globalConfigs.DisallowDuplicateStudents && allStudents.Any(x =>
@@ -105,12 +97,12 @@ public class StudentLogic : BasicCrudLogicAbstract<Student>, IStudentLogic
         
     protected override IApiEventService ApiEventService()
     {
-        return _apiEventService;
+        return apiEventService;
     }
 
     public override async Task<IEnumerable<Student>> GetAll(string sortBy = null, bool? descending = null, Func<object, string, object> sortByModifier = null, params Expression<Func<Student, bool>>[] filters)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         Expression<Func<Student, bool>> yearFilterExpr = x => x.Year == globalConfigs.YearValue;
         

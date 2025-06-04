@@ -8,21 +8,14 @@ namespace API.Controllers.API;
 
 [AllowAnonymous]
 [Route("api/[controller]")]
-public class TourController : Controller
+public class TourController(IConfigLogic configLogic) : Controller
 {
-    private readonly IConfigLogic _configLogic;
-
-    public TourController(IConfigLogic configLogic)
-    {
-        _configLogic = configLogic;
-    }
-        
     [HttpGet]
     [Route("info")]
     [SwaggerOperation("info")]
     public async Task<IActionResult> Status()
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
         
         return Ok(new
         {

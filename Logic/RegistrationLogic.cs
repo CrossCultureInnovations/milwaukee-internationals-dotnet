@@ -15,43 +15,21 @@ using Svg;
 
 namespace Logic;
 
-public class RegistrationLogic : IRegistrationLogic
+public class RegistrationLogic(
+    IStudentLogic studentLogic,
+    IDriverLogic driverLogic,
+    IHostLogic hostLogic,
+    IEventLogic eventLogic,
+    ILocationLogic locationLogic,
+    IEmailServiceApi emailServiceApiApi,
+    IApiEventService apiEventService,
+    ISmsService smsService,
+    IConfigLogic configLogic)
+    : IRegistrationLogic
 {
-    private readonly IStudentLogic _studentLogic;
-    private readonly IDriverLogic _driverLogic;
-    private readonly IHostLogic _hostLogic;
-    private readonly IEventLogic _eventLogic;
-    private readonly ILocationLogic _locationLogic;
-    private readonly IEmailServiceApi _emailServiceApiApi;
-    private readonly IApiEventService _apiEventService;
-    private readonly ISmsService _smsService;
-    private readonly IConfigLogic _configLogic;
-
-    public RegistrationLogic(
-        IStudentLogic studentLogic,
-        IDriverLogic driverLogic,
-        IHostLogic hostLogic,
-        IEventLogic eventLogic,
-        ILocationLogic locationLogic,
-        IEmailServiceApi emailServiceApiApi,
-        IApiEventService apiEventService,
-        ISmsService smsService,
-        IConfigLogic configLogic)
-    {
-        _studentLogic = studentLogic;
-        _driverLogic = driverLogic;
-        _hostLogic = hostLogic;
-        _eventLogic = eventLogic;
-        _locationLogic = locationLogic;
-        _emailServiceApiApi = emailServiceApiApi;
-        _apiEventService = apiEventService;
-        _smsService = smsService;
-        _configLogic = configLogic;
-    }
-
     public async Task SendStudentEmail(Student student)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
         
         const string rootUrl = ApiConstants.SiteUrl;
         var checkInPath = Url.Combine(rootUrl, "App", "CheckIn", "Student", student.GenerateHash());
@@ -74,7 +52,7 @@ public class RegistrationLogic : IRegistrationLogic
         var sigBase64 = Convert.ToBase64String(ms.ToArray());
         var qrUri = $"data:image/png;base64,{sigBase64}";
 
-        await _emailServiceApiApi.SendEmailAsync([student.Email], "Tour of Milwaukee Registration Confirmation",
+        await emailServiceApiApi.SendEmailAsync([student.Email], "Tour of Milwaukee Registration Confirmation",
             $@"
                     <p>Name: {student.Fullname}</p>
                     <p>University: {student.University}</p>
@@ -100,12 +78,12 @@ public class RegistrationLogic : IRegistrationLogic
 
     public async Task SendDriverEmail(Driver driver)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         switch (driver.Role)
         {
             case RolesEnum.Driver:
-                await _emailServiceApiApi.SendEmailAsync([driver.Email], "Tour of Milwaukee: Driver registration",
+                await emailServiceApiApi.SendEmailAsync([driver.Email], "Tour of Milwaukee: Driver registration",
                     $@"
                     <p> Name: {driver.Fullname}</p>
                     <p> Role: {driver.Role}</p>
@@ -133,9 +111,9 @@ public class RegistrationLogic : IRegistrationLogic
 
     public async Task SendHostEmail(Host host)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
-        await _emailServiceApiApi.SendEmailAsync([host.Email], "Tour of Milwaukee: Host registration", $@"
+        await emailServiceApiApi.SendEmailAsync([host.Email], "Tour of Milwaukee: Host registration", $@"
                     <p>Name: {host.Fullname}</p>
                     <p>Address: {host.Address}</p>
                     <hr>
@@ -152,10 +130,10 @@ public class RegistrationLogic : IRegistrationLogic
 
     public async Task<bool> IsRegisterStudentOpen()
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         var year = DateTime.Now.Year;
-        var count = await _studentLogic.Count(x => x.Year == year);
+        var count = await studentLogic.Count(x => x.Year == year);
 
         var overLimit = count >= globalConfigs.MaxLimitStudentSeats;
 
@@ -166,10 +144,10 @@ public class RegistrationLogic : IRegistrationLogic
     
     public async Task<bool> IsRegisterDriverOpen()
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         var year = DateTime.Now.Year;
-        var count = await _driverLogic.Count(x => x.Year == year);
+        var count = await driverLogic.Count(x => x.Year == year);
 
         var overLimit = count < globalConfigs.MaxLimitDrivers;
         var afterTour = await IsAfterTourDay();
@@ -179,19 +157,19 @@ public class RegistrationLogic : IRegistrationLogic
 
     private async Task<bool> IsAfterTourDay()
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         return DateTime.Now.Subtract(globalConfigs.TourDate.AddDays(1)).Days > 0;
     }
     
     public async Task RegisterDriver(Driver driver)
     {
-        driver = await _driverLogic.Save(driver);
+        driver = await driverLogic.Save(driver);
 
         // If save was successful
         if (driver != null)
         {
-            await _apiEventService.RecordEvent($"Driver {driver.Fullname} registered");
+            await apiEventService.RecordEvent($"Driver {driver.Fullname} registered");
 
             await SendDriverEmail(driver);
         }
@@ -199,12 +177,12 @@ public class RegistrationLogic : IRegistrationLogic
 
     public async Task RegisterStudent(Student student)
     {
-        student = await _studentLogic.Save(student);
+        student = await studentLogic.Save(student);
 
         // If save was successful
         if (student != null)
         {
-            await _apiEventService.RecordEvent($"Student {student.Fullname} registered");
+            await apiEventService.RecordEvent($"Student {student.Fullname} registered");
             
             await SendStudentEmail(student);
         }
@@ -212,12 +190,12 @@ public class RegistrationLogic : IRegistrationLogic
 
     public async Task RegisterHost(Host host)
     {
-        host = await _hostLogic.Save(host);
+        host = await hostLogic.Save(host);
 
         // If save was successful
         if (host != null)
         {
-            await _apiEventService.RecordEvent($"Host {host.Fullname} registered");
+            await apiEventService.RecordEvent($"Host {host.Fullname} registered");
 
             await SendHostEmail(host);
         }
@@ -225,12 +203,12 @@ public class RegistrationLogic : IRegistrationLogic
 
     public async Task RegisterEvent(Event @event)
     {
-        await _eventLogic.Save(@event);
+        await eventLogic.Save(@event);
     }
 
     public async Task RegisterLocation(Location location)
     {
-        await _locationLogic.Save(location);
+        await locationLogic.Save(location);
     }
 
     public async Task SendDriverSms(Driver driver)
@@ -239,7 +217,7 @@ public class RegistrationLogic : IRegistrationLogic
 
         var text = $"Asher here.Your display ID is {driver.DisplayId.Split('-')[1]}, link to check-in and see tour details {url}";
         
-        await _smsService.SendMessage(driver.Phone, text);
+        await smsService.SendMessage(driver.Phone, text);
     }
 
     public async Task SendStudentSms(Student student)
@@ -248,7 +226,7 @@ public class RegistrationLogic : IRegistrationLogic
 
         var text = $"Asher here.Link to check-in and see tour details {url}";
         
-        await _smsService.SendMessage(student.Phone, text);
+        await smsService.SendMessage(student.Phone, text);
     }
 
     public async Task SendHostSms(Host host)
@@ -256,6 +234,6 @@ public class RegistrationLogic : IRegistrationLogic
         var text = $"Hi {host.Fullname}.You have {host.Drivers.Count} drivers coming " +
                    $"with {host.Drivers.Select(driver => driver.Students.Select(student => 1 + student.FamilySize).Sum()).Sum()} students (some have navigators). Asher.";
 
-        await _smsService.SendMessage(host.Phone, text);
+        await smsService.SendMessage(host.Phone, text);
     }
 }

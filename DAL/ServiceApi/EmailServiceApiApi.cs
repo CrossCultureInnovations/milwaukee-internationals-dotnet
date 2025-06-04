@@ -9,19 +9,9 @@ using Models.Constants;
 
 namespace DAL.ServiceApi;
 
-public class EmailServiceApi : IEmailServiceApi
+public class EmailServiceApi(IMailjetClient mailJetClient, IConfigLogic configLogic, ILogger<EmailServiceApi> logger)
+    : IEmailServiceApi
 {
-    private readonly IMailjetClient _mailJetClient;
-    private readonly IConfigLogic _configLogic;
-    private readonly ILogger<EmailServiceApi> _logger;
-
-    public EmailServiceApi(IMailjetClient mailJetClient, IConfigLogic configLogic, ILogger<EmailServiceApi> logger)
-    {
-        _mailJetClient = mailJetClient;
-        _configLogic = configLogic;
-        _logger = logger;
-    }
-
     /// <summary>
     /// Send the email
     /// </summary>
@@ -36,7 +26,7 @@ public class EmailServiceApi : IEmailServiceApi
         if (!string.IsNullOrWhiteSpace(emailAddress))
         { 
             // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
-            _logger.LogInformation("Sending email to {}", emailAddress);
+            logger.LogInformation("Sending email to {}", emailAddress);
             
             // construct your email with builder
             var email = new TransactionalEmailBuilder()
@@ -49,10 +39,10 @@ public class EmailServiceApi : IEmailServiceApi
                 .Build();
 
             // invoke API to send email
-            var response = await _mailJetClient.SendTransactionalEmailAsync(email);
+            var response = await mailJetClient.SendTransactionalEmailAsync(email);
                     
             // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
-            _logger.LogInformation("Email sent successfully {}", response?.ToString());
+            logger.LogInformation("Email sent successfully {}", response?.ToString());
         }
     }
 
@@ -66,7 +56,7 @@ public class EmailServiceApi : IEmailServiceApi
     /// <returns></returns>
     public async Task SendEmailAsync(IEnumerable<string> emailAddresses, string emailSubject, string emailHtml, params (string filename, string contentType, string content)[] attachments)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
 
         await Task.WhenAll(emailAddresses.Select(emailAddress => SendEmailAsync(
             globalConfigs.EmailSenderOnBehalf,
