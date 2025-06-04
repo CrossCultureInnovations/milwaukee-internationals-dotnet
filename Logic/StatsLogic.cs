@@ -33,10 +33,16 @@ public class StatsLogic : IStatsLogic
         
         foreach (var year in _configLogic.GetYears())
         {
-            var students = (await _studentDal.GetAll(x => x.Year == year)).ToList();
+            var students = (await _studentDal.GetAll<Student>(filterExprs: [
+                x => x.Year == year
+            ])).ToList();
             
-            var countDrivers = await _driverDal.Count(x => x.Year == year && x.Role == RolesEnum.Driver);
-            var countHosts = await _hostDal.Count(x => x.Year == year);
+            var countDrivers = await _driverDal.Count(filterExprs: [
+                x => x.Year == year && x.Role == RolesEnum.Driver
+            ]);
+            var countHosts = await _hostDal.Count([
+                x => x.Year == year
+            ]);
             var countDependents = students.Select(x => x.FamilySize).Sum();
             var countDistinctCountries = students.Select(x => x.Country.ToLower()).Distinct().Count();
             
@@ -67,11 +73,11 @@ public class StatsLogic : IStatsLogic
         
         foreach (var year in _configLogic.GetYears())
         {
-            var countDrivers = await _driverDal.Count(x => x.Year == year && x.Role == RolesEnum.Driver);
+            var countDrivers = await _driverDal.Count([x => x.Year == year && x.Role == RolesEnum.Driver]);
 
             if (countDrivers <= 0) continue;
 
-            var countryDistributionForYear = (await _studentDal.GetAll(x => x.Year == year))
+            var countryDistributionForYear = (await _studentDal.GetAll<Student>(filterExprs: [x => x.Year == year]))
                 .GroupBy(x => x.Country.ToLower())
                 .ToDictionary(x => x.Key, x => x.Count());
 

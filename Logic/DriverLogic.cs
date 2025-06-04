@@ -43,7 +43,7 @@ public class DriverLogic : BasicCrudLogicAbstract<Driver>, IDriverLogic
         // Normalize phone number
         instance.Phone = NormalizePhoneNumber(instance.Phone);
 
-        var count = await _dal.Count(x => x.Year == DateTime.Now.Year);
+        var count = await _dal.Count([x => x.Year == DateTime.Now.Year]);
 
         // Set the year
         instance.Year = DateTime.UtcNow.Year;
@@ -83,10 +83,10 @@ public class DriverLogic : BasicCrudLogicAbstract<Driver>, IDriverLogic
 
     public async Task<Driver> DriverLogin(DriverLoginViewModel driverLoginViewModel)
     {
-        var driver = await _dal.Get(x => 
+        var driver = await _dal.Get([x => 
             x.DisplayId == driverLoginViewModel.DriverId &&
             x.Email == driverLoginViewModel.Email &&
-            x.Year == DateTime.Now.Year);
+            x.Year == DateTime.Now.Year]);
 
         return driver;
     }

@@ -12,7 +12,7 @@ using Models.Interfaces;
 
 namespace Logic.Abstracts;
 
-public abstract class BasicCrudLogicAbstract<T> : IBasicCrudLogic<T> where T : class, IEntity
+public abstract class BasicCrudLogicAbstract<T> : IBasicCrudLogic<T> where T : class, IEntity, new()
 {
     protected abstract IBasicCrud<T> Repository();
         
@@ -43,7 +43,7 @@ public abstract class BasicCrudLogicAbstract<T> : IBasicCrudLogic<T> where T : c
     /// <returns></returns>
     public virtual async Task<IEnumerable<T>> GetAll(string sortBy = null, bool? descending = null, Func<object, string, object> sortByModifier = null, params Expression<Func<T, bool>>[] filters)
     {
-        var result = await Repository().GetAll(filters);
+        var result = await Repository().GetAll<T>(filters);
 
         await ApiEventService().RecordEvent($"Queried all {typeof(T).Name}");
 
@@ -159,6 +159,6 @@ public abstract class BasicCrudLogicAbstract<T> : IBasicCrudLogic<T> where T : c
 
     public async Task<int> Count(Expression<Func<T, bool>> filter)
     {
-        return await Repository().Count(filter);
+        return await Repository().Count([filter]);
     }
 }
