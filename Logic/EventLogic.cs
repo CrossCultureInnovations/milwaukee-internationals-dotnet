@@ -64,7 +64,7 @@ public class EventLogic : BasicCrudLogicAbstract<Event>, IEventLogic
         var @event = await Get(id);
 
         // Prevent potential null pointer exception
-        @event.Students ??= new List<EventStudentRelationship>();
+        @event.Students ??= [];
 
         return new EventManagementViewModel
         {
@@ -97,7 +97,7 @@ public class EventLogic : BasicCrudLogicAbstract<Event>, IEventLogic
         await Update(eventId, @event =>
         {
             // Make sure it is not null or empty
-            @event.Students ??= new List<EventStudentRelationship>();
+            @event.Students ??= [];
                 
             // Add student
             @event.Students.Add(new EventStudentRelationship

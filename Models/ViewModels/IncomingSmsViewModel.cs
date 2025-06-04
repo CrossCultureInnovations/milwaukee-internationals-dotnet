@@ -44,7 +44,7 @@ public class Payload
     public From from { get; set; }
     public string id { get; set; }
     public bool? is_spam { get; set; }
-    public List<Media> media { get; set; } = new();
+    public List<Media> media { get; set; } = [];
     public string messaging_profile_id { get; set; }
     public string organization_id { get; set; }
     public int? parts { get; set; }

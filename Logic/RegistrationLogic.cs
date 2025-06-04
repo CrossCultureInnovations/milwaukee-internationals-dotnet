@@ -74,7 +74,7 @@ public class RegistrationLogic : IRegistrationLogic
         var sigBase64 = Convert.ToBase64String(ms.ToArray());
         var qrUri = $"data:image/png;base64,{sigBase64}";
 
-        await _emailServiceApiApi.SendEmailAsync(new []{ student.Email }, "Tour of Milwaukee Registration Confirmation",
+        await _emailServiceApiApi.SendEmailAsync([student.Email], "Tour of Milwaukee Registration Confirmation",
             $@"
                     <p>Name: {student.Fullname}</p>
                     <p>University: {student.University}</p>
@@ -105,7 +105,7 @@ public class RegistrationLogic : IRegistrationLogic
         switch (driver.Role)
         {
             case RolesEnum.Driver:
-                await _emailServiceApiApi.SendEmailAsync(new [] { driver.Email }, "Tour of Milwaukee: Driver registration",
+                await _emailServiceApiApi.SendEmailAsync([driver.Email], "Tour of Milwaukee: Driver registration",
                     $@"
                     <p> Name: {driver.Fullname}</p>
                     <p> Role: {driver.Role}</p>
@@ -135,7 +135,7 @@ public class RegistrationLogic : IRegistrationLogic
     {
         var globalConfigs = await _configLogic.ResolveGlobalConfig();
 
-        await _emailServiceApiApi.SendEmailAsync(new []{ host.Email }, "Tour of Milwaukee: Host registration", $@"
+        await _emailServiceApiApi.SendEmailAsync([host.Email], "Tour of Milwaukee: Host registration", $@"
                     <p>Name: {host.Fullname}</p>
                     <p>Address: {host.Address}</p>
                     <hr>

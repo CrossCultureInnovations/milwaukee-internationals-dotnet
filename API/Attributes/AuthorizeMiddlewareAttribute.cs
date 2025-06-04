@@ -10,7 +10,7 @@ public class AuthorizeMiddlewareAttribute : AuthorizeAttribute
     {
         if (!userRoleEnums.Any())
         {
-            userRoleEnums = new[] { UserRoleEnum.Basic };
+            userRoleEnums = [UserRoleEnum.Basic];
         }
             
         Roles = userRoleEnums.JoinToString();

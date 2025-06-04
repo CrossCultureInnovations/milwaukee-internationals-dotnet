@@ -210,7 +210,7 @@ public class SmsUtilityLogic : ISmsUtilityLogic
         }));
         
         await _emailServiceApi.SendEmailAsync(
-            new []{ ApiConstants.SiteEmail }, 
+            [ApiConstants.SiteEmail], 
             $"SMS received {middle}", 
             text,
             attachments);

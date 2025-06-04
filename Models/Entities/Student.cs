@@ -59,7 +59,7 @@ public class Student : ObjectHash<Student>, IPerson, IYearlyEntity
     /// <summary>
     /// List of Event Student Relationships
     /// </summary>
-    public List<EventStudentRelationship> Events { get; set; } = new();
+    public List<EventStudentRelationship> Events { get; set; } = [];
         
     public DateTimeOffset RegisteredOn { get; set; }
     

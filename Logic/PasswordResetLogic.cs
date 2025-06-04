@@ -21,7 +21,7 @@ public class PasswordResetLogic : IPasswordResetLogic
         var url = $"{ApiConstants.SiteUrl}/PasswordReset".AppendPathSegment(user.Id)
             .SetQueryParam("token", passwordResetToken).ToUri().AbsoluteUri;
             
-        await _emailServiceApi.SendEmailAsync(new []{ user.Email },
+        await _emailServiceApi.SendEmailAsync([user.Email],
             "Password Reset Request Email - MilwaukeeInternationals.com", $@"
                     <p> Name: {user.Fullname}</p>
                     <p> Username: {user.UserName}</p>

@@ -52,7 +52,7 @@ public class HostLogic : BasicCrudLogicAbstract<Host>, IHostLogic
         
         Expression<Func<Host, bool>> yearFilterExpr = x => x.Year == globalConfigs.YearValue;
         
-        return await base.GetAll(sortBy, descending, null, filters.Concat(new[] { yearFilterExpr }).ToArray());
+        return await base.GetAll(sortBy, descending, null, filters.Concat([yearFilterExpr]).ToArray());
     }
 
     public override Task<Host> Update(int id, Host host)

@@ -17,7 +17,7 @@ public class Host : IPerson, IYearlyEntity
         
     public string Address { get; set; }
         
-    public List<Driver> Drivers { get; set; } = new();
+    public List<Driver> Drivers { get; set; } = [];
         
     /// <summary>
     /// Indicates the year in which host attended the tour

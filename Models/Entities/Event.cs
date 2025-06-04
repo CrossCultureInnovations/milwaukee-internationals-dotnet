@@ -21,7 +21,7 @@ public class Event : IYearlyEntity
     /// <summary>
     /// List of Event Student Relationships
     /// </summary>
-    public List<EventStudentRelationship> Students { get; set; } = new();
+    public List<EventStudentRelationship> Students { get; set; } = [];
         
     /// <summary>
     /// Indicates the year in which driver attended the tour

@@ -15,7 +15,7 @@ public class ApiEventService : IApiEventService
     private readonly IConfigLogic _configLogic;
     private readonly IHubContext<MessageHub> _hubContext;
     private readonly ILogger<ApiEventService> _logger;
-    private LinkedList<ApiEvent> _events = new();
+    private LinkedList<ApiEvent> _events = [];
     private const int QueryLimit = 35;
 
     public ApiEventService(IConfigLogic configLogic, IHubContext<MessageHub> hubContext, ILogger<ApiEventService> logger)

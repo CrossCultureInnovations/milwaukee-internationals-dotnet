@@ -108,7 +108,7 @@ public class LocationMappingLogic :  BasicCrudLogicAbstract<LocationMapping>, IL
             throw new Exception("Duplicate mapping is not allowed");
         }
         
-        var mappings = existingMappings.Concat(new[] { instance }).ToList();
+        var mappings = existingMappings.Concat([instance]).ToList();
 
         if (await IsCyclic(mappings))
         {
@@ -138,7 +138,7 @@ public class LocationMappingLogic :  BasicCrudLogicAbstract<LocationMapping>, IL
             throw new Exception("Duplicate mapping is not allowed");
         }
         
-        var mappings = existingMappings.Concat(new[] { updatedInstance }).ToList();
+        var mappings = existingMappings.Concat([updatedInstance]).ToList();
 
         if (await IsCyclic(mappings))
         {

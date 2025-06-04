@@ -48,7 +48,7 @@
 
     <div class="form-group">
         @Html.LabelFor(x => x.Interests)
-        @Html.TextBoxFor(x => x.Interests, new { @class = "form-control hidden", type = "text", placeholder = "Enter interests", value = "{{tags}}", ng_init = $"tags = [{string.Join(',', Model.Interests?.Split(',').Select(x => @$"""{x}""") ?? Array.Empty<string>())}]", ng_model = "tags" })
+        @Html.TextBoxFor(x => x.Interests, new { @class = "form-control hidden", type = "text", placeholder = "Enter interests", value = "{{tags}}", ng_init = $"tags = [{string.Join(',', Model.Interests?.Split(',').Select(x => @$"""{x}""") ?? [])}]", ng_model = "tags" })
         <tags-input ng-model="tags" use-strings="true" placeholder="we can try to connect you with people having similar interests"></tags-input>
     </div>
 

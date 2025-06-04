@@ -92,7 +92,7 @@ public class StudentDriverMappingLogic : IStudentDriverMappingLogic
             AvailableDrivers = drivers.ToDictionary(x => x, x => 
             {
                 // Count = to 1 + FamilySize
-                var count = (x.Students ?? new List<Student>()).Select(st => 1 + st.FamilySize)
+                var count = (x.Students ?? []).Select(st => 1 + st.FamilySize)
                     .DefaultIfEmpty(0)
                     .Sum();
 
@@ -139,7 +139,7 @@ public class StudentDriverMappingLogic : IStudentDriverMappingLogic
             
         // Send the email to drivers
         var tasks = drivers.Select(x =>
-            _emailServiceApi.SendEmailAsync(new []{ x.Email }, "Tour of Milwaukee - Assigned Students", MessageFunc(x)));
+            _emailServiceApi.SendEmailAsync([x.Email], "Tour of Milwaukee - Assigned Students", MessageFunc(x)));
 
         await Task.WhenAll(tasks);
             

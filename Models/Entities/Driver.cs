@@ -39,7 +39,7 @@ public class Driver : ObjectHash<Driver>, IPerson, IYearlyEntity
     [Display(Name="Role")]
     public RolesEnum Role { get; set; }
         
-    public List<Student> Students { get; set; } = new();
+    public List<Student> Students { get; set; } = [];
 
     public int? HostRefId { get; set; }
 

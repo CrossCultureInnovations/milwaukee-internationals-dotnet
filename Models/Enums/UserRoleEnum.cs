@@ -32,12 +32,12 @@ public static class UserRoleEnumExtension
             UserRoleEnum.Admin => ImmutableList.Create<UserRoleEnum>()
                 .Add(UserRoleEnum.Basic),
             _ => Enumerable.Empty<UserRoleEnum>()
-        }).Concat(new[] {userRoleEnum}).ToHashSet();
+        }).Concat([userRoleEnum]).ToHashSet();
     }
 
     public static string JoinToString(this IEnumerable<UserRoleEnum> userRoleEnums)
     {
         return string.Join(',',
-            userRoleEnums.Concat(new[] {UserRoleEnum.Basic}).ToHashSet().Select(x => x.ToString()));
+            userRoleEnums.Concat([UserRoleEnum.Basic]).ToHashSet().Select(x => x.ToString()));
     }
 }

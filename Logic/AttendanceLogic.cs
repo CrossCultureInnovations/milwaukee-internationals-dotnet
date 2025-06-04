@@ -71,7 +71,7 @@ public class AttendanceLogic : IAttendanceLogic
         {
             var url = $"{ApiConstants.SiteUrl}/utility/EmailCheckIn/Student/{x.GenerateHash()}";
                 
-            await _emailServiceApi.SendEmailAsync(new []{ x.Email }, "Tour Check-In", $@"
+            await _emailServiceApi.SendEmailAsync([x.Email], "Tour Check-In", $@"
                     <h4>Please use this link to check-in</h4>
                     <br>
                     <p><a href=""{url}"">Link</a> ({url})</p>
@@ -95,7 +95,7 @@ public class AttendanceLogic : IAttendanceLogic
         {
             var url = $"{ApiConstants.SiteUrl}/utility/EmailCheckIn/Driver/{x.GenerateHash()}";
                 
-            await _emailServiceApi.SendEmailAsync(new []{ x.Email }, $"Tour Driver Check-In and Host Info ({DateTime.UtcNow.Year})", $@"
+            await _emailServiceApi.SendEmailAsync([x.Email], $"Tour Driver Check-In and Host Info ({DateTime.UtcNow.Year})", $@"
                     <h4>Hello {x.Fullname},</h4>
                     <h4>Please use the following link to see details and to check-in</h4>
                     <p><a href=""{url}"">{url}</a></p>

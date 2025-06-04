@@ -3,7 +3,7 @@
 public static class CountriesConstant
 {
     public static readonly string[] Countries =
-    {
+    [
         "India", "China",
         "Afghanistan", "Albania", "Algeria", "Andorra", "Angola",
         "Anguilla", "Argentina", "Armenia",
@@ -50,5 +50,5 @@ public static class CountriesConstant
         "United States Minor Outlying Islands", "Uruguay", "Uzbekistan",
         "Venezuela", "Vietnam", "Virgin Islands (US)", "Yemen", "Zambia",
         "Zimbabwe"
-    };
+    ];
 }

@@ -13,7 +13,7 @@ public class PushNotificationController : Controller
 {
     private readonly IApiEventService _apiEventService;
 
-    private static readonly HashSet<string> Tokens = new();
+    private static readonly HashSet<string> Tokens = [];
 
     public PushNotificationController(IApiEventService apiEventService)
     {

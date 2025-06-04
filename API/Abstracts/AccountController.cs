@@ -69,7 +69,7 @@ public abstract class AbstractIdentityController : Controller
             result2 &= (await ResolveUserManager().AddToRoleAsync(user, subRole.ToString())).Succeeded;
         }
 
-        return (result2, Array.Empty<string>());
+        return (result2, []);
     }
 
     [NonAction]
