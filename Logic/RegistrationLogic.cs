@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Drawing.Imaging;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Xml;
 using DAL.Interfaces;
 using Flurl;
 using Logic.Interfaces;
@@ -12,7 +9,6 @@ using Models.Constants;
 using Models.Entities;
 using Models.Enums;
 using Net.Codecrete.QrCodeGenerator;
-using Svg;
 
 namespace Logic;
 
@@ -138,7 +134,7 @@ public class RegistrationLogic(
         var year = DateTime.Now.Year;
         var count = await driverLogic.Count(x => x.Year == year);
 
-        var overLimit = count < globalConfigs.MaxLimitDrivers;
+        var overLimit = count >= globalConfigs.MaxLimitDrivers;
         var afterTour = await IsAfterTourDay();
         
         return !overLimit && !afterTour;
