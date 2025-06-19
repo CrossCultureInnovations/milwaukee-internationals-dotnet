@@ -58,7 +58,7 @@ public class RegistrationLogic(
                     {(globalConfigs.QrInStudentEmail ? @$"<br>
                     <p>Please save your QR code after your online registration. You can use the QR code when you check-in on the day of the Tour of Milwaukee.</p>
                     <img src=""{qrUri}"" alt=""QR code"" />" : "")}
-                ");
+                ", attachments: globalConfigs.QrInStudentEmail ? [ ("qr.png", "image/png", sigBase64) ] : []);
     }
 
     public async Task SendDriverEmail(Driver driver)
