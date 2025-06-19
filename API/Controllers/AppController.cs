@@ -1,4 +1,5 @@
 using API.Attributes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models.Enums;
 
@@ -7,14 +8,15 @@ namespace API.Controllers;
 /// <summary>
 ///     App controller
 /// </summary>
-[AuthorizeMiddleware]
+[AllowAnonymous]
 [ApiExplorerSettings(IgnoreApi = true)]
 [Route("[controller]")]
 public class AppController : Controller
 {
+    [AllowAnonymous]
     [HttpGet]
-    [Route("CheckIn/Student/{hashcode:int}")]
-    public IActionResult StudentCheckIn([FromRoute] int hashcode)
+    [Route("CheckIn/Student/{hashcode}")]
+    public IActionResult StudentCheckIn([FromRoute] string hashcode)
     {
         return RedirectToAction("EmailCheckIn", "Utility", new
         {

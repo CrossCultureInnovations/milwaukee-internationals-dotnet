@@ -237,10 +237,7 @@ public class Startup
     /// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
     /// </summary>
     /// <param name="app"></param>
-    /// <param name="configLogic"></param>
-    /// <param name="apiEventService"></param>
-    /// <param name="smsService"></param>
-    public void Configure(IApplicationBuilder app, IConfigLogic configLogic, IApiEventService apiEventService, ISmsService smsService)
+    public void Configure(IApplicationBuilder app)
     {
         // Add SecureHeadersMiddleware to the pipeline
         app.UseSecureHeadersMiddleware(_configuration.Get<SecureHeadersMiddlewareConfiguration>());
@@ -276,11 +273,12 @@ public class Startup
                 
             if (context.Response.IsFailure())
             {
+                var apiEventServiceCtx = context.RequestServices.GetRequiredService<IApiEventService>();
                 var exHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
                 var exception = exHandlerFeature?.Error;
 
                 var statusCodeEnum = (HttpStatusCode)context.Response.StatusCode;
-                await apiEventService.RecordEvent($"Failure with status code: {statusCodeEnum.ToString()} / {context.Response.StatusCode} route: [{context.Request.Method}] {context.Request.GetDisplayUrl()} => {exception?.Message}");
+                await apiEventServiceCtx.RecordEvent($"Failure with status code: {statusCodeEnum.ToString()} / {context.Response.StatusCode} route: [{context.Request.Method}] {context.Request.GetDisplayUrl()} => {exception?.Message}");
                     
                 context.Request.Path = $"/Error/{context.Response.StatusCode}";
                 await next();
