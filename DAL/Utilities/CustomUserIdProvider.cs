@@ -8,6 +8,6 @@ public class CustomUserIdProvider(UserManager<User> userManager) : IUserIdProvid
 {
     public string GetUserId(HubConnectionContext connection)
     {
-        return userManager.FindByNameAsync(connection.User.Identity!.Name).Result.Id.ToString();
+        return userManager.FindByNameAsync(connection.User.Identity!.Name!).Result!.Id.ToString();
     }
 }
