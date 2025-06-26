@@ -150,16 +150,9 @@ public class Startup
             .AddHtmlMinification()
             .AddHttpCompression();
 
-        services.Scan(scan => scan
-            .FromAssemblies(Assembly.Load("API"), Assembly.Load("Logic"), Assembly.Load("DAL"))
-            .AddClasses() // to register
-            .UsingRegistrationStrategy(RegistrationStrategy.Skip) // 2. Define how to handle duplicates
-            .AsImplementedInterfaces() // 2. Specify which services they are registered as
-            .WithTransientLifetime()); // 3. Set the lifetime for the services
-
         services.AddSingleton<CacheBustingUtility>();
 
-        services.AddSingleton<ISmsService>(ctx => new SmsService(
+        services.AddTransient<ISmsService>(ctx => new SmsService(
             _configuration.GetRequiredValue<string>("TELNYX_AUTH_TOKEN"),
             _configuration.GetRequiredValue<string>("TELNYX_SENDER_PHONE_NUMBER"),
             ctx.GetRequiredService<IConfigLogic>(),
@@ -230,7 +223,14 @@ public class Startup
 
         services.AddEfRepository<EntityDbContext>(opt => opt.Profile(Assembly.Load("Dal")));
 
-        services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+        services.AddScoped<IUserIdProvider, CustomUserIdProvider>();
+        
+        services.Scan(scan => scan
+            .FromAssemblies(Assembly.Load("API"), Assembly.Load("Logic"), Assembly.Load("DAL"))
+            .AddClasses() // to register
+            .UsingRegistrationStrategy(RegistrationStrategy.Skip) // 2. Define how to handle duplicates
+            .AsImplementedInterfaces() // 2. Specify which services they are registered as
+            .WithTransientLifetime()); // 3. Set the lifetime for the services
     }
 
     /// <summary>
