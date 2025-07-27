@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using DAL.ServiceApi;
 
 namespace DAL.Interfaces;
 
@@ -10,4 +11,6 @@ public interface IEmailServiceApi
         string emailSubject,
         string emailHtml,
         params (string filename, string contentType, string content)[] attachments);
+
+    Task<MailSenderRegistrationStatus> IsSenderRegistered(string email);
 }

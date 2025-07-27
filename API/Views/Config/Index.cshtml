@@ -3,14 +3,28 @@
 @using Models.Constants
 @model Models.Entities.GlobalConfigs
 @inject IConfigLogic ConfigLogic
+@inject IEmailServiceApi EmailService
 @{
     ViewBag.Title = "Configuration";
     Layout = "_Layout";
     var selectedYear = Model.YearValue;
     var selectedTheme = Model.Theme;
+
+    var emailSenderRegistered = await EmailService.IsSenderRegistered(Model.EmailSenderOnBehalf);
 }
 
 <div class="container-fluid">
+    
+    @if (!string.IsNullOrWhiteSpace(Model.EmailSenderOnBehalf) && !emailSenderRegistered.Success)
+    {
+        <div class="alert alert-danger">
+            <p>@(Model.EmailSenderOnBehalf) is not registered to send an email</p>
+            <code>
+                @(emailSenderRegistered.Message)
+            </code>
+        </div>
+    }
+
 @using (Html.BeginForm("UpdateConfig", "Config", FormMethod.Post))
 {
     @Html.TextBoxFor(x => x.Id, new { @class = "hidden" })

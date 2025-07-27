@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DAL.Interfaces;
 using Mailjet.Client;
+using Mailjet.Client.Resources;
 using Mailjet.Client.TransactionalEmails;
 using Microsoft.Extensions.Logging;
 using Models.Constants;
@@ -65,4 +67,65 @@ public class EmailServiceApi(IMailjetClient mailJetClient, IConfigLogic configLo
             emailHtml,
             attachments)));
     }
+    
+    
+    public async Task<MailSenderRegistrationStatus> IsSenderRegistered(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return new MailSenderRegistrationStatus
+            {
+                Success = false,
+                Message = $"Malformed email address {email}."
+            };
+        }
+
+        var request = new MailjetRequest
+        {
+            Resource = Sender.Resource
+        }
+        .Filter(Sender.Email, email);
+        
+        var response = await mailJetClient.GetAsync(request);
+
+        switch (response.IsSuccessStatusCode)
+        {
+            case true when response.GetTotal() > 0:
+            {
+                if (string.Equals(response.Content.SelectToken("Data")!.First!.Value<string>("Status"), "InActive", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return new MailSenderRegistrationStatus
+                    {
+                        Success = false,
+                        Message = $"User {email} is registered to send email but inactive. Please check verification email from mailjet."
+                    };
+                }
+
+                return new MailSenderRegistrationStatus
+                {
+                    Success = true,
+                    Message = $"User {email} is registered and active to send emails."
+                };
+            }
+            case true:
+                return new MailSenderRegistrationStatus
+                {
+                    Success = false,
+                    Message = $"User {email} is not registered to send emails."
+                };
+            default:
+                return new MailSenderRegistrationStatus
+                {
+                    Success = false,
+                    Message = $"Failed to get email sender registration status for {email}."
+                };
+        }
+    }
+}
+
+public class MailSenderRegistrationStatus
+{
+    public required bool Success { get; set; }
+    
+    public required string Message { get; set; }
 }
