@@ -200,7 +200,7 @@ public class RegistrationLogic(
     {
         var url = $"{ApiConstants.SiteUrl}/utility/EmailCheckIn/Driver/{driver.GenerateHash()}";
 
-        var text = $"Asher here.Your display ID is {driver.DisplayId.Split('-')[1]}, link to check-in and see tour details {url}";
+        var text = $"Tour of MKE.Your display ID is {driver.DisplayId.Split('-')[1]}, link to check-in and see tour details {url}";
         
         await smsService.SendMessage(driver.Phone, text);
     }
@@ -209,7 +209,7 @@ public class RegistrationLogic(
     {
         var url = $"{ApiConstants.SiteUrl}/utility/EmailCheckIn/Student/{student.GenerateHash()}";
 
-        var text = $"Asher here.Link to check-in and see tour details {url}";
+        var text = $"Tour of MKE.Link to check-in and see tour details {url}";
         
         await smsService.SendMessage(student.Phone, text);
     }

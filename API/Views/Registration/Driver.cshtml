@@ -29,6 +29,6 @@
             <toggle class="pull-right" ng-model="agreeSms" on="Agree" off="Disagree" onstyle="btn-primary" offstyle="btn-default" ng-change="agreeSms_val = agreeSms"></toggle>
         </div> 
         
-        <input class="btn btn-primary" type="submit" value="Register"/>
+        <input class="btn btn-primary" type="submit" value="Register" ng-disabled="!agreeSms" />
     }
 </div>
