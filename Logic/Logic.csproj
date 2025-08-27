@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\DAL\DAL.csproj" />
@@ -8,7 +8,7 @@
   <ItemGroup>
     <PackageReference Include="CaseExtensions" Version="1.1.0" />
     <PackageReference Include="Flurl" Version="4.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.8" />
     <PackageReference Include="MlkPwgen" Version="0.3.0" />
     <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="2.0.7" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.7" />

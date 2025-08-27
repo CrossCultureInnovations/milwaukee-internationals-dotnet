@@ -1,6 +1,6 @@
-using System.Data.Entity;
 using System.Linq;
 using EfCoreRepository;
+using Microsoft.EntityFrameworkCore;
 using Models.Entities;
 
 namespace DAL.Profiles;
