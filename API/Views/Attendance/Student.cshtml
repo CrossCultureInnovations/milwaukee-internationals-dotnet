@@ -86,14 +86,14 @@
                 <td class="col-xs-4 col-sm-2">
                     <toggle ng-model="student.isPresent" ng-change="changeAttendance(student)" on="Present" off="Absent" size="btn" onstyle="btn-success" offstyle="btn-default" toggle-class="quick"></toggle>
                 </td>
-                <td ng-if="student.driver != null">{{student.driver ? ( student.driver.fullname + " (" + student.driver.displayId +  ")" ) : ""}}</td>
+                <td ng-if="student.driver != null" ng-class="{ 'danger': !student.driver.isPresent }">{{student.driver ? ( student.driver.fullname + " (" + student.driver.displayId +  ")" ) : ""}}</td>
                 <td ng-if="student.driver == null">
                     <div class="row">
                         <div class="col-sm-8">
                             <select class="form-control" ng-model="student.driverId">
                                 <optgroup label="{{hostFullname}}" ng-repeat="(hostFullname, drivers) in availableDriversBuckets">
                                     <option value="{{driver.id}}" ng-repeat="driver in drivers" ng-disabled="!availableDriversTable[driver.id]">
-                                        {{driver.fullname}} [ {{ resolvePassengers(driver) }} / {{ driver.capacity }} ] {{ driver.haveChildSeat ? "[C]" : "" }}
+                                        {{driver.fullname}} [ {{ resolvePassengers(driver) }} / {{ driver.capacity }} ] {{ driver.haveChildSeat ? "[C]" : "" }} {{ !driver.isPresent ? "(absent)" : "" }}
                                     </option>
                                 </optgroup>
                             </select>
