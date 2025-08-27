@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DAL.Interfaces;
 using DAL.Utilities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using Models.ViewModels.EventService;
@@ -11,21 +12,24 @@ using Models.ViewModels.EventService;
 namespace DAL.ServiceApi;
 
 public class ApiEventService(
+    IHttpContextAccessor httpContextAccessor,
     IConfigLogic configLogic,
     IHubContext<MessageHub> hubContext,
     ILogger<ApiEventService> logger)
     : IApiEventService
 {
     private LinkedList<ApiEvent> _events = [];
-    private const int QueryLimit = 35;
+    private const int QueryLimit = 55;
 
     public async Task RecordEvent(string description)
     {
         logger.LogTrace("{}", description);
         
+        var user = httpContextAccessor.HttpContext?.User.Identity?.Name ?? "anonymous";
+        
         var entity = new ApiEvent
         {
-            Description = description,
+            Description = $"[{user}] {description}",
             RecordedDate = DateTimeOffset.Now,
             // This is needed to make sure events are added in reverse chronological order because azure blob storage doesn't have order by feature
             RowKey = (DateTimeOffset.MaxValue.Ticks - DateTimeOffset.Now.Ticks).ToString("d19"),
