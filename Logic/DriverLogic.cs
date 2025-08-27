@@ -40,7 +40,21 @@ public class DriverLogic(IEfRepository repository, IConfigLogic configLogic, IAp
         // Set the year
         instance.Year = DateTime.UtcNow.Year;
 
-        instance.DisplayId = GenerateDisplayId(instance, count);
+        var allDrivers = (await _dal.GetAll<Driver>([x => x.Year == DateTime.Now.Year])).ToList();
+
+        // This will ensure there is never two drivers with the same number
+        while (true)
+        {
+            var displayIdCandidate = GenerateDisplayId(instance, count);
+
+            if (allDrivers.All(x => x.DisplayId != displayIdCandidate))
+            {
+                instance.DisplayId = displayIdCandidate;
+                break;
+            }
+
+            count++;
+        }
         
         instance.RegisteredOn = DateTimeOffset.Now;
 
