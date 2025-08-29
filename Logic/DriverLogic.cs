@@ -10,6 +10,7 @@ using Logic.Interfaces;
 using Models.Entities;
 using Models.Enums;
 using Models.ViewModels;
+using EfCoreRepository.Extensions;
 using static Logic.Utilities.RegistrationUtility;
 
 namespace Logic;
@@ -40,7 +41,7 @@ public class DriverLogic(IEfRepository repository, IConfigLogic configLogic, IAp
         // Set the year
         instance.Year = DateTime.UtcNow.Year;
 
-        var allDrivers = (await _dal.GetAll<Driver>([x => x.Year == DateTime.Now.Year])).ToList();
+        var allDrivers = (await _dal.GetAll([x => x.Year == DateTime.Now.Year])).ToList();
 
         // This will ensure there is never two drivers with the same number
         while (true)

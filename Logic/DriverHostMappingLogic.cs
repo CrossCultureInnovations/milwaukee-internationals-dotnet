@@ -91,7 +91,7 @@ public class DriverHostMappingLogic : IDriverHostMappingLogic
             AvailableHosts = hosts,
             AvailableDrivers = drivers.Where(x => x.Host == null),
             MappedDrivers = drivers.Where(x => x.Host != null),
-            MappedHosts = hosts.Where(x => x.Drivers != null && x.Drivers.Any())
+            MappedHosts = hosts.Where(x => x.Drivers != null && x.Drivers.Count != 0)
         };
     }
 

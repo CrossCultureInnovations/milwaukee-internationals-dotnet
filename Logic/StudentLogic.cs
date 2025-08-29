@@ -45,7 +45,19 @@ public class StudentLogic(IEfRepository repository, IConfigLogic configLogic, IA
 
         var count = allStudents.Count;
 
-        student.DisplayId = GenerateDisplayId(student, count);
+        // This will ensure there is never two drivers with the same number
+        while (true)
+        {
+            var displayIdCandidate = GenerateDisplayId(student, count);
+
+            if (allStudents.All(x => x.DisplayId != displayIdCandidate))
+            {
+                student.DisplayId = displayIdCandidate;
+                break;
+            }
+
+            count++;
+        }
 
         // If student is not a family then family size should be zero
         if (!student.IsFamily)
