@@ -68,6 +68,7 @@
             <thead>
             <tr>
                 <th>Fullname</th>
+                <th class="hidden-sm hidden-xs">DisplayId</th>
                 <th>Capacity</th>
                 <th>Checked-in</th>
                 <th>Host</th>
@@ -77,6 +78,7 @@
             <tbody>
             <tr ng-repeat="driver in drivers track by driver.id">
                 <td>{{driver.fullname}} ({{ driver.displayId }})</td>
+                <td class="hidden-sm hidden-xs">{{driver.displayId}}</td>
                 <td>{{driver.capacity}}</td>
                 <td class="col-xs-4 col-sm-2">
                     <toggle ng-model="driver.isPresent" ng-change="changeAttendance(driver)" on="Present" off="Absent" size="btn" onstyle="btn-success" offstyle="btn-default" toggle-class="quick"></toggle>

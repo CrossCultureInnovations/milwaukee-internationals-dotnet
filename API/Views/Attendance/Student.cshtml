@@ -73,6 +73,7 @@
             <thead>
             <tr>
                 <th>Fullname</th>
+                <th class="hidden-sm hidden-xs">DisplayId</th>
                 <th>Country</th>
                 <th>Checked-in</th>
                 <th>Driver</th>
@@ -82,6 +83,7 @@
             <tbody>
             <tr ng-repeat="student in students track by student.id">
                 <td>{{student.fullname}} {{ student.isFamily ? "[+" + student.familySize + "]" : "" }} {{ student.kosherFood ? "[H]" : "" }}</td>
+                <td class="hidden-sm hidden-xs">{{student.displayId }}</td>
                 <td>{{student.country}}</td>
                 <td class="col-xs-4 col-sm-2">
                     <toggle ng-model="student.isPresent" ng-change="changeAttendance(student)" on="Present" off="Absent" size="btn" onstyle="btn-success" offstyle="btn-default" toggle-class="quick"></toggle>
