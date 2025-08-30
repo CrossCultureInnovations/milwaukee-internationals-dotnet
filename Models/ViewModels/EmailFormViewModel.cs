@@ -39,5 +39,5 @@ public class EmailFormViewModel : IViewModel
     public string AdditionalRecipients { get; set; }
     
     [Display(Name = "Email Attachments")]
-    public IFormFile[] Files { get; set; }
+    public IFormFile[] Files { get; set; } = [];
 }
