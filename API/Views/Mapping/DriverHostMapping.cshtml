@@ -11,13 +11,16 @@
 
     var userInfo = await RequestUtilityBuilder.For(Context).GetUserInfo();
     var globalConfig = await ConfigLogic.ResolveGlobalConfig();
+
+    var capacity = Model.Sum(x => x.Capacity);
+    var countAllStudents = Model.Sum(x => x.Students.Count);
 }
 
 <div class="container-fluid">
     <div class="page-header">
         <h3>
             Driver-Host Mapping
-            <small>(Assigned Drivers: @Model.Count(x => x.Host != null) out of @Model.Count)</small>
+            <small>(Assigned Drivers: @Model.Count(x => x.Host != null) out of @Model.Count, Total students assigned/capacity: [@countAllStudents / @capacity] )</small>
         </h3>
     </div>
 
@@ -61,7 +64,10 @@
                                         <div class="col-sm-12">
                                             <div class="list-group">
                                                 <div ng-repeat="driver in host.drivers" ng-class="driver.isPresent ? 'list-group-item-success' : 'list-group-item-danger'" class="list-group-item clearfix">
-                                                    <div class="pull-left vcenter">{{driver.fullname}} [{{ resolvePassengers(driver) }} / {{driver.capacity}}]</div>
+                                                    <p class="vcenter" style="margin-bottom: 0.1rem">
+                                                        {{driver.fullname}} [{{ resolvePassengers(driver) }} / {{driver.capacity}}]
+                                                    </p>
+                                                    <sub ng-if="driver.navigator">{{driver.navigator}}</sub>
                                                     <span class="pull-right">
                                                         <a ng-click="unmap(driver.id, host.id)" class="btn btn-danger pull-right">
                                                             <span class="glyphicon glyphicon-remove"></span>
