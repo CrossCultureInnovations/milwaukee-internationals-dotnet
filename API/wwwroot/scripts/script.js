@@ -164,7 +164,7 @@ angular.module('cytoscape.js-edgehandles', [])
         });
     });
 
-angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize', 'angular-async-await', 'angular-loading-bar', 'cytoscape.js-edgehandles'])
+angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize', 'angular-async-await', 'angular-loading-bar', 'cytoscape.js-edgehandles', 'ngStorage'])
     .config(['cfpLoadingBarProvider', cfpLoadingBarProvider => {
         cfpLoadingBarProvider.includeBar = true;
         cfpLoadingBarProvider.includeSpinner = true;
@@ -355,8 +355,8 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         angular.element('.summernote').summernote({ height: 150 });
 
     }])
-    .controller('userListCtrl', ['$scope', '$http', ($scope, $http) => {
-
+    .controller('userListCtrl', ['$scope', '$http', '$localStorage', ($scope, $http, $localStorage) => {
+        $scope.storage = $localStorage;
     }])
     .controller('emailUtilityCtrl', ['$scope', '$timeout', ($scope, $timeout) => {
 
@@ -412,8 +412,9 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
             }
         }
     }])
-    .controller('studentListCtrl', ['$scope', '$http', 'jsPDF', '$async', ($scope, $http, jsPDF, $async) => {
-
+    .controller('studentListCtrl', ['$scope', '$http', 'jsPDF', '$async', '$localStorage', ($scope, $http, jsPDF, $async, $localStorage) => {
+        $scope.storage = $localStorage;
+        
         $scope.downloadTable = {
             id: false,
             displayId: false,
@@ -431,9 +432,6 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
         };
 
         $scope.showDetail = false;
-
-        $scope.toggleShowDetail = () => {
-        };
 
         $scope.getAllStudentsCSV = $async($scope, async () => {
             const { data: students } = await $http.get('/api/student');
@@ -497,7 +495,9 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
             doc.save('student-list.pdf');
         });
     }])
-    .controller('driverListCtrl', ['$scope', '$http', 'jsPDF', '$async', ($scope, $http, jsPDF, $async) => {
+    .controller('driverListCtrl', ['$scope', '$http', 'jsPDF', '$async', '$localStorage', ($scope, $http, jsPDF, $async, $localStorage) => {
+        $scope.storage = $localStorage;
+
         $scope.downloadTable = {
             id: false,
             displayId: false,
@@ -567,7 +567,9 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
             doc.save('driver-list.pdf');
         });
     }])
-    .controller('hostListCtrl', ['$scope', '$http', 'jsPDF', '$async', ($scope, $http, jsPDF, $async) => {
+    .controller('hostListCtrl', ['$scope', '$http', 'jsPDF', '$async', '$localStorage', ($scope, $http, jsPDF, $async, $localStorage) => {
+        $scope.storage = $localStorage;
+
         $scope.getAllHostPDF = $async($scope, async () => {
             const { data: hosts } = await $http.get('/api/host');
 
@@ -1051,7 +1053,9 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
 
         await $scope.init();
     }])
-    .controller('locationListCtrl', ['$scope', '$http', '$window', '$async', 'jsPDF', async ($scope, $http, $window, $async, jsPDF) => {
+    .controller('locationListCtrl', ['$scope', '$http', '$window', '$async', 'jsPDF', '$localStorage', async ($scope, $http, $window, $async, jsPDF, $localStorage) => {
+        $scope.storage = $localStorage;
+        
         $scope.getAllLocationsPDF = $async($scope, async () => {
             const { data: locations } = await $http.get('/api/location');
 

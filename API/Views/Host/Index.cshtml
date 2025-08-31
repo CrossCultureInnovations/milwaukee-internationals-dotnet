@@ -18,7 +18,7 @@
                 <div class="pull-right">
                     @if (userInfo.UserRoleEnum == UserRoleEnum.Admin)
                     {
-                        <toggle ng-model="showDetail" on="Hide detail" off="Show detail" size="btn" onstyle="btn-success" offstyle="btn-danger" toggle-class="quick" class="margin-right-md"></toggle>
+                        <toggle ng-model="showDetail" ng-init="showDetail = storage.hostDetails || false" ng-change="storage.hostDetails = showDetail" on="Hide detail" off="Show detail" size="btn" onstyle="btn-success" offstyle="btn-danger" toggle-class="quick" class="margin-right-md"></toggle>
                         <button class="btn btn-default pull-right" ng-click="getAllHostPDF()">Download PDF</button>
                     }
                 </div>
