@@ -438,7 +438,12 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
             const attributes = Object.keys($scope.downloadTable).filter(value => $scope.downloadTable[value]);
 
             const rows = students
-                .map(student => attributes.map(x => student[x]));
+                .map(student => attributes
+                    .map(x => student[x])
+                    .map(String)  // convert every value to String
+                    .map(v => v.replaceAll('"', '""'))  // escape double quotes
+                    .map(v => `"${v}"`)  // quote it
+                );
 
             let csvContent = "data:text/csv;charset=utf-8,";
 
@@ -512,7 +517,12 @@ angular.module('tourApp', ['ui.toggle', 'ngTagsInput', 'chart.js', 'ngSanitize',
             const attributes = Object.keys($scope.downloadTable).filter(value => $scope.downloadTable[value]);
 
             const rows = drivers
-                .map(driver => attributes.map(x => driver[x]));
+                .map(driver => attributes
+                    .map(x => driver[x])
+                    .map(String)  // convert every value to String
+                    .map(v => v.replaceAll('"', '""'))  // escape double quotes
+                    .map(v => `"${v}"`)  // quote it
+                );
 
             let csvContent = "data:text/csv;charset=utf-8,";
 
