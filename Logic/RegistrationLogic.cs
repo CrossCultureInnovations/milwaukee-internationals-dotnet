@@ -144,7 +144,7 @@ public class RegistrationLogic(
     {
         var globalConfigs = await configLogic.ResolveGlobalConfig();
 
-        return DateTime.Now.Subtract(globalConfigs.TourDate.AddDays(1)).Days > 0;
+        return DateTime.Now.Subtract(globalConfigs.TourDate.AddDays(1)).Days >= 0;
     }
     
     public async Task RegisterDriver(Driver driver)
