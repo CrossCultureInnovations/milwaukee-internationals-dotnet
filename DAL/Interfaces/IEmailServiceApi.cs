@@ -13,4 +13,6 @@ public interface IEmailServiceApi
         params (string filename, string contentType, string content)[] attachments);
 
     Task<MailSenderRegistrationStatus> IsSenderRegistered(string email);
+
+    Task Callback(MailjetEvent[] body);
 }
