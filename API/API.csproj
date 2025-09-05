@@ -16,8 +16,8 @@
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.8" />
     <PackageReference Include="OwaspHeaders.Core" Version="9.8.1" />
     <PackageReference Include="Scrutor" Version="6.1.0" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
-    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="9.0.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
+    <PackageReference Include="Swashbuckle.AspNetCore.Annotations" Version="9.0.4" />
     <PackageReference Include="WebMarkupMin.AspNetCore6" Version="2.19.0" />
   </ItemGroup>
   
