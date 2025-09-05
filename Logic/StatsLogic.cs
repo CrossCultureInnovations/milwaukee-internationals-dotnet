@@ -8,6 +8,7 @@ using Logic.Interfaces;
 using Models.Entities;
 using Models.Enums;
 using Models.ViewModels;
+using EfCoreRepository.Extensions;
 
 namespace Logic;
 
@@ -24,7 +25,7 @@ public class StatsLogic(IEfRepository repository, IConfigLogic configLogic) : IS
         
         foreach (var year in configLogic.GetYears())
         {
-            var students = (await _studentDal.GetAll<Student>(filterExprs: [
+            var students = (await _studentDal.GetAll(filterExprs: [
                 x => x.Year == year
             ])).ToList();
             
@@ -68,7 +69,7 @@ public class StatsLogic(IEfRepository repository, IConfigLogic configLogic) : IS
 
             if (countDrivers <= 0) continue;
 
-            var countryDistributionForYear = (await _studentDal.GetAll<Student>(filterExprs: [x => x.Year == year]))
+            var countryDistributionForYear = (await _studentDal.GetAll(filterExprs: [x => x.Year == year]))
                 .GroupBy(x => x.Country.ToLower())
                 .ToDictionary(x => x.Key, x => x.Count());
 

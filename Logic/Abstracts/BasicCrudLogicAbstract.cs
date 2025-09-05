@@ -9,6 +9,7 @@ using EfCoreRepository.Interfaces;
 using Logic.Interfaces;
 using Models.Entities;
 using Models.Interfaces;
+using EfCoreRepository.Extensions;
 
 namespace Logic.Abstracts;
 
@@ -43,7 +44,7 @@ public abstract class BasicCrudLogicAbstract<T> : IBasicCrudLogic<T> where T : c
     /// <returns></returns>
     public virtual async Task<IEnumerable<T>> GetAll(string sortBy = null, bool? descending = null, Func<object, string, object> sortByModifier = null, params Expression<Func<T, bool>>[] filters)
     {
-        var result = await Repository().GetAll<T>(filters);
+        var result = await Repository().GetAll(filters);
 
         await ApiEventService().RecordEvent($"Queried all {typeof(T).Name}");
 
