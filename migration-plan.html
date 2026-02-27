@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Milwaukee Internationals — UI Modernization Plan</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0b0d;
+    --surface: #111318;
+    --surface-2: #181b22;
+    --surface-3: #1e222b;
+    --border: #2a2f3a;
+    --border-accent: #3d4455;
+    --text: #e8eaf0;
+    --text-dim: #8b91a3;
+    --text-muted: #555c6e;
+    --accent: #c4a35a;
+    --accent-dim: #a08542;
+    --accent-glow: rgba(196, 163, 90, 0.12);
+    --green: #5db87a;
+    --blue: #5b8fd9;
+    --red: #d9605b;
+    --purple: #9b7bd4;
+    --font-display: 'DM Serif Display', Georgia, serif;
+    --font-body: 'IBM Plex Sans', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Atmospheric grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Top accent line */
+  .accent-bar {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+  }
+
+  .container {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 60px 32px 100px;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom: 64px;
+    padding-bottom: 48px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 120px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .eyebrow::before {
+    content: '';
+    width: 32px;
+    height: 1px;
+    background: var(--accent);
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 42px;
+    font-weight: 400;
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 12px;
+    letter-spacing: -0.3px;
+  }
+
+  h1 em {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .subtitle {
+    font-size: 17px;
+    color: var(--text-dim);
+    font-weight: 300;
+    margin-bottom: 28px;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 32px;
+    align-items: center;
+  }
+
+  .meta-tag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .meta-tag .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+  }
+
+  /* Download button */
+  .download-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 28px;
+    background: var(--accent);
+    color: #0a0b0d;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .download-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .download-btn:hover {
+    background: #d4b36a;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 32px rgba(196, 163, 90, 0.25);
+  }
+
+  .download-btn:hover::before { opacity: 1; }
+
+  .download-btn:active { transform: translateY(0); }
+
+  .download-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Sections */
+  .section {
+    margin-bottom: 56px;
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .section:nth-child(2) { animation-delay: 0.05s; }
+  .section:nth-child(3) { animation-delay: 0.1s; }
+  .section:nth-child(4) { animation-delay: 0.15s; }
+  .section:nth-child(5) { animation-delay: 0.2s; }
+  .section:nth-child(6) { animation-delay: 0.25s; }
+  .section:nth-child(7) { animation-delay: 0.3s; }
+  .section:nth-child(8) { animation-delay: 0.35s; }
+  .section:nth-child(9) { animation-delay: 0.4s; }
+  .section:nth-child(10) { animation-delay: 0.45s; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  h2 .phase-num {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-glow);
+    padding: 4px 10px;
+    border: 1px solid rgba(196, 163, 90, 0.2);
+    letter-spacing: 1px;
+  }
+
+  /* Comparison Table */
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+    font-size: 13.5px;
+  }
+
+  .comparison-table th {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .comparison-table td {
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+    vertical-align: top;
+  }
+
+  .comparison-table tr:hover td {
+    background: var(--surface);
+  }
+
+  .comparison-table td:first-child {
+    color: var(--text);
+    font-weight: 500;
+    width: 120px;
+  }
+
+  .comparison-table td:nth-child(2) {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--red);
+    opacity: 0.85;
+  }
+
+  .comparison-table td:nth-child(3) {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--green);
+    opacity: 0.85;
+  }
+
+  .comparison-table .arrow-cell {
+    width: 32px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  /* Step list */
+  .steps {
+    list-style: none;
+    counter-reset: step-counter;
+  }
+
+  .steps li {
+    counter-increment: step-counter;
+    display: flex;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(42, 47, 58, 0.5);
+    align-items: flex-start;
+  }
+
+  .steps li:last-child { border-bottom: none; }
+
+  .steps li::before {
+    content: counter(step-counter);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--accent);
+    background: var(--accent-glow);
+    border: 1px solid rgba(196, 163, 90, 0.15);
+    min-width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .steps li .step-text {
+    font-size: 14.5px;
+    color: var(--text-dim);
+    line-height: 1.55;
+  }
+
+  .steps li .step-text strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .steps li .step-text code {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--surface-2);
+    color: var(--blue);
+    padding: 1px 6px;
+    border: 1px solid var(--border);
+  }
+
+  /* Decision / Constraint cards */
+  .card-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover {
+    border-color: var(--border-accent);
+  }
+
+  .card-icon {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 7px;
+  }
+
+  .card-icon.decision { background: var(--purple); }
+  .card-icon.constraint { background: var(--green); }
+
+  .card p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  .card p strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 56px 0;
+    position: relative;
+  }
+
+  .divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 60px;
+    height: 1px;
+    background: var(--accent-dim);
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-family: var(--font-mono);
+    letter-spacing: 1px;
+  }
+
+  /* Sticky download bar */
+  .sticky-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(10, 11, 13, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    z-index: 50;
+    animation: slideUp 0.5s ease 0.6s both;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .sticky-bar .info {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  /* PDF generating state */
+  .download-btn.generating {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  @media (max-width: 640px) {
+    .container { padding: 40px 20px 120px; }
+    h1 { font-size: 30px; }
+    h2 { font-size: 22px; }
+    .meta-row { flex-direction: column; gap: 12px; }
+    .comparison-table { font-size: 12px; }
+    .comparison-table th, .comparison-table td { padding: 8px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="accent-bar"></div>
+
+<div class="container">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="eyebrow">Technical Proposal</div>
+    <h1>Milwaukee Internationals<br>Web UI <em>Modernization</em> Plan</h1>
+    <p class="subtitle">Migration from Razor / AngularJS to React SPA</p>
+    <div class="meta-row">
+      <span class="meta-tag"><span class="dot"></span>February 27, 2026</span>
+      <span class="meta-tag"><span class="dot"></span>32 Implementation Steps</span>
+      <span class="meta-tag"><span class="dot"></span>7 Phases</span>
+    </div>
+  </header>
+
+  <!-- Comparison Table -->
+  <div class="section">
+    <div class="section-label">Analysis</div>
+    <h2>Current State vs. Target</h2>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Aspect</th>
+          <th>Current</th>
+          <th style="width:32px"></th>
+          <th>Target</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Frontend</td><td>Razor Views + AngularJS 1.8</td><td class="arrow-cell">&rarr;</td><td>React 18 SPA (Vite + TS)</td></tr>
+        <tr><td>Styling</td><td>Bootstrap 3.3.7</td><td class="arrow-cell">&rarr;</td><td>Tailwind CSS + Radix UI</td></tr>
+        <tr><td>State Mgmt</td><td>$scope + ngStorage</td><td class="arrow-cell">&rarr;</td><td>TanStack Query + Context</td></tr>
+        <tr><td>Forms</td><td>jQuery Validate + Razor</td><td class="arrow-cell">&rarr;</td><td>React Hook Form + Zod</td></tr>
+        <tr><td>Routing</td><td>Server-side MVC</td><td class="arrow-cell">&rarr;</td><td>React Router v6</td></tr>
+        <tr><td>Build</td><td>Gulp + Babel + Browserify</td><td class="arrow-cell">&rarr;</td><td>Vite</td></tr>
+        <tr><td>API Calls</td><td>$http + form POSTs</td><td class="arrow-cell">&rarr;</td><td>Typed fetch + React Query</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Phase 1 -->
+  <div class="section">
+    <div class="section-label">Phase 1</div>
+    <h2><span class="phase-num">01</span> Scaffold the React SPA</h2>
+    <ol class="steps" style="counter-reset: step-counter 0;">
+      <li><div class="step-text">Create a <code>/web</code> folder with <strong>Vite + React + TypeScript</strong></div></li>
+      <li><div class="step-text">Set up <strong>Tailwind CSS</strong>, <strong>Radix UI</strong> primitives, and <code>ui/</code> component library (button, card, input, table, select, badge, skeleton, sheet)</div></li>
+      <li><div class="step-text">Configure fonts, <strong>CSS variables</strong> for theming, and <code>cn()</code> utility</div></li>
+      <li><div class="step-text">Set up <strong>React Router v6</strong> with route structure matching existing pages</div></li>
+    </ol>
+  </div>
+
+  <!-- Phase 2 -->
+  <div class="section">
+    <div class="section-label">Phase 2</div>
+    <h2><span class="phase-num">02</span> API Client Layer</h2>
+    <ol class="steps" style="counter-reset: step-counter 4;">
+      <li><div class="step-text">Build typed <code>api.ts</code> fetch wrapper calling existing controllers (<code>/api/Event</code>, <code>/api/Student</code>, <code>/api/Driver</code>, <code>/api/Location</code>, <code>/api/Email</code>) — <strong>no backend changes</strong></div></li>
+      <li><div class="step-text">Define <strong>TypeScript types/interfaces</strong> matching existing API response shapes</div></li>
+      <li><div class="step-text">Create <strong>TanStack React Query hooks</strong> — <code>useStudents()</code>, <code>useDrivers()</code>, <code>useEvents()</code>, <code>useHosts()</code></div></li>
+    </ol>
+  </div>
+
+  <!-- Phase 3 -->
+  <div class="section">
+    <div class="section-label">Phase 3</div>
+    <h2><span class="phase-num">03</span> Auth Integration</h2>
+    <ol class="steps" style="counter-reset: step-counter 7;">
+      <li><div class="step-text">Build <strong>AuthContext</strong> provider working with existing ASP.NET Identity / JWT + Cookie auth</div></li>
+      <li><div class="step-text">Create <strong>login</strong>, <strong>register</strong>, and <strong>forgot-password</strong> pages</div></li>
+      <li><div class="step-text">Add <code>&lt;RequireAuth&gt;</code> route guards with <strong>role-based access</strong> (Admin, Driver, Host)</div></li>
+    </ol>
+  </div>
+
+  <!-- Phase 4 -->
+  <div class="section">
+    <div class="section-label">Phase 4</div>
+    <h2><span class="phase-num">04</span> Core Pages</h2>
+    <ol class="steps" style="counter-reset: step-counter 10;">
+      <li><div class="step-text"><strong>Dashboard / Home</strong> — landing page and stats overview</div></li>
+      <li><div class="step-text"><strong>Student Management</strong> — list, create, edit, detail with filters and TanStack Table</div></li>
+      <li><div class="step-text"><strong>Driver Management</strong> — similar CRUD views</div></li>
+      <li><div class="step-text"><strong>Host Management</strong> — similar CRUD views</div></li>
+      <li><div class="step-text"><strong>Event / Tour Management</strong> — event listing, student mapping and unmapping</div></li>
+      <li><div class="step-text"><strong>Location Management</strong> — location CRUD</div></li>
+      <li><div class="step-text"><strong>Registration Flow</strong> — multi-step forms with React Hook Form + Zod</div></li>
+      <li><div class="step-text"><strong>Email / Notification Tools</strong> — admin email composer (replace Summernote with Tiptap)</div></li>
+      <li><div class="step-text"><strong>Reports / Stats</strong> — charts and data export</div></li>
+      <li><div class="step-text"><strong>Admin / Config Pages</strong> — user management, settings, utilities</div></li>
+    </ol>
+  </div>
+
+  <!-- Phase 5 -->
+  <div class="section">
+    <div class="section-label">Phase 5</div>
+    <h2><span class="phase-num">05</span> Special Features</h2>
+    <ol class="steps" style="counter-reset: step-counter 20;">
+      <li><div class="step-text">Port <strong>SignalR</strong> real-time updates using <code>@microsoft/signalr</code> npm package</div></li>
+      <li><div class="step-text">Port <strong>PDF generation</strong> capability</div></li>
+      <li><div class="step-text">Port <strong>graph visualization</strong> (Cytoscape.js or React-friendly alternative)</div></li>
+      <li><div class="step-text">Port <strong>Excel export</strong> functionality</div></li>
+      <li><div class="step-text">Implement <strong>theme switching</strong> with CSS variables (light/dark mode)</div></li>
+    </ol>
+  </div>
+
+  <!-- Phase 6 -->
+  <div class="section">
+    <div class="section-label">Phase 6</div>
+    <h2><span class="phase-num">06</span> Layout &amp; Shell</h2>
+    <ol class="steps" style="counter-reset: step-counter 25;">
+      <li><div class="step-text">Build <strong>Topbar</strong>, <strong>Container</strong>, <strong>PageShell</strong>, <strong>FilterRail</strong>, <strong>AppFooter</strong> layout components</div></li>
+      <li><div class="step-text">Navigation with <strong>role-based menu items</strong></div></li>
+      <li><div class="step-text"><strong>Mobile-responsive</strong> sidebar / sheet navigation</div></li>
+    </ol>
+  </div>
+
+  <!-- Phase 7 -->
+  <div class="section">
+    <div class="section-label">Phase 7</div>
+    <h2><span class="phase-num">07</span> Deployment &amp; Cutover</h2>
+    <ol class="steps" style="counter-reset: step-counter 28;">
+      <li><div class="step-text">Configure ASP.NET backend to <strong>serve React SPA static files</strong></div></li>
+      <li><div class="step-text">Remove or <strong>feature-flag Razor views</strong> during transition</div></li>
+      <li><div class="step-text"><strong>Test all flows</strong> end-to-end against the unchanged API</div></li>
+      <li><div class="step-text">Remove old frontend code — Razor views, AngularJS, Gulp pipeline, wwwroot scripts/styles</div></li>
+    </ol>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Key Decisions -->
+  <div class="section">
+    <div class="section-label">Open Questions</div>
+    <h2>Key Decisions</h2>
+    <div class="card-grid">
+      <div class="card"><div class="card-icon decision"></div><p><strong>Incremental vs Big Bang</strong> — migrate page-by-page (safer, parallel UIs) or rewrite all at once?</p></div>
+      <div class="card"><div class="card-icon decision"></div><p><strong>Repository structure</strong> — add <code>/web</code> inside this repo (monorepo) or separate frontend repo?</p></div>
+      <div class="card"><div class="card-icon decision"></div><p><strong>Rich text editor</strong> — Tiptap, Plate, or another modern React editor to replace Summernote?</p></div>
+      <div class="card"><div class="card-icon decision"></div><p><strong>Charts library</strong> — Recharts, Chart.js 4, or Nivo for data visualization?</p></div>
+      <div class="card"><div class="card-icon decision"></div><p><strong>Component library</strong> — reuse ArtOp's Radix + Tailwind components or adopt shadcn/ui?</p></div>
+    </div>
+  </div>
+
+  <!-- Constraints -->
+  <div class="section">
+    <div class="section-label">Guardrails</div>
+    <h2>Constraints</h2>
+    <div class="card-grid">
+      <div class="card"><div class="card-icon constraint"></div><p><strong>No changes</strong> to existing API controllers</p></div>
+      <div class="card"><div class="card-icon constraint"></div><p><strong>No changes</strong> to database schema</p></div>
+      <div class="card"><div class="card-icon constraint"></div><p>Existing API endpoints already return JSON — <strong>backend is ready</strong></p></div>
+      <div class="card"><div class="card-icon constraint"></div><p>ASP.NET Identity auth system <strong>remains unchanged</strong></p></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Milwaukee Internationals &middot; UI Modernization Plan &middot; 2026
+  </div>
+
+</div>
+
+<!-- Sticky Download Bar -->
+<div class="sticky-bar">
+  <span class="info">Ready to export</span>
+  <button class="download-btn" onclick="generatePDF()" id="dlBtn">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8 2v9M4.5 7.5 8 11l3.5-3.5M3 13h10"/>
+    </svg>
+    Download PDF
+  </button>
+</div>
+
+<script>
+function generatePDF() {
+  const btn = document.getElementById('dlBtn');
+  btn.classList.add('generating');
+  btn.innerHTML = 'Generating…';
+
+  setTimeout(() => {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+    const W = 210, H = 297;
+    const ML = 22, MR = 22, MT = 22;
+    const CW = W - ML - MR;
+    let y = MT;
+
+    const colors = {
+      bg: [13, 15, 18],
+      surface: [22, 25, 32],
+      border: [42, 47, 58],
+      text: [232, 234, 240],
+      dim: [139, 145, 163],
+      muted: [85, 92, 110],
+      accent: [196, 163, 90],
+      green: [93, 184, 122],
+      red: [217, 96, 91],
+      blue: [91, 143, 217],
+      purple: [155, 123, 212],
+    };
+
+    function setColor(c) { doc.setTextColor(c[0], c[1], c[2]); }
+    function setFill(c) { doc.setFillColor(c[0], c[1], c[2]); }
+    function setDraw(c) { doc.setDrawColor(c[0], c[1], c[2]); }
+
+    function addPage() {
+      doc.addPage();
+      setFill(colors.bg);
+      doc.rect(0, 0, W, H, 'F');
+      // Top accent
+      setFill(colors.accent);
+      doc.rect(0, 0, W, 0.7, 'F');
+      y = MT;
+    }
+
+    function checkPage(need) {
+      if (y + need > H - 20) addPage();
+    }
+
+    // --- Page 1 Background ---
+    setFill(colors.bg);
+    doc.rect(0, 0, W, H, 'F');
+    setFill(colors.accent);
+    doc.rect(0, 0, W, 0.7, 'F');
+
+    // Eyebrow
+    y = 30;
+    setFill(colors.accent);
+    doc.rect(ML, y + 1.5, 12, 0.4, 'F');
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    setColor(colors.accent);
+    doc.text('TECHNICAL PROPOSAL', ML + 16, y + 3);
+
+    // Title
+    y += 14;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(28);
+    setColor(colors.text);
+    doc.text('Milwaukee Internationals', ML, y);
+    y += 11;
+    doc.setFontSize(28);
+    setColor(colors.accent);
+    doc.text('Web UI Modernization Plan', ML, y);
+
+    // Subtitle
+    y += 10;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    setColor(colors.dim);
+    doc.text('Migration from Razor / AngularJS to React SPA', ML, y);
+
+    // Meta
+    y += 10;
+    doc.setFontSize(8);
+    setColor(colors.muted);
+    setFill(colors.accent);
+    doc.circle(ML + 1.5, y - 1.2, 1.2, 'F');
+    doc.text('February 27, 2026', ML + 5, y);
+    doc.circle(ML + 50, y - 1.2, 1.2, 'F');
+    doc.text('32 Implementation Steps', ML + 53.5, y);
+    doc.circle(ML + 105, y - 1.2, 1.2, 'F');
+    doc.text('7 Phases', ML + 108.5, y);
+
+    // Divider
+    y += 8;
+    setDraw(colors.border);
+    doc.setLineWidth(0.2);
+    doc.line(ML, y, W - MR, y);
+    setDraw(colors.accent);
+    doc.line(ML, y, ML + 30, y);
+
+    // --- Comparison Table ---
+    y += 10;
+    doc.setFontSize(7);
+    setColor(colors.muted);
+    doc.text('ANALYSIS', ML, y);
+    y += 6;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    setColor(colors.text);
+    doc.text('Current State vs. Target', ML, y);
+    y += 8;
+
+    const tableData = [
+      ['Frontend', 'Razor Views + AngularJS 1.8', 'React 18 SPA (Vite + TS)'],
+      ['Styling', 'Bootstrap 3.3.7', 'Tailwind CSS + Radix UI'],
+      ['State Mgmt', '$scope + ngStorage', 'TanStack Query + Context'],
+      ['Forms', 'jQuery Validate + Razor', 'React Hook Form + Zod'],
+      ['Routing', 'Server-side MVC', 'React Router v6'],
+      ['Build', 'Gulp + Babel + Browserify', 'Vite'],
+      ['API Calls', '$http + form POSTs', 'Typed fetch + React Query'],
+    ];
+
+    // Header
+    const col1 = ML, col2 = ML + 34, col3 = ML + 100;
+    setFill(colors.surface);
+    doc.rect(ML, y - 3, CW, 7, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    setColor(colors.muted);
+    doc.text('ASPECT', col1 + 3, y + 1);
+    doc.text('CURRENT', col2 + 3, y + 1);
+    doc.text('TARGET', col3 + 3, y + 1);
+    y += 7;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    tableData.forEach(row => {
+      setDraw(colors.border);
+      doc.setLineWidth(0.15);
+      doc.line(ML, y + 5, W - MR, y + 5);
+
+      setColor(colors.text);
+      doc.setFont('helvetica', 'bold');
+      doc.text(row[0], col1 + 3, y + 3);
+
+      doc.setFont('courier', 'normal');
+      doc.setFontSize(7.5);
+      setColor(colors.red);
+      doc.text(row[1], col2 + 3, y + 3);
+
+      setColor(colors.muted);
+      doc.text('\u2192', col2 + 58, y + 3);
+
+      setColor(colors.green);
+      doc.text(row[2], col3 + 3, y + 3);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+
+      y += 8;
+    });
+
+    // --- Phase rendering function ---
+    function renderPhase(num, title, steps, startNum) {
+      checkPage(18 + steps.length * 9);
+
+      // Divider
+      y += 6;
+      setDraw(colors.border);
+      doc.setLineWidth(0.2);
+      doc.line(ML, y, W - MR, y);
+      setDraw(colors.accent);
+      doc.line(ML, y, ML + 18, y);
+      y += 10;
+
+      // Phase label
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      setColor(colors.muted);
+      doc.text('PHASE ' + num, ML, y);
+      y += 7;
+
+      // Phase number badge
+      setFill(colors.surface);
+      doc.rect(ML, y - 4, 11, 6, 'F');
+      setDraw([50, 43, 25]);
+      doc.setLineWidth(0.2);
+      doc.rect(ML, y - 4, 11, 6, 'S');
+      doc.setFont('courier', 'bold');
+      doc.setFontSize(8);
+      setColor(colors.accent);
+      doc.text(String(num).padStart(2, '0'), ML + 2.8, y);
+
+      // Title
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(15);
+      setColor(colors.text);
+      doc.text(title, ML + 15, y + 0.5);
+      y += 10;
+
+      // Steps
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+
+      steps.forEach((step, i) => {
+        checkPage(10);
+        const stepNum = startNum + i;
+
+        // Number badge
+        setFill([20, 23, 28]);
+        doc.rect(ML, y - 3.2, 8, 5.5, 'F');
+        doc.setFont('courier', 'bold');
+        doc.setFontSize(7.5);
+        setColor(colors.accent);
+        doc.text(String(stepNum), ML + 2.2, y + 0.5);
+
+        // Step text
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(9);
+        setColor(colors.dim);
+
+        // Split long text
+        const lines = doc.splitTextToSize(step, CW - 14);
+        lines.forEach((line, li) => {
+          if (li === 0) {
+            doc.text(line, ML + 12, y + 0.5);
+          } else {
+            y += 4.5;
+            doc.text(line, ML + 12, y + 0.5);
+          }
+        });
+
+        y += 7.5;
+
+        // Line separator
+        if (i < steps.length - 1) {
+          setDraw([30, 34, 42]);
+          doc.setLineWidth(0.1);
+          doc.line(ML + 12, y - 3.5, W - MR, y - 3.5);
+        }
+      });
+    }
+
+    // --- Render all phases ---
+
+    renderPhase(1, 'Scaffold the React SPA', [
+      'Create a /web folder with Vite + React + TypeScript',
+      'Set up Tailwind CSS, Radix UI primitives, and ui/ component library (button, card, input, table, select, badge, skeleton, sheet)',
+      'Configure fonts, CSS variables for theming, and cn() utility',
+      'Set up React Router v6 with route structure matching existing pages',
+    ], 1);
+
+    renderPhase(2, 'API Client Layer', [
+      'Build typed api.ts fetch wrapper calling existing controllers (/api/Event, /api/Student, /api/Driver, /api/Location, /api/Email) \u2014 no backend changes',
+      'Define TypeScript types/interfaces matching existing API response shapes',
+      'Create TanStack React Query hooks \u2014 useStudents(), useDrivers(), useEvents(), useHosts()',
+    ], 5);
+
+    renderPhase(3, 'Auth Integration', [
+      'Build AuthContext provider working with existing ASP.NET Identity / JWT + Cookie auth',
+      'Create login, register, and forgot-password pages',
+      'Add <RequireAuth> route guards with role-based access (Admin, Driver, Host)',
+    ], 8);
+
+    renderPhase(4, 'Core Pages', [
+      'Dashboard / Home \u2014 landing page and stats overview',
+      'Student Management \u2014 list, create, edit, detail with filters and TanStack Table',
+      'Driver Management \u2014 similar CRUD views',
+      'Host Management \u2014 similar CRUD views',
+      'Event / Tour Management \u2014 event listing, student mapping and unmapping',
+      'Location Management \u2014 location CRUD',
+      'Registration Flow \u2014 multi-step forms with React Hook Form + Zod',
+      'Email / Notification Tools \u2014 admin email composer (replace Summernote with Tiptap)',
+      'Reports / Stats \u2014 charts and data export',
+      'Admin / Config Pages \u2014 user management, settings, utilities',
+    ], 11);
+
+    renderPhase(5, 'Special Features', [
+      'Port SignalR real-time updates using @microsoft/signalr npm package',
+      'Port PDF generation capability',
+      'Port graph visualization (Cytoscape.js or React-friendly alternative)',
+      'Port Excel export functionality',
+      'Implement theme switching with CSS variables (light/dark mode)',
+    ], 21);
+
+    renderPhase(6, 'Layout & Shell', [
+      'Build Topbar, Container, PageShell, FilterRail, AppFooter layout components',
+      'Navigation with role-based menu items',
+      'Mobile-responsive sidebar / sheet navigation',
+    ], 26);
+
+    renderPhase(7, 'Deployment & Cutover', [
+      'Configure ASP.NET backend to serve React SPA static files',
+      'Remove or feature-flag Razor views during transition',
+      'Test all flows end-to-end against the unchanged API',
+      'Remove old frontend code \u2014 Razor views, AngularJS, Gulp pipeline, wwwroot scripts/styles',
+    ], 29);
+
+    // --- Key Decisions ---
+    checkPage(55);
+    y += 6;
+    setDraw(colors.border);
+    doc.setLineWidth(0.2);
+    doc.line(ML, y, W - MR, y);
+    setDraw(colors.accent);
+    doc.line(ML, y, ML + 18, y);
+    y += 10;
+
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    setColor(colors.muted);
+    doc.text('OPEN QUESTIONS', ML, y);
+    y += 7;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(15);
+    setColor(colors.text);
+    doc.text('Key Decisions', ML, y);
+    y += 9;
+
+    const decisions = [
+      ['Incremental vs Big Bang', 'Migrate page-by-page (safer, parallel UIs) or rewrite all at once?'],
+      ['Repository structure', 'Add /web inside this repo (monorepo) or separate frontend repo?'],
+      ['Rich text editor', 'Tiptap, Plate, or another modern React editor to replace Summernote?'],
+      ['Charts library', 'Recharts, Chart.js 4, or Nivo for data visualization?'],
+      ['Component library', "Reuse ArtOp's Radix + Tailwind components or adopt shadcn/ui?"],
+    ];
+
+    decisions.forEach(d => {
+      checkPage(14);
+      setFill(colors.surface);
+      doc.rect(ML, y - 3, CW, 11, 'F');
+      setDraw(colors.border);
+      doc.setLineWidth(0.15);
+      doc.rect(ML, y - 3, CW, 11, 'S');
+
+      setFill(colors.purple);
+      doc.circle(ML + 5, y + 1.8, 1.5, 'F');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      setColor(colors.text);
+      doc.text(d[0], ML + 10, y + 1);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      setColor(colors.dim);
+      doc.text(d[1], ML + 10, y + 5.5);
+
+      y += 14;
+    });
+
+    // --- Constraints ---
+    checkPage(50);
+    y += 4;
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    setColor(colors.muted);
+    doc.text('GUARDRAILS', ML, y);
+    y += 7;
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(15);
+    setColor(colors.text);
+    doc.text('Constraints', ML, y);
+    y += 9;
+
+    const constraints = [
+      'No changes to existing API controllers',
+      'No changes to database schema',
+      'Existing API endpoints already return JSON \u2014 backend is ready',
+      'ASP.NET Identity auth system remains unchanged',
+    ];
+
+    constraints.forEach(c => {
+      checkPage(14);
+      setFill(colors.surface);
+      doc.rect(ML, y - 3, CW, 9, 'F');
+      setDraw(colors.border);
+      doc.setLineWidth(0.15);
+      doc.rect(ML, y - 3, CW, 9, 'S');
+
+      setFill(colors.green);
+      doc.circle(ML + 5, y + 1.2, 1.5, 'F');
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      setColor(colors.dim);
+      doc.text(c, ML + 10, y + 1.5);
+
+      y += 12;
+    });
+
+    // Footer
+    y += 6;
+    setDraw(colors.border);
+    doc.setLineWidth(0.15);
+    doc.line(ML, y, W - MR, y);
+    y += 6;
+    doc.setFontSize(7);
+    setColor(colors.muted);
+    doc.text('Milwaukee Internationals  \u00B7  UI Modernization Plan  \u00B7  2026', W / 2, y, { align: 'center' });
+
+    // Save
+    doc.save('Milwaukee-Internationals-UI-Modernization-Plan.pdf');
+
+    btn.classList.remove('generating');
+    btn.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v9M4.5 7.5 8 11l3.5-3.5M3 13h10"/></svg> Download PDF';
+  }, 100);
+}
+</script>
+
+</body>
+</html>
