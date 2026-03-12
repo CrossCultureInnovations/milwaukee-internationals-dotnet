@@ -2,9 +2,11 @@ using System;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using API.Extensions;
 using API.Middlewares;
 using API.Utilities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using DAL.Interfaces;
 using DAL.ServiceApi;
@@ -208,6 +210,19 @@ public class Startup
             x.LoginPath = new PathString("/Identity/login");
             x.LogoutPath = new PathString("/Identity/logout");
             x.SlidingExpiration = true;
+
+            // Return 401 for API/stats routes instead of redirecting to login page
+            x.Events.OnRedirectToLogin = context =>
+            {
+                if (context.Request.Path.StartsWithSegments("/api") ||
+                    context.Request.Path.StartsWithSegments("/stats"))
+                {
+                    context.Response.StatusCode = 401;
+                    return Task.CompletedTask;
+                }
+                context.Response.Redirect(context.RedirectUri);
+                return Task.CompletedTask;
+            };
         }).AddJwtBearer(config =>
         {
             config.RequireHttpsMetadata = false;
@@ -220,6 +235,12 @@ public class Startup
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSetting.Key))
             };
         });
+
+        // In Development, bypass all authorization (including role checks)
+        if (_env.IsDevelopment())
+        {
+            services.AddSingleton<IAuthorizationHandler, DevBypassAuthorizationHandler>();
+        }
 
         services.AddEfRepository<EntityDbContext>(opt => opt.Profile(Assembly.Load("Dal")));
 

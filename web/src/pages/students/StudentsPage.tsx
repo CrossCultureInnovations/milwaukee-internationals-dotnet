@@ -1,291 +1,356 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Search,
-  Plus,
   GraduationCap,
-  Car,
-  Check,
   Download,
+  ChevronDown,
+  Pencil,
+  Trash2,
+  Users,
+  Baby,
+  UtensilsCrossed,
+  Car,
+  Mail,
+  Phone,
+  Heart,
+  Calendar,
 } from "lucide-react";
 import { Container } from "../../components/layout/Container";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
-import { Checkbox } from "../../components/ui/checkbox";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "../../components/ui/table";
-import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetClose,
-} from "../../components/ui/sheet";
 import { useStudents } from "../../lib/hooks/useApiQueries";
-import { api } from "../../api";
+import { api, type Student } from "../../api";
 import { exportStudentsToExcel } from "../../lib/export";
+import { cn } from "../../lib/utils";
 
 // ---------------------------------------------------------------------------
-// Create student form schema
+// Summary stats
 // ---------------------------------------------------------------------------
 
-const createStudentSchema = z.object({
-  fullname: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email"),
-  phone: z.string().optional().default(""),
-  university: z.string().optional().default(""),
-  major: z.string().optional().default(""),
-  country: z.string().optional().default(""),
-  interests: z.string().optional().default(""),
-  familySize: z.coerce.number().int().min(1).default(1),
-  needCarSeat: z.boolean().default(false),
-  kosherFood: z.boolean().default(false),
-  isFamily: z.boolean().default(false),
-});
+function StudentStats({ students }: { students: Student[] }) {
+  const total = students.length;
+  const deps = students.reduce((s, x) => s + (x.isFamily ? x.familySize : 0), 0);
+  const seats = students.filter((s) => s.needCarSeat).length;
+  const families = students.filter((s) => s.isFamily).length;
+  const kosher = students.filter((s) => s.kosherFood).length;
 
-type CreateStudentValues = z.infer<typeof createStudentSchema>;
-
-// ---------------------------------------------------------------------------
-// Create student slide-over form
-// ---------------------------------------------------------------------------
-
-function CreateStudentForm({ onSuccess }: { onSuccess: () => void }) {
-  const queryClient = useQueryClient();
-
-  const {
-    register,
-    handleSubmit,
-    control,
-    formState: { errors },
-    reset,
-  } = useForm<CreateStudentValues>({
-    resolver: zodResolver(createStudentSchema),
-    defaultValues: {
-      fullname: "",
-      email: "",
-      phone: "",
-      university: "",
-      major: "",
-      country: "",
-      interests: "",
-      familySize: 1,
-      needCarSeat: false,
-      kosherFood: false,
-      isFamily: false,
-    },
-  });
-
-  const mutation = useMutation({
-    mutationFn: (values: CreateStudentValues) => api.createStudent(values),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["students"] });
-      reset();
-      onSuccess();
-    },
-  });
-
-  const onSubmit = (values: CreateStudentValues) => mutation.mutate(values);
+  const stats = [
+    { label: "Students", value: total },
+    { label: "Dependents", value: deps },
+    { label: "Total", value: total + deps },
+    { label: "Families", value: families },
+    { label: "Car Seats", value: seats },
+    { label: "Kosher", value: kosher },
+  ];
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex h-full flex-col">
-      <h2 className="mb-6 text-lg font-semibold text-foreground">
-        Add Student
-      </h2>
+    <div className="mb-6 grid grid-cols-3 gap-3 sm:grid-cols-6">
+      {stats.map((s) => (
+        <div
+          key={s.label}
+          className="rounded-xl border border-border bg-card px-3 py-2 text-center"
+        >
+          <p className="text-lg font-semibold text-foreground">{s.value}</p>
+          <p className="text-xs text-muted-foreground">{s.label}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
-      <div className="flex-1 space-y-4 overflow-y-auto">
-        {/* Fullname */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Full name *
-          </label>
-          <Input {...register("fullname")} placeholder="Jane Doe" />
-          {errors.fullname && (
-            <p className="mt-1 text-xs text-red-500">{errors.fullname.message}</p>
-          )}
+// ---------------------------------------------------------------------------
+// Date formatter
+// ---------------------------------------------------------------------------
+
+function formatDate(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+// ---------------------------------------------------------------------------
+// Grid row class shared by header + all cards
+// ---------------------------------------------------------------------------
+
+const ROW_GRID = cn(
+  "grid items-center gap-x-3 px-4",
+  "grid-cols-[3rem_1fr_auto]",
+  "sm:grid-cols-[3rem_1fr_10rem_18rem]",
+);
+
+// ---------------------------------------------------------------------------
+// Column header row
+// ---------------------------------------------------------------------------
+
+function ColumnHeader() {
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Student card (Google Flights style)
+// ---------------------------------------------------------------------------
+
+function StudentCard({ student, onDelete }: { student: Student; onDelete: (id: number) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
+
+  return (
+    <div className="rounded-xl border border-border bg-card transition-shadow hover:shadow-md">
+      {/* Main row — always visible */}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className={cn(ROW_GRID, "w-full py-3 text-left")}
+      >
+        {/* ID */}
+        <div className={cn(
+          "flex h-9 w-9 mx-auto shrink-0 items-center justify-center rounded-full",
+          student.isPresent
+            ? "bg-green-500/15 text-green-600 dark:text-green-400"
+            : "bg-muted text-muted-foreground"
+        )}>
+          <span className="text-xs font-bold">{student.displayId?.split("-").pop() || "#"}</span>
         </div>
 
-        {/* Email */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Email *
-          </label>
-          <Input {...register("email")} type="email" placeholder="jane@university.edu" />
-          {errors.email && (
-            <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
-          )}
-        </div>
-
-        {/* Phone */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Phone
-          </label>
-          <Input {...register("phone")} placeholder="+1 (555) 000-0000" />
-        </div>
-
-        {/* University */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            University
-          </label>
-          <Input {...register("university")} placeholder="University of Wisconsin" />
-        </div>
-
-        {/* Major */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Major
-          </label>
-          <Input {...register("major")} placeholder="Computer Science" />
+        {/* Name + University/Major */}
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+            <span className="truncate">{student.fullname}</span>
+            {student.isFamily && (
+              <span className="flex shrink-0 items-center gap-0.5 text-xs font-normal text-muted-foreground">
+                <Users className="h-3 w-3" />
+                {student.familySize}
+              </span>
+            )}
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            {[student.university, student.major].filter(Boolean).join(" \u00B7 ") || "\u2014"}
+          </p>
         </div>
 
         {/* Country */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Country
-          </label>
-          <Input {...register("country")} placeholder="India" />
-        </div>
+        <p className="hidden sm:block truncate text-sm text-foreground">{student.country || "\u2014"}</p>
 
-        {/* Interests */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Interests
-          </label>
-          <Input {...register("interests")} placeholder="Hiking, cooking..." />
-        </div>
-
-        {/* Family size */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Family size
-          </label>
-          <Input
-            {...register("familySize")}
-            type="number"
-            min={1}
-            className="w-24"
-          />
-        </div>
-
-        {/* Checkboxes */}
-        <div className="space-y-3 pt-1">
-          <Controller
-            control={control}
-            name="needCarSeat"
-            render={({ field }) => (
-              <label className="flex items-center gap-2 text-sm text-foreground">
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-                Needs car seat
-              </label>
+        {/* Badges + Chevron */}
+        <div className="flex items-center gap-1.5 justify-end">
+          <div className="hidden sm:flex items-center gap-1.5">
+            {student.kosherFood && (
+              <Badge variant="outline" className="text-xs gap-1 border-green-200 text-green-700 dark:border-green-800 dark:text-green-400">
+                <UtensilsCrossed className="h-3 w-3" />
+                Kosher
+              </Badge>
             )}
-          />
-          <Controller
-            control={control}
-            name="kosherFood"
-            render={({ field }) => (
-              <label className="flex items-center gap-2 text-sm text-foreground">
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-                Kosher food
-              </label>
+            {student.needCarSeat && (
+              <Baby className="h-4 w-4 text-amber-500 dark:text-amber-400" />
             )}
-          />
-          <Controller
-            control={control}
-            name="isFamily"
-            render={({ field }) => (
-              <label className="flex items-center gap-2 text-sm text-foreground">
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-                Is a family
-              </label>
+            {student.driverRefId != null && (
+              <Car className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+            )}
+          </div>
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+              expanded && "rotate-180"
             )}
           />
         </div>
-      </div>
+      </button>
 
-      {/* Actions */}
-      <div className="mt-6 flex items-center gap-3 border-t border-border pt-4">
-        <Button type="submit" disabled={mutation.isPending} className="flex-1">
-          {mutation.isPending ? "Saving..." : "Create Student"}
-        </Button>
-        <SheetClose asChild>
-          <Button type="button" variant="outline">
-            Cancel
-          </Button>
-        </SheetClose>
-      </div>
+      {/* Expanded details */}
+      {expanded && (
+        <div className="border-t border-border px-4 py-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <DetailItem icon={Mail} label="Email" value={student.email} />
+            <DetailItem icon={Phone} label="Phone" value={student.phone || "\u2014"} />
+            <DetailItem icon={Calendar} label="Registered" value={formatDate(student.registeredOn)} />
+            {student.interests && (
+              <div className="sm:col-span-2 lg:col-span-3">
+                <p className="mb-1 text-xs text-muted-foreground flex items-center gap-1.5">
+                  <Heart className="h-3.5 w-3.5" /> Interests
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {student.interests.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).map((tag) => (
+                    <span key={tag} className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-foreground">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
-      {mutation.isError && (
-        <p className="mt-2 text-xs text-red-500">
-          {(mutation.error as Error).message || "Something went wrong."}
-        </p>
+          {/* Mobile badges */}
+          <div className="mt-3 flex flex-wrap gap-1.5 md:hidden">
+            {student.kosherFood && (
+              <Badge variant="outline" className="text-xs gap-1 border-green-200 text-green-700 dark:border-green-800 dark:text-green-400">
+                Kosher
+              </Badge>
+            )}
+            {student.needCarSeat && (
+              <Baby className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+            )}
+            {student.driverRefId != null && (
+              <Car className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="mt-4 flex items-center gap-2 border-t border-border/50 pt-3">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => navigate(`/students/${student.id}`)}
+            >
+              <Pencil className="mr-1 h-3.5 w-3.5" />
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+              onClick={() => {
+                if (window.confirm(`Delete student "${student.fullname}"?`)) {
+                  onDelete(student.id);
+                }
+              }}
+            >
+              <Trash2 className="mr-1 h-3.5 w-3.5" />
+              Delete
+            </Button>
+          </div>
+        </div>
       )}
-    </form>
+    </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Loading skeleton rows
-// ---------------------------------------------------------------------------
-
-function TableSkeleton() {
+function DetailItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+}) {
   return (
-    <>
-      {Array.from({ length: 6 }).map((_, i) => (
-        <TableRow key={i}>
-          {Array.from({ length: 7 }).map((_, j) => (
-            <TableCell key={j}>
-              <Skeleton className="h-4 w-full" />
-            </TableCell>
-          ))}
-        </TableRow>
-      ))}
-    </>
+    <div className="flex items-start gap-2">
+      <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm text-foreground break-all">{value}</p>
+      </div>
+    </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Loading skeleton
+// ---------------------------------------------------------------------------
+
+function CardSkeleton() {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+            <Skeleton className="hidden h-4 w-20 sm:block" />
+            <Skeleton className="hidden h-4 w-20 md:block" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Sort options
+// ---------------------------------------------------------------------------
+
+type SortKey = "fullname" | "country" | "university" | "displayId";
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "fullname", label: "Name" },
+  { key: "displayId", label: "Display ID" },
+  { key: "country", label: "Country" },
+  { key: "university", label: "University" },
+];
 
 // ---------------------------------------------------------------------------
 // Main page
 // ---------------------------------------------------------------------------
 
 export function StudentsPage() {
-  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: students, isLoading } = useStudents();
   const [search, setSearch] = useState("");
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<SortKey>("fullname");
+  const [sortDesc, setSortDesc] = useState(false);
+
+  const handleSort = useCallback(
+    (key: SortKey) => {
+      if (sortKey === key) {
+        setSortDesc((prev) => !prev);
+      } else {
+        setSortKey(key);
+        setSortDesc(false);
+      }
+    },
+    [sortKey]
+  );
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => api.deleteStudent(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+    },
+  });
 
   const filtered = useMemo(() => {
     if (!students) return [];
-    if (!search.trim()) return students;
-    const q = search.toLowerCase();
-    return students.filter(
-      (s) =>
-        s.fullname.toLowerCase().includes(q) ||
-        s.email.toLowerCase().includes(q) ||
-        s.country.toLowerCase().includes(q) ||
-        s.university.toLowerCase().includes(q)
-    );
-  }, [students, search]);
+    let list = students;
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(
+        (s) =>
+          s.fullname?.toLowerCase().includes(q) ||
+          s.email?.toLowerCase().includes(q) ||
+          s.country?.toLowerCase().includes(q) ||
+          s.university?.toLowerCase().includes(q) ||
+          s.displayId?.toLowerCase().includes(q) ||
+          s.major?.toLowerCase().includes(q)
+      );
+    }
+
+    list = [...list].sort((a, b) => {
+      let aVal: string | number = "";
+      let bVal: string | number = "";
+
+      if (sortKey === "displayId") {
+        aVal = parseInt((a.displayId || "").split("-").pop() || "0");
+        bVal = parseInt((b.displayId || "").split("-").pop() || "0");
+      } else {
+        aVal = ((a as Record<string, unknown>)[sortKey] as string || "").toLowerCase();
+        bVal = ((b as Record<string, unknown>)[sortKey] as string || "").toLowerCase();
+      }
+
+      if (aVal < bVal) return sortDesc ? 1 : -1;
+      if (aVal > bVal) return sortDesc ? -1 : 1;
+      return 0;
+    });
+
+    return list;
+  }, [students, search, sortKey, sortDesc]);
 
   return (
     <Container className="py-8">
@@ -295,14 +360,7 @@ export function StudentsPage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <GraduationCap className="h-5 w-5" />
           </div>
-          <div>
-            <h1 className="font-heading text-2xl text-foreground">Students</h1>
-            {!isLoading && (
-              <p className="text-sm text-muted-foreground">
-                {students?.length ?? 0} total
-              </p>
-            )}
-          </div>
+          <h1 className="font-heading text-2xl text-foreground">Students</h1>
         </div>
 
         <div className="flex items-center gap-2">
@@ -313,104 +371,63 @@ export function StudentsPage() {
             disabled={!students?.length}
           >
             <Download className="mr-1 h-4 w-4" />
-            Export
+            Download
           </Button>
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Student
-              </Button>
-            </SheetTrigger>
-            <SheetContent className="flex flex-col">
-              <CreateStudentForm onSuccess={() => setSheetOpen(false)} />
-            </SheetContent>
-          </Sheet>
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, email, country, university..."
-          className="pl-9"
-        />
+      {/* Stats */}
+      {!isLoading && students && <StudentStats students={students} />}
+
+      {/* Search + Sort */}
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, email, country, university, ID..."
+            className="pl-9"
+          />
+        </div>
+        <div className="flex items-center gap-1 overflow-x-auto">
+          <span className="text-xs text-muted-foreground whitespace-nowrap mr-1">Sort by</span>
+          {SORT_OPTIONS.map((opt) => (
+            <Button
+              key={opt.key}
+              variant={sortKey === opt.key ? "default" : "outline"}
+              size="sm"
+              className="text-xs h-8 px-2.5"
+              onClick={() => handleSort(opt.key)}
+            >
+              {opt.label}
+              {sortKey === opt.key && (
+                <span className="ml-1">{sortDesc ? "\u2193" : "\u2191"}</span>
+              )}
+            </Button>
+          ))}
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="rounded-2xl border border-border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead className="hidden sm:table-cell">Email</TableHead>
-              <TableHead className="hidden md:table-cell">University</TableHead>
-              <TableHead className="hidden md:table-cell">Country</TableHead>
-              <TableHead className="hidden lg:table-cell">Family Size</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Mapped</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableSkeleton />
-            ) : filtered.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="py-12 text-center text-muted-foreground">
-                  {search ? "No students match your search." : "No students yet."}
-                </TableCell>
-              </TableRow>
-            ) : (
-              filtered.map((student) => (
-                <TableRow
-                  key={student.id}
-                  className="cursor-pointer transition-colors hover:bg-accent/50"
-                  onClick={() => navigate(`/students/${student.id}`)}
-                >
-                  <TableCell className="font-medium text-foreground">
-                    {student.fullname}
-                  </TableCell>
-                  <TableCell className="hidden text-muted-foreground sm:table-cell">
-                    {student.email}
-                  </TableCell>
-                  <TableCell className="hidden text-muted-foreground md:table-cell">
-                    {student.university || "\u2014"}
-                  </TableCell>
-                  <TableCell className="hidden text-muted-foreground md:table-cell">
-                    {student.country || "\u2014"}
-                  </TableCell>
-                  <TableCell className="hidden text-muted-foreground lg:table-cell">
-                    {student.familySize}
-                  </TableCell>
-                  <TableCell>
-                    {student.isPresent ? (
-                      <Badge className="gap-1">
-                        <Check className="h-3 w-3" />
-                        Present
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">Absent</Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {student.driverRefId != null ? (
-                      <Badge variant="outline" className="gap-1">
-                        <Car className="h-3 w-3" />
-                        Driver
-                      </Badge>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Unmapped</span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {/* Column header + Student cards */}
+      {!isLoading && filtered.length > 0 && <ColumnHeader />}
+      {isLoading ? (
+        <CardSkeleton />
+      ) : filtered.length === 0 ? (
+        <div className="rounded-xl border border-border bg-card py-16 text-center text-muted-foreground">
+          {search ? "No students match your search." : "No students yet."}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((student) => (
+            <StudentCard
+              key={student.id}
+              student={student}
+              onDelete={(id) => deleteMutation.mutate(id)}
+            />
+          ))}
+        </div>
+      )}
     </Container>
   );
 }

@@ -35,6 +35,8 @@ export function AppRoutes() {
     { path: "/login", element: <LoginPage /> },
     { path: "/register", element: <RegisterPage /> },
     { path: "/registration", element: <RegistrationPage /> },
+    { path: "/registration/student", element: <RegistrationPage /> },
+    { path: "/registration/driver", element: <RegistrationPage /> },
     {
       path: "/dashboard",
       element: (

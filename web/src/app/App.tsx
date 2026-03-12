@@ -1,28 +1,29 @@
 import { useLocation } from "react-router-dom";
-import { Topbar } from "../components/layout/Topbar";
-import { AppFooter } from "../components/layout/AppFooter";
+import { Sidebar, MobileHeader } from "../components/layout/Sidebar";
 import { AppRoutes } from "./routes";
 
 export function App() {
   const location = useLocation();
-  const isAuthRoute = new Set(["/login", "/register"]).has(location.pathname);
+  const isPublicRoute =
+    new Set(["/login", "/register"]).has(location.pathname) ||
+    location.pathname.startsWith("/registration");
 
-  if (isAuthRoute) {
-    return (
-      <>
-        <AppRoutes />
-        <AppFooter />
-      </>
-    );
+  if (isPublicRoute) {
+    return <AppRoutes />;
   }
 
   return (
-    <>
-      <Topbar />
-      <main className="min-h-[calc(100vh-8rem)]">
+    <div className="min-h-screen">
+      {/* Fixed sidebar on desktop */}
+      <Sidebar />
+
+      {/* Mobile top bar */}
+      <MobileHeader />
+
+      {/* Main content area, offset by sidebar width on desktop */}
+      <main className="min-h-screen lg:pl-60">
         <AppRoutes />
       </main>
-      <AppFooter />
-    </>
+    </div>
   );
 }

@@ -1,18 +1,19 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { useForm, Controller } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Car,
   Search,
-  Plus,
-  Check,
-  X,
+  ChevronDown,
+  Pencil,
+  Trash2,
   Baby,
   Home,
   Download,
+  Mail,
+  Phone,
+  Users as UsersIcon,
+  Calendar,
+  Navigation,
 } from "lucide-react";
 import { Container } from "../../components/layout/Container";
 import { Button } from "../../components/ui/button";
@@ -20,63 +21,280 @@ import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
 import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "../../components/ui/table";
-import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectItem,
   SelectValue,
 } from "../../components/ui/select";
-import { Checkbox } from "../../components/ui/checkbox";
-import {
-  Sheet,
-  SheetTrigger,
-  SheetContent,
-  SheetClose,
-} from "../../components/ui/sheet";
 import { useDrivers } from "../../lib/hooks/useApiQueries";
-import { api, type RolesEnum } from "../../api";
+import { api, type Driver, type RolesEnum } from "../../api";
 import { cn } from "../../lib/utils";
 import { exportDriversToExcel } from "../../lib/export";
 
 // ---------------------------------------------------------------------------
-// Create driver form schema
+// Summary stats
 // ---------------------------------------------------------------------------
 
-const createDriverSchema = z.object({
-  fullname: z.string().min(1, "Name is required"),
-  email: z.string().email("Valid email required"),
-  phone: z.string().min(1, "Phone is required"),
-  capacity: z.coerce.number().int().min(1, "Capacity must be at least 1"),
-  role: z.enum(["Driver", "Navigator"] as const),
-  navigator: z.string().optional(),
-  requireNavigator: z.boolean().optional(),
-  haveChildSeat: z.boolean().optional(),
-});
+function DriverStats({ drivers }: { drivers: Driver[] }) {
+  const total = drivers.length;
+  const present = drivers.filter((d) => d.isPresent).length;
+  const assigned = drivers.reduce((s, d) => s + (d.students?.length ?? 0), 0);
+  const capacity = drivers.reduce((s, d) => s + d.capacity, 0);
+  const childSeats = drivers.filter((d) => d.haveChildSeat).length;
+  const navigators = drivers.filter((d) => d.role === "Navigator").length;
 
-type CreateDriverForm = z.infer<typeof createDriverSchema>;
+  const stats = [
+    { label: "Drivers", value: total },
+    { label: "Present", value: present },
+    { label: "Assigned", value: assigned },
+    { label: "Capacity", value: capacity },
+    { label: "Child Seats", value: childSeats },
+    { label: "Navigators", value: navigators },
+  ];
+
+  return (
+    <div className="mb-6 grid grid-cols-3 gap-3 sm:grid-cols-6">
+      {stats.map((s) => (
+        <div
+          key={s.label}
+          className="rounded-xl border border-border bg-card px-3 py-2 text-center"
+        >
+          <p className="text-lg font-semibold text-foreground">{s.value}</p>
+          <p className="text-xs text-muted-foreground">{s.label}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Date formatter
+// ---------------------------------------------------------------------------
+
+function formatDate(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+// ---------------------------------------------------------------------------
+// Grid row class shared by all cards
+// ---------------------------------------------------------------------------
+
+const ROW_GRID = cn(
+  "grid items-center gap-x-3 px-4",
+  "grid-cols-[3rem_1fr_auto]",
+  "sm:grid-cols-[3rem_1fr_10rem_18rem]",
+);
+
+// ---------------------------------------------------------------------------
+// Detail item
+// ---------------------------------------------------------------------------
+
+function DetailItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="flex items-start gap-2">
+      <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="text-sm text-foreground break-all">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Driver card
+// ---------------------------------------------------------------------------
+
+function DriverCard({ driver, onDelete }: { driver: Driver; onDelete: (id: number) => void }) {
+  const [expanded, setExpanded] = useState(false);
+
+  return (
+    <div className="rounded-xl border border-border bg-card transition-shadow hover:shadow-md">
+      {/* Main row */}
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className={cn(ROW_GRID, "w-full py-3 text-left")}
+      >
+        {/* ID */}
+        <div className={cn(
+          "flex h-9 w-9 mx-auto shrink-0 items-center justify-center rounded-full",
+          driver.isPresent
+            ? "bg-green-500/15 text-green-600 dark:text-green-400"
+            : "bg-muted text-muted-foreground"
+        )}>
+          <span className="text-xs font-bold">{driver.displayId?.split("-").pop() || "#"}</span>
+        </div>
+
+        {/* Name + Role */}
+        <div className="min-w-0">
+          <p className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+            <span className="truncate">{driver.fullname}</span>
+            <Badge variant={driver.role === "Driver" ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
+              {driver.role}
+            </Badge>
+          </p>
+          <p className="truncate text-xs text-muted-foreground">
+            Capacity: {driver.capacity}
+            {driver.navigator && ` · Nav: ${driver.navigator}`}
+          </p>
+        </div>
+
+        {/* Host */}
+        <p className="hidden sm:block truncate text-sm text-foreground">
+          {driver.host ? (
+            <span className="flex items-center gap-1">
+              <Home className="h-3 w-3 text-muted-foreground" />
+              {driver.host.fullname}
+            </span>
+          ) : "\u2014"}
+        </p>
+
+        {/* Icons + Chevron */}
+        <div className="flex items-center gap-1.5 justify-end">
+          <div className="hidden sm:flex items-center gap-1.5">
+            {driver.haveChildSeat && (
+              <Baby className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+            )}
+            {driver.requireNavigator && (
+              <Navigation className="h-4 w-4 text-purple-500 dark:text-purple-400" />
+            )}
+            {driver.students && driver.students.length > 0 && (
+              <span className="flex items-center gap-0.5 text-xs text-muted-foreground">
+                <UsersIcon className="h-3.5 w-3.5" />
+                {driver.students.length}
+              </span>
+            )}
+          </div>
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+              expanded && "rotate-180"
+            )}
+          />
+        </div>
+      </button>
+
+      {/* Expanded details */}
+      {expanded && (
+        <div className="border-t border-border px-4 py-4">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <DetailItem icon={Mail} label="Email" value={driver.email} />
+            <DetailItem icon={Phone} label="Phone" value={driver.phone || "\u2014"} />
+            <DetailItem icon={Calendar} label="Registered" value={formatDate(driver.registeredOn)} />
+            {driver.navigator && (
+              <DetailItem icon={Navigation} label="Navigator" value={driver.navigator} />
+            )}
+          </div>
+
+          {/* Assigned students */}
+          {driver.students && driver.students.length > 0 && (
+            <div className="mt-3">
+              <p className="mb-1.5 text-xs text-muted-foreground flex items-center gap-1.5">
+                <UsersIcon className="h-3.5 w-3.5" /> Assigned Students ({driver.students.length})
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {driver.students.map((s) => (
+                  <span key={s.id} className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-foreground">
+                    {s.fullname}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Mobile icons */}
+          <div className="mt-3 flex flex-wrap items-center gap-2 md:hidden">
+            {driver.haveChildSeat && (
+              <Baby className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+            )}
+            {driver.requireNavigator && (
+              <Navigation className="h-4 w-4 text-purple-500 dark:text-purple-400" />
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="mt-4 flex items-center gap-2 border-t border-border/50 pt-3">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {/* TODO: inline edit or navigate */}}
+            >
+              <Pencil className="mr-1 h-3.5 w-3.5" />
+              Edit
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+              onClick={() => {
+                if (window.confirm(`Delete driver "${driver.fullname}"?`)) {
+                  onDelete(driver.id);
+                }
+              }}
+            >
+              <Trash2 className="mr-1 h-3.5 w-3.5" />
+              Delete
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Loading skeleton
+// ---------------------------------------------------------------------------
+
+function CardSkeleton() {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="rounded-xl border border-border bg-card p-4">
+          <div className="flex items-center gap-4">
+            <Skeleton className="h-10 w-10 rounded-full" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-28" />
+            </div>
+            <Skeleton className="hidden h-4 w-20 sm:block" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // DriversPage
 // ---------------------------------------------------------------------------
 
 export function DriversPage() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: drivers, isLoading } = useDrivers();
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [sheetOpen, setSheetOpen] = useState(false);
 
-  // --- filtered list ---
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => api.deleteDriver(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["drivers"] });
+    },
+  });
+
   const filtered = useMemo(() => {
     if (!drivers) return [];
     const q = search.toLowerCase();
@@ -84,42 +302,14 @@ export function DriversPage() {
       const matchesSearch =
         !q ||
         d.fullname.toLowerCase().includes(q) ||
-        d.email.toLowerCase().includes(q);
+        d.email.toLowerCase().includes(q) ||
+        d.phone?.toLowerCase().includes(q) ||
+        d.displayId?.toLowerCase().includes(q);
       const matchesRole = roleFilter === "all" || d.role === roleFilter;
       return matchesSearch && matchesRole;
     });
   }, [drivers, search, roleFilter]);
 
-  // --- create mutation ---
-  const createMutation = useMutation({
-    mutationFn: (payload: CreateDriverForm) => api.createDriver(payload),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["drivers"] });
-      setSheetOpen(false);
-      form.reset();
-    },
-  });
-
-  // --- form ---
-  const form = useForm<CreateDriverForm>({
-    resolver: zodResolver(createDriverSchema),
-    defaultValues: {
-      fullname: "",
-      email: "",
-      phone: "",
-      capacity: 4,
-      role: "Driver",
-      navigator: "",
-      requireNavigator: false,
-      haveChildSeat: false,
-    },
-  });
-
-  const onSubmit = (values: CreateDriverForm) => {
-    createMutation.mutate(values);
-  };
-
-  // --- render ---
   return (
     <Container className="py-8">
       {/* Header */}
@@ -128,169 +318,22 @@ export function DriversPage() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Car className="h-5 w-5" />
           </div>
-          <div>
-            <h1 className="font-heading text-2xl text-foreground">Drivers</h1>
-            {!isLoading && (
-              <p className="text-sm text-muted-foreground">
-                {drivers?.length ?? 0} total &middot; {drivers?.filter((d) => d.isPresent).length ?? 0} present
-              </p>
-            )}
-          </div>
+          <h1 className="font-heading text-2xl text-foreground">Drivers</h1>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => drivers && exportDriversToExcel(drivers)}
-            disabled={!drivers?.length}
-          >
-            <Download className="mr-1 h-4 w-4" />
-            Export
-          </Button>
-          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-            <SheetTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Driver
-              </Button>
-            </SheetTrigger>
-            <SheetContent className="overflow-y-auto sm:max-w-lg">
-            <h2 className="mb-6 text-lg font-semibold text-foreground">
-              Add Driver
-            </h2>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">
-                  Full name
-                </label>
-                <Input {...form.register("fullname")} placeholder="Jane Doe" />
-                {form.formState.errors.fullname && (
-                  <p className="mt-1 text-xs text-destructive">
-                    {form.formState.errors.fullname.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">
-                  Email
-                </label>
-                <Input {...form.register("email")} type="email" placeholder="jane@example.com" />
-                {form.formState.errors.email && (
-                  <p className="mt-1 text-xs text-destructive">
-                    {form.formState.errors.email.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">
-                  Phone
-                </label>
-                <Input {...form.register("phone")} placeholder="(414) 555-0100" />
-                {form.formState.errors.phone && (
-                  <p className="mt-1 text-xs text-destructive">
-                    {form.formState.errors.phone.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">
-                  Capacity
-                </label>
-                <Input {...form.register("capacity")} type="number" min={1} />
-                {form.formState.errors.capacity && (
-                  <p className="mt-1 text-xs text-destructive">
-                    {form.formState.errors.capacity.message}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">
-                  Role
-                </label>
-                <Controller
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Driver">Driver</SelectItem>
-                        <SelectItem value="Navigator">Navigator</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-foreground">
-                  Navigator name
-                </label>
-                <Input {...form.register("navigator")} placeholder="Optional" />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Controller
-                  control={form.control}
-                  name="requireNavigator"
-                  render={({ field }) => (
-                    <Checkbox
-                      id="requireNavigator"
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  )}
-                />
-                <label htmlFor="requireNavigator" className="text-sm text-foreground">
-                  Requires navigator
-                </label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Controller
-                  control={form.control}
-                  name="haveChildSeat"
-                  render={({ field }) => (
-                    <Checkbox
-                      id="haveChildSeat"
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  )}
-                />
-                <label htmlFor="haveChildSeat" className="text-sm text-foreground">
-                  Has child seat
-                </label>
-              </div>
-
-              {createMutation.isError && (
-                <p className="text-sm text-destructive">
-                  {(createMutation.error as Error).message ?? "Failed to create driver"}
-                </p>
-              )}
-
-              <div className="flex gap-2 pt-2">
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? "Creating..." : "Create Driver"}
-                </Button>
-                <SheetClose asChild>
-                  <Button type="button" variant="outline">
-                    Cancel
-                  </Button>
-                </SheetClose>
-              </div>
-            </form>
-          </SheetContent>
-        </Sheet>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => drivers && exportDriversToExcel(drivers)}
+          disabled={!drivers?.length}
+        >
+          <Download className="mr-1 h-4 w-4" />
+          Export
+        </Button>
       </div>
+
+      {/* Stats */}
+      {!isLoading && drivers && <DriverStats drivers={drivers} />}
 
       {/* Search & filters */}
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
@@ -299,7 +342,7 @@ export function DriversPage() {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name or email..."
+            placeholder="Search by name, email, phone, ID..."
             className="pl-9"
           />
         </div>
@@ -315,95 +358,26 @@ export function DriversPage() {
         </Select>
       </div>
 
-      {/* Table */}
-      <div className="rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead className="hidden md:table-cell">Phone</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead className="hidden sm:table-cell">Capacity</TableHead>
-              <TableHead className="hidden lg:table-cell">Child Seat</TableHead>
-              <TableHead className="hidden sm:table-cell">Present</TableHead>
-              <TableHead className="hidden lg:table-cell">Host</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading &&
-              Array.from({ length: 6 }).map((_, i) => (
-                <TableRow key={i}>
-                  {Array.from({ length: 8 }).map((__, j) => (
-                    <TableCell key={j}>
-                      <Skeleton className="h-5 w-full" />
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-
-            {!isLoading && filtered.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={8} className="py-12 text-center text-muted-foreground">
-                  {search || roleFilter !== "all"
-                    ? "No drivers match your filters."
-                    : "No drivers registered yet."}
-                </TableCell>
-              </TableRow>
-            )}
-
-            {filtered.map((driver) => (
-              <TableRow
-                key={driver.id}
-                className="cursor-pointer transition-colors hover:bg-accent/50"
-                onClick={() => navigate(`/drivers/${driver.id}`)}
-              >
-                <TableCell className="font-medium text-foreground">
-                  {driver.fullname}
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {driver.email}
-                </TableCell>
-                <TableCell className="hidden text-muted-foreground md:table-cell">
-                  {driver.phone}
-                </TableCell>
-                <TableCell>
-                  <Badge variant={driver.role === "Driver" ? "default" : "secondary"}>
-                    {driver.role}
-                  </Badge>
-                </TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  {driver.capacity}
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  {driver.haveChildSeat ? (
-                    <Baby className="h-4 w-4 text-primary" />
-                  ) : (
-                    <span className="text-muted-foreground">&mdash;</span>
-                  )}
-                </TableCell>
-                <TableCell className="hidden sm:table-cell">
-                  {driver.isPresent ? (
-                    <Check className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <X className="h-4 w-4 text-muted-foreground/50" />
-                  )}
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  {driver.host ? (
-                    <span className="flex items-center gap-1 text-sm text-foreground">
-                      <Home className="h-3 w-3 text-muted-foreground" />
-                      {driver.host.fullname}
-                    </span>
-                  ) : (
-                    <span className="text-muted-foreground">&mdash;</span>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      {/* Driver cards */}
+      {isLoading ? (
+        <CardSkeleton />
+      ) : filtered.length === 0 ? (
+        <div className="rounded-xl border border-border bg-card py-16 text-center text-muted-foreground">
+          {search || roleFilter !== "all"
+            ? "No drivers match your filters."
+            : "No drivers registered yet."}
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((driver) => (
+            <DriverCard
+              key={driver.id}
+              driver={driver}
+              onDelete={(id) => deleteMutation.mutate(id)}
+            />
+          ))}
+        </div>
+      )}
     </Container>
   );
 }

@@ -444,6 +444,22 @@ export const api = {
       body: JSON.stringify(payload),
     }),
 
+  // Registration (public, no auth)
+  getStudentRegistrationStatus: () =>
+    request<{ isOpen: boolean }>("/registration/student/status"),
+  getDriverRegistrationStatus: () =>
+    request<{ isOpen: boolean }>("/registration/driver/status"),
+  registerStudent: (payload: Partial<Student>) =>
+    request<{ success: boolean }>("/registration/student", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  registerDriver: (payload: Partial<Driver>) =>
+    request<{ success: boolean }>("/registration/driver", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+
   // Tour
   getTourInfo: () => request<TourInfo>("/tour/info"),
 
