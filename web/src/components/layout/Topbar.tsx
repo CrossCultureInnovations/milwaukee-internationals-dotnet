@@ -67,15 +67,20 @@ const navGroups: NavGroup[] = [
   },
 ];
 
-// Flat list for desktop top bar — most used items
+// Flat list for desktop top bar
 const desktopNav: NavEntry[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/students", label: "Students", icon: GraduationCap },
   { to: "/drivers", label: "Drivers", icon: Car },
   { to: "/hosts", label: "Hosts", icon: Home },
   { to: "/events", label: "Events", icon: CalendarDays },
+  { to: "/locations", label: "Locations", icon: MapPin },
   { to: "/mappings", label: "Mappings", icon: Link2 },
+  { to: "/attendance", label: "Attendance", icon: ClipboardCheck },
   { to: "/reports", label: "Reports", icon: BarChart3 },
+  { to: "/email", label: "Email", icon: Mail, adminOnly: true },
+  { to: "/users", label: "Users", icon: Users, adminOnly: true },
+  { to: "/config", label: "Config", icon: Settings, adminOnly: true },
 ];
 
 function DesktopNavItem({ to, label }: { to: string; label: string }) {
