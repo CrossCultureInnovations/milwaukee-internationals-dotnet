@@ -59,9 +59,9 @@ const navGroups: NavGroup[] = [
     label: "Admin",
     items: [
       { to: "/reports", label: "Reports", icon: BarChart3 },
-      { to: "/email", label: "Email", icon: Mail, adminOnly: true },
-      { to: "/users", label: "Users", icon: Users, adminOnly: true },
-      { to: "/config", label: "Config", icon: Settings, adminOnly: true },
+      { to: "/email", label: "Email", icon: Mail },
+      { to: "/users", label: "Users", icon: Users },
+      { to: "/config", label: "Config", icon: Settings },
       { to: "/registration/student", label: "Register Student", icon: GraduationCap },
       { to: "/registration/driver", label: "Register Driver", icon: Car },
     ],
