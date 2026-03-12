@@ -43,7 +43,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const me = await api.me();
         if (!cancelled) {
-          setSession({ token, user: me });
+          if (me) {
+            setSession({ token, user: me });
+          } else {
+            // 204 / null means token is invalid or expired
+            setToken(null);
+            setSession(null);
+          }
         }
       } catch {
         setToken(null);
