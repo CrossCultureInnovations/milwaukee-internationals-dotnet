@@ -1,46 +1,51 @@
+import { useState, useEffect } from "react";
 import {
   Settings,
-  Calendar,
   MapPin,
-  Clock,
   Users,
-  Car,
   Mail,
-  Palette,
   ToggleRight,
+  Save,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import { Skeleton } from "../../components/ui/skeleton";
 import { Container } from "../../components/layout/Container";
 import { useConfig } from "../../lib/hooks/useApiQueries";
+import { api, type GlobalConfigs } from "../../api";
+import { useQueryClient } from "@tanstack/react-query";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-function FeatureBadge({ enabled, label }: { enabled: boolean; label: string }) {
+function FeatureToggle({
+  enabled,
+  label,
+  onToggle,
+}: {
+  enabled: boolean;
+  label: string;
+  onToggle: () => void;
+}) {
   return (
     <div className="flex items-center justify-between rounded-lg border border-border p-3">
       <span className="text-sm text-foreground">{label}</span>
-      {enabled ? (
-        <Badge className="border-green-500/30 text-green-600" variant="outline">
-          Enabled
-        </Badge>
-      ) : (
-        <Badge className="border-red-500/30 text-red-500" variant="outline">
-          Disabled
-        </Badge>
-      )}
-    </div>
-  );
-}
-
-function ConfigItem({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="flex items-center justify-between rounded-lg border border-border p-3">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="text-sm font-medium text-foreground">{value || "\u2014"}</span>
+      <Button
+        size="sm"
+        variant={enabled ? "default" : "outline"}
+        className={
+          enabled
+            ? "bg-green-600 hover:bg-green-700 text-white"
+            : "text-muted-foreground"
+        }
+        onClick={onToggle}
+      >
+        {enabled ? "Enabled" : "Disabled"}
+      </Button>
     </div>
   );
 }
@@ -66,8 +71,38 @@ function CardSkeleton() {
 
 export function ConfigPage() {
   const { data: config, isLoading } = useConfig();
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState<GlobalConfigs | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [dirty, setDirty] = useState(false);
 
-  if (isLoading) {
+  useEffect(() => {
+    if (config && !form) {
+      setForm({ ...config });
+    }
+  }, [config, form]);
+
+  function update<K extends keyof GlobalConfigs>(key: K, value: GlobalConfigs[K]) {
+    if (!form) return;
+    setForm({ ...form, [key]: value });
+    setDirty(true);
+  }
+
+  async function handleSave() {
+    if (!form) return;
+    setSaving(true);
+    try {
+      await api.updateConfig(form);
+      await queryClient.invalidateQueries({ queryKey: ["config"] });
+      setDirty(false);
+    } catch (e) {
+      console.error("Failed to save config", e);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (isLoading || !form) {
     return (
       <Container className="py-8">
         <div className="mb-6 flex items-center gap-3">
@@ -85,82 +120,105 @@ export function ConfigPage() {
     );
   }
 
-  if (!config) {
-    return (
-      <Container className="py-8">
-        <div className="mb-6 flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Settings className="h-5 w-5" />
-          </div>
-          <h1 className="font-heading text-2xl text-foreground">Configuration</h1>
-        </div>
-        <Card>
-          <CardContent className="py-12 text-center text-muted-foreground">
-            Unable to load configuration.
-          </CardContent>
-        </Card>
-      </Container>
-    );
-  }
+  // Generate year options: current year context ± a few years
+  const currentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 7 }, (_, i) => currentYear - 3 + i);
 
   return (
     <Container className="py-8">
       {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Settings className="h-5 w-5" />
+      <div className="mb-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Settings className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="font-heading text-2xl text-foreground">Configuration</h1>
+            <p className="text-sm text-muted-foreground">
+              Global application settings
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="font-heading text-2xl text-foreground">Configuration</h1>
-          <p className="text-sm text-muted-foreground">
-            Global application settings (read-only)
-          </p>
-        </div>
+        <Button onClick={handleSave} disabled={!dirty || saving}>
+          {saving ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
+          Save Changes
+        </Button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* General */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Palette className="h-4 w-4 text-primary" />
-              General
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <ConfigItem label="Year" value={config.yearValue} />
-            <ConfigItem label="Theme" value={config.theme} />
-          </CardContent>
-        </Card>
+      {/* Year Selector */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-4">
+            <Label htmlFor="yearSelect" className="text-sm font-medium whitespace-nowrap">
+              Select a year context (for viewing and editing only)
+            </Label>
+            <select
+              id="yearSelect"
+              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              value={form.yearValue}
+              onChange={(e) => update("yearValue", Number(e.target.value))}
+            >
+              {yearOptions.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
+        </CardContent>
+      </Card>
 
-        {/* Tour Info */}
-        <Card>
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Features */}
+        <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base">
-              <MapPin className="h-4 w-4 text-primary" />
-              Tour Info
+              <ToggleRight className="h-4 w-4 text-primary" />
+              Features
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <ConfigItem
-              label="Tour Date"
-              value={
-                config.tourDate
-                  ? new Date(config.tourDate).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })
-                  : "\u2014"
-              }
-            />
-            <ConfigItem label="Tour Address" value={config.tourAddress} />
-            <ConfigItem label="Tour Location" value={config.tourLocation} />
-            <ConfigItem
-              label="Host Arrival Time"
-              value={config.arrivalTimeForHost}
-            />
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <FeatureToggle
+                enabled={form.locationWizardFeature}
+                label="Location Wizard Feature"
+                onToggle={() => update("locationWizardFeature", !form.locationWizardFeature)}
+              />
+              <FeatureToggle
+                enabled={form.emailTestMode}
+                label="Email Test Mode"
+                onToggle={() => update("emailTestMode", !form.emailTestMode)}
+              />
+              <FeatureToggle
+                enabled={form.smsTestMode}
+                label="SMS Test Mode"
+                onToggle={() => update("smsTestMode", !form.smsTestMode)}
+              />
+              <FeatureToggle
+                enabled={form.eventFeature}
+                label="Ad-Hoc Event Feature"
+                onToggle={() => update("eventFeature", !form.eventFeature)}
+              />
+              <FeatureToggle
+                enabled={form.disallowDuplicateStudents}
+                label="Disallow registration of duplicate students"
+                onToggle={() => update("disallowDuplicateStudents", !form.disallowDuplicateStudents)}
+              />
+              <FeatureToggle
+                enabled={form.recordApiEvents}
+                label="Record API events"
+                onToggle={() => update("recordApiEvents", !form.recordApiEvents)}
+              />
+              <FeatureToggle
+                enabled={form.qrInStudentEmail}
+                label="Display QR code in student email"
+                onToggle={() => update("qrInStudentEmail", !form.qrInStudentEmail)}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -172,12 +230,79 @@ export function ConfigPage() {
               Limits
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <ConfigItem
-              label="Max Student Seats"
-              value={config.maxLimitStudentSeats}
-            />
-            <ConfigItem label="Max Drivers" value={config.maxLimitDrivers} />
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="maxStudents" className="text-sm">
+                Max upper limit of students for [{form.yearValue}] year
+              </Label>
+              <Input
+                id="maxStudents"
+                type="number"
+                value={form.maxLimitStudentSeats}
+                onChange={(e) => update("maxLimitStudentSeats", Number(e.target.value))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="maxDrivers" className="text-sm">
+                Max upper limit of drivers for [{form.yearValue}] year
+              </Label>
+              <Input
+                id="maxDrivers"
+                type="number"
+                value={form.maxLimitDrivers}
+                onChange={(e) => update("maxLimitDrivers", Number(e.target.value))}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Tour Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <MapPin className="h-4 w-4 text-primary" />
+              Tour Info
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="tourDate" className="text-sm">
+                Time of the tour (CST Zone)
+              </Label>
+              <Input
+                id="tourDate"
+                type="datetime-local"
+                value={form.tourDate ? form.tourDate.slice(0, 16) : ""}
+                onChange={(e) => update("tourDate", e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="arrivalTime" className="text-sm">
+                Student arrival time for hosts (CST Zone)
+              </Label>
+              <Input
+                id="arrivalTime"
+                type="datetime-local"
+                value={form.arrivalTimeForHost ? form.arrivalTimeForHost.slice(0, 16) : ""}
+                onChange={(e) => update("arrivalTimeForHost", e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="tourAddress" className="text-sm">Tour Address</Label>
+              <Input
+                id="tourAddress"
+                value={form.tourAddress || ""}
+                onChange={(e) => update("tourAddress", e.target.value)}
+              />
+            </div>
+            <div>
+              <Label htmlFor="tourLocation" className="text-sm">Tour Location</Label>
+              <Input
+                id="tourLocation"
+                value={form.tourLocation || ""}
+                onChange={(e) => update("tourLocation", e.target.value)}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -189,51 +314,13 @@ export function ConfigPage() {
               Email
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <FeatureBadge
-              enabled={config.emailTestMode}
-              label="Email Test Mode"
-            />
-            <ConfigItem
-              label="Sender (On Behalf)"
-              value={config.emailSenderOnBehalf}
-            />
-            <FeatureBadge
-              enabled={config.qrInStudentEmail}
-              label="QR in Student Email"
-            />
-          </CardContent>
-        </Card>
-
-        {/* Features */}
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ToggleRight className="h-4 w-4 text-primary" />
-              Features
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              <FeatureBadge
-                enabled={config.eventFeature}
-                label="Events"
-              />
-              <FeatureBadge
-                enabled={config.smsTestMode}
-                label="SMS Test Mode"
-              />
-              <FeatureBadge
-                enabled={config.disallowDuplicateStudents}
-                label="Disallow Duplicate Students"
-              />
-              <FeatureBadge
-                enabled={config.recordApiEvents}
-                label="Record API Events"
-              />
-              <FeatureBadge
-                enabled={config.locationWizardFeature}
-                label="Location Wizard"
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="emailSender" className="text-sm">Sender (On Behalf)</Label>
+              <Input
+                id="emailSender"
+                value={form.emailSenderOnBehalf || ""}
+                onChange={(e) => update("emailSenderOnBehalf", e.target.value)}
               />
             </div>
           </CardContent>

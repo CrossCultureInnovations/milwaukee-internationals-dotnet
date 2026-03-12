@@ -409,6 +409,11 @@ export const api = {
 
   // Config
   getConfig: () => request<GlobalConfigs>("/config"),
+  updateConfig: (payload: GlobalConfigs) =>
+    request<GlobalConfigs>("/config", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    }),
 
   // Attendance
   setStudentAttendance: (payload: AttendanceViewModel) =>
