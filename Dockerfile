@@ -9,10 +9,15 @@ COPY . .
 
 RUN npm install && npm run build
 
+# Build React SPA
+WORKDIR /app/stage/web
+RUN npm install && npm run build
+
+WORKDIR /app/stage
 RUN dotnet restore
 RUN dotnet publish -c Release -o out
 
-# Copy the script and styles into wwwroot
+# Copy the old script/styles into wwwroot (SPA already built into wwwroot/spa by Vite)
 RUN cp -r client-build/* ./out/wwwroot/
 
 # Build runtime image
