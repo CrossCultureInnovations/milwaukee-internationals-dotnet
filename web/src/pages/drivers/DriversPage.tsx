@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Car,
@@ -118,6 +119,7 @@ function DetailItem({
 
 function DriverCard({ driver, onDelete }: { driver: Driver; onDelete: (id: number) => void }) {
   const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="rounded-xl border border-border bg-card transition-shadow hover:shadow-md">
@@ -229,7 +231,7 @@ function DriverCard({ driver, onDelete }: { driver: Driver; onDelete: (id: numbe
             <Button
               size="sm"
               variant="outline"
-              onClick={() => {/* TODO: inline edit or navigate */}}
+              onClick={() => navigate(`/drivers/${driver.id}`)}
             >
               <Pencil className="mr-1 h-3.5 w-3.5" />
               Edit

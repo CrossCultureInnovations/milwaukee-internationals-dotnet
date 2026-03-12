@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -116,6 +117,7 @@ function DetailItem({
 
 function HostCard({ host, onDelete }: { host: Host; onDelete: (id: number) => void }) {
   const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
   const driverCount = host.drivers?.length ?? 0;
 
   return (
@@ -191,7 +193,7 @@ function HostCard({ host, onDelete }: { host: Host; onDelete: (id: number) => vo
             <Button
               size="sm"
               variant="outline"
-              onClick={() => {/* TODO: inline edit */}}
+              onClick={() => navigate(`/hosts/${host.id}`)}
             >
               <Pencil className="mr-1 h-3.5 w-3.5" />
               Edit

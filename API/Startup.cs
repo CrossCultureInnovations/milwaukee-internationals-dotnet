@@ -236,11 +236,13 @@ public class Startup
             };
         });
 
+#if DEBUG
         // In Development, bypass all authorization (including role checks)
         if (_env.IsDevelopment())
         {
             services.AddSingleton<IAuthorizationHandler, DevBypassAuthorizationHandler>();
         }
+#endif
 
         services.AddEfRepository<EntityDbContext>(opt => opt.Profile(Assembly.Load("Dal")));
 
