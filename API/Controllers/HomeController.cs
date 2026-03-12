@@ -6,14 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace API.Controllers;
 
 [AllowAnonymous]
-[Route("")]
+[Route("legacy")]
 [ApiExplorerSettings(IgnoreApi = true)]
 public class HomeController(IHttpRequestUtilityBuilder httpRequestUtilityBuilder) : Controller
 {
     public IActionResult Index()
     {
         return RedirectToAction("Student", "Registration");
-        // return RedirectToAction("Index", "AdHocRegistration");
     }
 
     /// <summary>

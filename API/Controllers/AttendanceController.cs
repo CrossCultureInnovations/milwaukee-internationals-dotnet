@@ -5,7 +5,7 @@ namespace API.Controllers;
 
 [ApiExplorerSettings(IgnoreApi = true)]
 [AuthorizeMiddleware]
-[Route("[controller]")]
+[Route("legacy/[controller]")]
 public class AttendanceController : Controller
 {
     // GET

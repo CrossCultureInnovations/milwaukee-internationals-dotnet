@@ -26,3 +26,5 @@ client-build
 *.sqlite-*
 
 imageid.txt
+
+web/dist

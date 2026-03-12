@@ -15,7 +15,7 @@ public class StatsController(IStatsLogic statsLogic) : Controller
     [Route("")]
     public async Task<IActionResult> Index()
     {
-        return View(await statsLogic.GetStats());
+        return Ok(await statsLogic.GetStats());
     }
 
     [HttpGet]

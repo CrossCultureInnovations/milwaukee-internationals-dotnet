@@ -17,7 +17,7 @@ namespace API.Controllers;
 
 [AllowAnonymous]
 [ApiExplorerSettings(IgnoreApi = true)]
-[Route("[controller]")]
+[Route("legacy/[controller]")]
 public class RegistrationController(IRegistrationLogic registrationLogic, IConfiguration configuration)
     : Controller
 {

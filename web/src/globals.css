@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: "Inter";
+  --font-heading: "Fraunces";
+  --paper: 210 20% 96%;
+  --ink: 220 14% 10%;
+  --background: 210 20% 96%;
+  --foreground: 220 14% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 14% 10%;
+  --primary: 213 72% 37%;
+  --primary-hover: 213 68% 42%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 18% 93%;
+  --secondary-foreground: 220 14% 10%;
+  --muted: 210 18% 93%;
+  --muted-foreground: 215 12% 44%;
+  --accent: 210 18% 93%;
+  --accent-foreground: 220 14% 10%;
+  --border: 214 14% 89%;
+  --input: 214 14% 89%;
+  --ring: 213 72% 37%;
+  --radius: 0.75rem;
+}
+
+.dark {
+  --paper: 222 18% 11%;
+  --ink: 210 20% 96%;
+  --background: 222 18% 11%;
+  --foreground: 210 20% 96%;
+  --card: 222 16% 14%;
+  --card-foreground: 210 20% 96%;
+  --primary: 213 72% 52%;
+  --primary-hover: 213 68% 46%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 222 14% 18%;
+  --secondary-foreground: 210 20% 96%;
+  --muted: 222 14% 18%;
+  --muted-foreground: 215 10% 68%;
+  --accent: 222 14% 18%;
+  --accent-foreground: 210 20% 96%;
+  --border: 222 12% 26%;
+  --input: 222 12% 26%;
+  --ring: 213 80% 60%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+    letter-spacing: -0.0015em;
+  }
+}
+
+@layer utilities {
+  .font-heading {
+    font-family: var(--font-heading), Georgia, serif;
+    font-weight: 500;
+    letter-spacing: -0.016em;
+  }
+}

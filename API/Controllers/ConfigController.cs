@@ -8,7 +8,7 @@ using Models.Enums;
 namespace API.Controllers;
 
 [ApiExplorerSettings(IgnoreApi = true)]
-[Route("[controller]")]
+[Route("legacy/[controller]")]
 [AuthorizeMiddleware]
 public class ConfigController(IConfigLogic configLogic) : Controller
 {

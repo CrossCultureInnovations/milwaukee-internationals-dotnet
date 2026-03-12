@@ -223,7 +223,7 @@ public class Startup
 
         services.AddEfRepository<EntityDbContext>(opt => opt.Profile(Assembly.Load("Dal")));
 
-        services.AddScoped<IUserIdProvider, CustomUserIdProvider>();
+        services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
         
         services.Scan(scan => scan
             .FromAssemblies(Assembly.Load("API"), Assembly.Load("Logic"), Assembly.Load("DAL"))
@@ -300,6 +300,9 @@ public class Startup
                 endpoints.MapControllers();
                 endpoints.MapHub<MessageHub>("/hub");
                 endpoints.MapHub<LogHub>("/log");
+
+                // SPA fallback: serve React app's index.html for unmatched routes
+                endpoints.MapFallbackToFile("spa/index.html");
             });
 
         Console.WriteLine("Application Started!");
