@@ -162,7 +162,7 @@ export function DashboardPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="font-heading text-2xl text-foreground">
-          Welcome back{session?.user.fullname ? `, ${session.user.fullname}` : ""}
+          Welcome back{session?.user?.fullname ? `, ${session.user.fullname}` : ""}
         </h1>
         {configData && (
           <div className="mt-2 flex flex-wrap items-center gap-3">

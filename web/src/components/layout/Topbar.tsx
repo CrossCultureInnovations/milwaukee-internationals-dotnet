@@ -132,7 +132,7 @@ export function Topbar() {
   );
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const isAdmin = import.meta.env.DEV || session?.user.userRoleEnum === "Admin";
+  const isAdmin = import.meta.env.DEV || session?.user?.userRoleEnum === "Admin";
 
   const toggleTheme = useCallback(() => {
     setDark((prev) => {

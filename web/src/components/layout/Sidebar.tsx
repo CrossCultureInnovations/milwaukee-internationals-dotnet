@@ -130,7 +130,7 @@ export function MobileHeader() {
     document.documentElement.classList.contains("dark")
   );
 
-  const isAdmin = import.meta.env.DEV || session?.user.userRoleEnum === "Admin";
+  const isAdmin = import.meta.env.DEV || session?.user?.userRoleEnum === "Admin";
 
   const toggleTheme = useCallback(() => {
     setDark((prev) => {
@@ -248,7 +248,7 @@ export function Sidebar() {
     document.documentElement.classList.contains("dark")
   );
 
-  const isAdmin = import.meta.env.DEV || session?.user.userRoleEnum === "Admin";
+  const isAdmin = import.meta.env.DEV || session?.user?.userRoleEnum === "Admin";
 
   const toggleTheme = useCallback(() => {
     setDark((prev) => {
