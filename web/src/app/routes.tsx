@@ -20,18 +20,19 @@ import { AttendancePage } from "../pages/admin/AttendancePage";
 import { ReportsPage } from "../pages/reports/ReportsPage";
 import { RegistrationPage } from "../pages/registration/RegistrationPage";
 import { EmailToolsPage } from "../pages/email/EmailToolsPage";
+import { LandingPage } from "../pages/landing/LandingPage";
 
 function HomeRedirect() {
   const { isAuthenticated, isInitializing } = useAuth();
-  if (import.meta.env.DEV) return <Navigate to="/dashboard" replace />;
   if (isInitializing) return null;
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  return <Navigate to="/dashboard" replace />;
+  if (isAuthenticated) return <Navigate to="/dashboard" replace />;
+  return <Navigate to="/welcome" replace />;
 }
 
 export function AppRoutes() {
   return useRoutes([
     { path: "/", element: <HomeRedirect /> },
+    { path: "/welcome", element: <LandingPage /> },
     { path: "/login", element: <LoginPage /> },
     { path: "/register", element: <RegisterPage /> },
     { path: "/registration", element: <RegistrationPage /> },

@@ -5,7 +5,7 @@ import { AppRoutes } from "./routes";
 export function App() {
   const location = useLocation();
   const isPublicRoute =
-    new Set(["/login", "/register"]).has(location.pathname) ||
+    new Set(["/login", "/register", "/welcome"]).has(location.pathname) ||
     location.pathname.startsWith("/registration");
 
   if (isPublicRoute) {
