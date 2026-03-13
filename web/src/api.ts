@@ -406,6 +406,8 @@ export const api = {
       body: JSON.stringify(payload),
     }),
   deleteUser: (id: number) => request(`/user/${id}`, { method: "DELETE" }),
+  sendPasswordReset: (id: number) =>
+    request<{ message: string }>(`/user/${id}/SendPasswordReset`, { method: "POST" }),
 
   // Config
   getConfig: () => request<GlobalConfigs>("/config"),
