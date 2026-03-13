@@ -12,9 +12,6 @@ import {
   Baby,
   UtensilsCrossed,
   Car,
-  Mail,
-  Phone,
-  Heart,
   Calendar,
 } from "lucide-react";
 import { Container } from "../../components/layout/Container";
@@ -162,65 +159,63 @@ function StudentCard({ student, onDelete }: { student: Student; onDelete: (id: n
 
       {/* Expanded details */}
       {expanded && (
-        <div className="border-t border-border px-4 py-4">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <DetailItem icon={Mail} label="Email" value={student.email} />
-            <DetailItem icon={Phone} label="Phone" value={student.phone || "\u2014"} />
-            <DetailItem icon={Calendar} label="Registered" value={formatDate(student.registeredOn)} />
+        <div className="border-t border-border px-4 py-3">
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <span className="text-sm text-foreground break-all">{student.email}</span>
+            <span className="text-sm text-foreground">{student.phone || "\u2014"}</span>
+            <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              {formatDate(student.registeredOn)}
+            </span>
+
             {student.interests && (
-              <div className="sm:col-span-2 lg:col-span-3">
-                <p className="mb-1 text-xs text-muted-foreground flex items-center gap-1.5">
-                  <Heart className="h-3.5 w-3.5" /> Interests
-                </p>
-                <div className="flex flex-wrap gap-1.5">
-                  {student.interests.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).map((tag) => (
-                    <span key={tag} className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-foreground">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {student.interests.split(/[,;]+/).map((t) => t.trim()).filter(Boolean).map((tag) => (
+                  <span key={tag} className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-foreground">
+                    {tag}
+                  </span>
+                ))}
               </div>
             )}
-          </div>
 
-          {/* Mobile badges */}
-          <div className="mt-3 flex flex-wrap gap-1.5 md:hidden">
-            {student.kosherFood && (
-              <Badge variant="outline" className="text-xs gap-1 border-green-200 text-green-700 dark:border-green-800 dark:text-green-400">
-                Kosher
-              </Badge>
-            )}
-            {student.needCarSeat && (
-              <Baby className="h-4 w-4 text-amber-500 dark:text-amber-400" />
-            )}
-            {student.driverRefId != null && (
-              <Car className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-            )}
-          </div>
+            {/* Mobile badges */}
+            <div className="flex items-center gap-1.5 md:hidden">
+              {student.kosherFood && (
+                <Badge variant="outline" className="text-xs gap-1 border-green-200 text-green-700 dark:border-green-800 dark:text-green-400">
+                  Kosher
+                </Badge>
+              )}
+              {student.needCarSeat && (
+                <Baby className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+              )}
+              {student.driverRefId != null && (
+                <Car className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+              )}
+            </div>
 
-          {/* Actions */}
-          <div className="mt-4 flex items-center gap-2 border-t border-border/50 pt-3">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => navigate(`/students/${student.id}`)}
-            >
-              <Pencil className="mr-1 h-3.5 w-3.5" />
-              Edit
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
-              onClick={() => {
-                if (window.confirm(`Delete student "${student.fullname}"?`)) {
-                  onDelete(student.id);
-                }
-              }}
-            >
-              <Trash2 className="mr-1 h-3.5 w-3.5" />
-              Delete
-            </Button>
+            <div className="ml-auto flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => navigate(`/students/${student.id}`)}
+              >
+                <Pencil className="mr-1 h-3.5 w-3.5" />
+                Edit
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                onClick={() => {
+                  if (window.confirm(`Delete student "${student.fullname}"?`)) {
+                    onDelete(student.id);
+                  }
+                }}
+              >
+                <Trash2 className="mr-1 h-3.5 w-3.5" />
+                Delete
+              </Button>
+            </div>
           </div>
         </div>
       )}
@@ -228,25 +223,6 @@ function StudentCard({ student, onDelete }: { student: Student; onDelete: (id: n
   );
 }
 
-function DetailItem({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-start gap-2">
-      <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-      <div className="min-w-0">
-        <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm text-foreground break-all">{value}</p>
-      </div>
-    </div>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // Loading skeleton
