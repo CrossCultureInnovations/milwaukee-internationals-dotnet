@@ -32,12 +32,13 @@ public class JwtIdentityController(
     {
         if (User.Identity is { IsAuthenticated: true })
         {
-            var user = await userManager.FindByEmailAsync(User.Identity.Name);
-                
-            return Ok(user);
+            var user = await userManager.FindByNameAsync(User.Identity.Name)
+                       ?? await userManager.FindByEmailAsync(User.Identity.Name);
+
+            if (user != null) return Ok(user);
         }
 
-        return Ok(new { });
+        return NoContent();
     }
 
     [NonAction]
