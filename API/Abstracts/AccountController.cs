@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -135,7 +136,7 @@ public abstract class AbstractIdentityController : Controller
         var jwtSettings = ResolveJwtSettings();
             
         // Generate and issue a JWT token
-        var claims = new[]
+        var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Email, user.Email),
             new Claim(ClaimTypes.Name, user.UserName),    // use username as name
@@ -143,6 +144,12 @@ public abstract class AbstractIdentityController : Controller
             new Claim(JwtRegisteredClaimNames.Sub, user.Email),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+
+        // Add role claims so [Authorize(Roles = "...")] works
+        foreach (var role in user.UserRoleEnum.SubRoles())
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role.ToString()));
+        }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
