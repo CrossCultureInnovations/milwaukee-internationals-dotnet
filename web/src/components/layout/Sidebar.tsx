@@ -101,12 +101,12 @@ function SidebarNav({
   onItemClick?: () => void;
 }) {
   return (
-    <nav className="space-y-6">
-      {groups.map((group) => (
+    <nav className="space-y-2">
+      {groups.map((group, index) => (
         <div key={group.label}>
-          <p className="mb-2 px-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            {group.label}
-          </p>
+          {index > 0 && (
+            <hr className="my-2 border-border/50" />
+          )}
           <div className="space-y-0.5">
             {group.items.map((item) => (
               <SidebarNavItem key={item.to} {...item} onClick={onItemClick} />
