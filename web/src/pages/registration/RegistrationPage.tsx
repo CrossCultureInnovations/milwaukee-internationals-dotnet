@@ -1,10 +1,8 @@
-import { useState, useEffect } from "react";
-import { useSearchParams, useLocation, Link } from "react-router-dom";
+import { useState } from "react";
+import { useLocation, Link } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
   Globe,
-  GraduationCap,
-  Car,
   Loader2,
   CheckCircle2,
   MapPin,
@@ -645,32 +643,12 @@ function DriverRegistration() {
 
 export function RegistrationPage() {
   const location = useLocation();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const queryType = searchParams.get("type");
-
-  // Detect mode from URL path or query param
-  function detectMode(): "student" | "driver" {
-    if (location.pathname.endsWith("/driver")) return "driver";
-    if (location.pathname.endsWith("/student")) return "student";
-    if (queryType === "driver") return "driver";
-    return "student";
-  }
-
-  const [mode, setMode] = useState<"student" | "driver">(detectMode);
+  const mode: "student" | "driver" = location.pathname.endsWith("/driver") ? "driver" : "student";
 
   const tourQuery = useQuery({
     queryKey: ["tour", "info"],
     queryFn: api.getTourInfo,
   });
-
-  useEffect(() => {
-    setMode(detectMode());
-  }, [location.pathname, queryType]);
-
-  function switchMode(m: "student" | "driver") {
-    setMode(m);
-    setSearchParams({ type: m });
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
@@ -682,38 +660,8 @@ export function RegistrationPage() {
           tourLocation={tourQuery.data?.tourLocation}
         />
 
-        {/* Mode toggle */}
-        <div className="mt-8 flex gap-2 rounded-xl bg-secondary/70 p-1">
-          <button
-            type="button"
-            onClick={() => switchMode("student")}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all",
-              mode === "student"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <GraduationCap className="h-4 w-4" />
-            Student
-          </button>
-          <button
-            type="button"
-            onClick={() => switchMode("driver")}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-medium transition-all",
-              mode === "driver"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Car className="h-4 w-4" />
-            Driver
-          </button>
-        </div>
-
         {/* Registration form */}
-        <Card className="mt-6">
+        <Card className="mt-8">
           <CardContent className="pt-6">
             {mode === "student" ? <StudentRegistration /> : <DriverRegistration />}
           </CardContent>

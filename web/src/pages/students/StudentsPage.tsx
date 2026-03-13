@@ -353,81 +353,90 @@ export function StudentsPage() {
   }, [students, search, sortKey, sortDesc]);
 
   return (
-    <Container className="py-8">
-      {/* Header */}
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <GraduationCap className="h-5 w-5" />
+    <div className="flex h-screen flex-col">
+      {/* Sticky header area */}
+      <div className="shrink-0 bg-background">
+        <Container className="pt-8">
+          {/* Header */}
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <GraduationCap className="h-5 w-5" />
+              </div>
+              <h1 className="font-heading text-2xl text-foreground">Students</h1>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => students && exportStudentsToExcel(students)}
+                disabled={!students?.length}
+              >
+                <Download className="mr-1 h-4 w-4" />
+                Download
+              </Button>
+            </div>
           </div>
-          <h1 className="font-heading text-2xl text-foreground">Students</h1>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => students && exportStudentsToExcel(students)}
-            disabled={!students?.length}
-          >
-            <Download className="mr-1 h-4 w-4" />
-            Download
-          </Button>
-        </div>
+          {/* Stats */}
+          {!isLoading && students && <StudentStats students={students} />}
+
+          {/* Search + Sort */}
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name, email, country, university, ID..."
+                className="pl-9"
+              />
+            </div>
+            <div className="flex items-center gap-1 overflow-x-auto">
+              <span className="text-xs text-muted-foreground whitespace-nowrap mr-1">Sort by</span>
+              {SORT_OPTIONS.map((opt) => (
+                <Button
+                  key={opt.key}
+                  variant={sortKey === opt.key ? "default" : "outline"}
+                  size="sm"
+                  className="text-xs h-8 px-2.5"
+                  onClick={() => handleSort(opt.key)}
+                >
+                  {opt.label}
+                  {sortKey === opt.key && (
+                    <span className="ml-1">{sortDesc ? "\u2193" : "\u2191"}</span>
+                  )}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </Container>
       </div>
 
-      {/* Stats */}
-      {!isLoading && students && <StudentStats students={students} />}
-
-      {/* Search + Sort */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, email, country, university, ID..."
-            className="pl-9"
-          />
-        </div>
-        <div className="flex items-center gap-1 overflow-x-auto">
-          <span className="text-xs text-muted-foreground whitespace-nowrap mr-1">Sort by</span>
-          {SORT_OPTIONS.map((opt) => (
-            <Button
-              key={opt.key}
-              variant={sortKey === opt.key ? "default" : "outline"}
-              size="sm"
-              className="text-xs h-8 px-2.5"
-              onClick={() => handleSort(opt.key)}
-            >
-              {opt.label}
-              {sortKey === opt.key && (
-                <span className="ml-1">{sortDesc ? "\u2193" : "\u2191"}</span>
-              )}
-            </Button>
-          ))}
-        </div>
+      {/* Scrollable list */}
+      <div className="min-h-0 flex-1 overflow-y-auto pb-8">
+        <Container>
+          {!isLoading && filtered.length > 0 && <ColumnHeader />}
+          {isLoading ? (
+            <CardSkeleton />
+          ) : filtered.length === 0 ? (
+            <div className="rounded-xl border border-border bg-card py-16 text-center text-muted-foreground">
+              {search ? "No students match your search." : "No students yet."}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filtered.map((student) => (
+                <StudentCard
+                  key={student.id}
+                  student={student}
+                  onDelete={(id) => deleteMutation.mutate(id)}
+                />
+              ))}
+            </div>
+          )}
+        </Container>
       </div>
-
-      {/* Column header + Student cards */}
-      {!isLoading && filtered.length > 0 && <ColumnHeader />}
-      {isLoading ? (
-        <CardSkeleton />
-      ) : filtered.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card py-16 text-center text-muted-foreground">
-          {search ? "No students match your search." : "No students yet."}
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {filtered.map((student) => (
-            <StudentCard
-              key={student.id}
-              student={student}
-              onDelete={(id) => deleteMutation.mutate(id)}
-            />
-          ))}
-        </div>
-      )}
-    </Container>
+    </div>
   );
 }
