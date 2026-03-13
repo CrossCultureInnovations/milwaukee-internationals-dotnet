@@ -1,0 +1,79 @@
+/*
+ * Earthy Tones Theme
+ *
+ * Warm, natural palette inspired by terracotta, olive, sand, and stone.
+ * To switch themes, change the import in globals.css.
+ */
+
+:root {
+  --font-sans: "Inter";
+  --font-heading: "Fraunces";
+
+  /* Warm sand background */
+  --paper: 35 25% 95%;
+  --ink: 25 20% 12%;
+  --background: 35 25% 95%;
+  --foreground: 25 20% 12%;
+
+  /* Cream white cards */
+  --card: 38 30% 98%;
+  --card-foreground: 25 20% 12%;
+
+  /* Terracotta primary */
+  --primary: 16 55% 42%;
+  --primary-hover: 16 50% 48%;
+  --primary-foreground: 38 30% 98%;
+
+  /* Warm sand secondary */
+  --secondary: 35 20% 90%;
+  --secondary-foreground: 25 20% 12%;
+
+  /* Muted warm gray — 38% lightness for good contrast (WCAG AA) */
+  --muted: 30 15% 90%;
+  --muted-foreground: 25 12% 38%;
+
+  /* Sage accent */
+  --accent: 90 15% 88%;
+  --accent-foreground: 25 20% 12%;
+
+  /* Warm borders */
+  --border: 30 15% 85%;
+  --input: 30 15% 85%;
+  --ring: 16 55% 42%;
+
+  --radius: 0.75rem;
+}
+
+.dark {
+  /* Deep warm charcoal */
+  --paper: 25 15% 10%;
+  --ink: 35 20% 90%;
+  --background: 25 15% 10%;
+  --foreground: 35 20% 90%;
+
+  /* Dark warm card */
+  --card: 25 12% 14%;
+  --card-foreground: 35 20% 90%;
+
+  /* Lighter terracotta for dark mode */
+  --primary: 16 55% 55%;
+  --primary-hover: 16 50% 48%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Dark warm secondary */
+  --secondary: 25 12% 18%;
+  --secondary-foreground: 35 20% 90%;
+
+  /* Dark muted */
+  --muted: 25 12% 18%;
+  --muted-foreground: 30 10% 65%;
+
+  /* Dark accent */
+  --accent: 25 12% 18%;
+  --accent-foreground: 35 20% 90%;
+
+  /* Dark borders */
+  --border: 25 10% 24%;
+  --input: 25 10% 24%;
+  --ring: 16 60% 58%;
+}
