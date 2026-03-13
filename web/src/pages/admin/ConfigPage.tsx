@@ -7,6 +7,7 @@ import {
   ToggleRight,
   Save,
   Loader2,
+  Database,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -16,7 +17,7 @@ import { Skeleton } from "../../components/ui/skeleton";
 import { Container } from "../../components/layout/Container";
 import { useConfig } from "../../lib/hooks/useApiQueries";
 import { api, type GlobalConfigs } from "../../api";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -71,6 +72,10 @@ function CardSkeleton() {
 
 export function ConfigPage() {
   const { data: config, isLoading } = useConfig();
+  const { data: connInfo } = useQuery({
+    queryKey: ["connection-string"],
+    queryFn: api.getConnectionString,
+  });
   const queryClient = useQueryClient();
   const [form, setForm] = useState<GlobalConfigs | null>(null);
   const [saving, setSaving] = useState(false);
@@ -322,6 +327,26 @@ export function ConfigPage() {
                 value={form.emailSenderOnBehalf || ""}
                 onChange={(e) => update("emailSenderOnBehalf", e.target.value)}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Database */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Database className="h-4 w-4 text-primary" />
+              Database
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label className="text-sm">Provider</Label>
+              <Input readOnly value={connInfo?.provider ?? "Loading..."} />
+            </div>
+            <div>
+              <Label className="text-sm">Connection String</Label>
+              <Input readOnly value={connInfo?.connectionString ?? "Loading..."} className="font-mono text-xs" />
             </div>
           </CardContent>
         </Card>

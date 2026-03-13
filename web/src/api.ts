@@ -414,6 +414,8 @@ export const api = {
       method: "PUT",
       body: JSON.stringify(payload),
     }),
+  getConnectionString: () =>
+    request<{ connectionString: string; provider: string }>("/config/connection-string"),
 
   // Attendance
   setStudentAttendance: (payload: AttendanceViewModel) =>
