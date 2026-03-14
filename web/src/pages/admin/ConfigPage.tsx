@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import {
   Settings,
   MapPin,
-  Users,
   Mail,
   ToggleRight,
   Save,
@@ -149,25 +148,49 @@ export function ConfigPage() {
         </Button>
       </div>
 
-      {/* Year Selector */}
+      {/* Year & Limits */}
       <Card className="mb-6">
         <CardContent className="pt-6">
-          <div className="flex items-center gap-4">
-            <Label htmlFor="yearSelect" className="text-sm font-medium whitespace-nowrap">
-              Select a year context (for viewing and editing only)
-            </Label>
-            <select
-              id="yearSelect"
-              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              value={form.yearValue}
-              onChange={(e) => update("yearValue", Number(e.target.value))}
-            >
-              {yearOptions.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="flex items-center gap-2">
+              <Label htmlFor="yearSelect" className="text-sm font-medium whitespace-nowrap">
+                Year
+              </Label>
+              <select
+                id="yearSelect"
+                className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                value={form.yearValue}
+                onChange={(e) => update("yearValue", Number(e.target.value))}
+              >
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="maxStudents" className="text-sm whitespace-nowrap">
+                Max students
+              </Label>
+              <Input
+                id="maxStudents"
+                type="number"
+                value={form.maxLimitStudentSeats}
+                onChange={(e) => update("maxLimitStudentSeats", Number(e.target.value))}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="maxDrivers" className="text-sm whitespace-nowrap">
+                Max drivers
+              </Label>
+              <Input
+                id="maxDrivers"
+                type="number"
+                value={form.maxLimitDrivers}
+                onChange={(e) => update("maxLimitDrivers", Number(e.target.value))}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -217,40 +240,6 @@ export function ConfigPage() {
                 enabled={form.qrInStudentEmail}
                 label="Display QR code in student email"
                 onToggle={() => update("qrInStudentEmail", !form.qrInStudentEmail)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Limits */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Users className="h-4 w-4 text-primary" />
-              Limits
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-3">
-              <Label htmlFor="maxStudents" className="text-sm whitespace-nowrap shrink-0">
-                Max students ({form.yearValue})
-              </Label>
-              <Input
-                id="maxStudents"
-                type="number"
-                value={form.maxLimitStudentSeats}
-                onChange={(e) => update("maxLimitStudentSeats", Number(e.target.value))}
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              <Label htmlFor="maxDrivers" className="text-sm whitespace-nowrap shrink-0">
-                Max drivers ({form.yearValue})
-              </Label>
-              <Input
-                id="maxDrivers"
-                type="number"
-                value={form.maxLimitDrivers}
-                onChange={(e) => update("maxLimitDrivers", Number(e.target.value))}
               />
             </div>
           </CardContent>
