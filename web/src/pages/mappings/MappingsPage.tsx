@@ -25,14 +25,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/ca
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "../../components/ui/table";
 import { cn } from "../../lib/utils";
 
 type Tab = "student-driver" | "driver-host";
@@ -256,13 +248,13 @@ function StudentDriverSection() {
         </CardContent>
       </Card>
 
-      {/* Mapped pairs table */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="flex items-center gap-2 text-base">
+      {/* Current mappings */}
+      <div>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
             <Users className="h-4 w-4 text-primary" />
             Current mappings
-          </CardTitle>
+          </h2>
           <Button
             variant="outline"
             size="sm"
@@ -273,61 +265,67 @@ function StudentDriverSection() {
             <Mail className="h-4 w-4" />
             Email Mappings
           </Button>
-        </CardHeader>
-        <CardContent>
-          {mappedStudents.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              No mappings yet
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Driver</TableHead>
-                    <TableHead>Capacity</TableHead>
-                    <TableHead className="w-[80px]" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mappedStudents.map((s) => {
-                    const driver = driverData.find((d) => d.id === s.driverRefId);
-                    return (
-                      <TableRow key={s.id}>
-                        <TableCell className="font-medium">{s.fullname}</TableCell>
-                        <TableCell>{driver?.fullname ?? "Unknown"}</TableCell>
-                        <TableCell>
-                          {driver && (
-                            <Badge variant="outline">
-                              {driver.students.length}/{driver.capacity}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              unmapMutation.mutate({
-                                studentId: s.id,
-                                driverId: s.driverRefId!,
-                              })
-                            }
-                            disabled={unmapMutation.isPending}
-                          >
-                            <Unlink className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        </div>
+        {mappedStudents.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            No mappings yet
+          </p>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {(() => {
+              const grouped = new Map<number, { driver: Driver; students: Student[] }>();
+              for (const s of mappedStudents) {
+                const driver = driverData.find((d) => d.id === s.driverRefId);
+                if (!driver) continue;
+                if (!grouped.has(driver.id)) {
+                  grouped.set(driver.id, { driver, students: [] });
+                }
+                grouped.get(driver.id)!.students.push(s);
+              }
+              return Array.from(grouped.values()).map(({ driver, students: driverStudents }) => (
+                <Card key={driver.id}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <Car className="h-4 w-4 text-primary" />
+                      {driver.fullname}
+                      <Badge variant="outline" className="ml-auto text-xs">
+                        {driver.students.length}/{driver.capacity}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-1">
+                    {driverStudents.map((s) => (
+                      <div key={s.id} className={cn(
+                        "flex items-center gap-2 rounded-md px-2 py-1.5",
+                        s.isPresent
+                          ? "bg-green-100 dark:bg-green-950/40"
+                          : "bg-red-100 dark:bg-red-950/40"
+                      )}>
+                        <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span className="text-sm truncate">{s.fullname}</span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="ml-auto h-7 w-7 shrink-0"
+                          onClick={() =>
+                            unmapMutation.mutate({
+                              studentId: s.id,
+                              driverId: s.driverRefId!,
+                            })
+                          }
+                          disabled={unmapMutation.isPending}
+                        >
+                          <Unlink className="h-3.5 w-3.5 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              ));
+            })()}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -546,13 +544,13 @@ function DriverHostSection() {
         </CardContent>
       </Card>
 
-      {/* Mapped pairs table */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0">
-          <CardTitle className="flex items-center gap-2 text-base">
+      {/* Current mappings */}
+      <div>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="flex items-center gap-2 text-base font-semibold text-foreground">
             <Car className="h-4 w-4 text-primary" />
             Current mappings
-          </CardTitle>
+          </h2>
           <Button
             variant="outline"
             size="sm"
@@ -563,63 +561,70 @@ function DriverHostSection() {
             <Mail className="h-4 w-4" />
             Email Mappings
           </Button>
-        </CardHeader>
-        <CardContent>
-          {mappedDrivers.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">
-              No mappings yet
-            </p>
-          ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Driver</TableHead>
-                    <TableHead>Students</TableHead>
-                    <TableHead>Host</TableHead>
-                    <TableHead>Address</TableHead>
-                    <TableHead className="w-[80px]" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mappedDrivers.map((d) => {
-                    const host = hostData.find((h) => h.id === d.hostRefId);
-                    return (
-                      <TableRow key={d.id}>
-                        <TableCell className="font-medium">{d.fullname}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {d.students.length}/{d.capacity}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{host?.fullname ?? "Unknown"}</TableCell>
-                        <TableCell className="max-w-[200px] truncate text-muted-foreground">
-                          {host?.address}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              unmapMutation.mutate({
-                                driverId: d.id,
-                                hostId: d.hostRefId!,
-                              })
-                            }
-                            disabled={unmapMutation.isPending}
-                          >
-                            <Unlink className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        </div>
+        {mappedDrivers.length === 0 ? (
+          <p className="py-6 text-center text-sm text-muted-foreground">
+            No mappings yet
+          </p>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {(() => {
+              const grouped = new Map<number, { host: Host; drivers: Driver[] }>();
+              for (const d of mappedDrivers) {
+                const host = hostData.find((h) => h.id === d.hostRefId);
+                if (!host) continue;
+                if (!grouped.has(host.id)) {
+                  grouped.set(host.id, { host, drivers: [] });
+                }
+                grouped.get(host.id)!.drivers.push(d);
+              }
+              return Array.from(grouped.values()).map(({ host, drivers: hostDrivers }) => (
+                <Card key={host.id}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="flex items-center gap-2 text-sm">
+                      <Home className="h-4 w-4 text-primary" />
+                      {host.fullname}
+                    </CardTitle>
+                    {host.address && (
+                      <p className="text-xs text-muted-foreground truncate">{host.address}</p>
+                    )}
+                  </CardHeader>
+                  <CardContent className="space-y-1">
+                    {hostDrivers.map((d) => (
+                      <div key={d.id} className={cn(
+                        "flex items-center gap-2 rounded-md px-2 py-1.5",
+                        d.isPresent
+                          ? "bg-green-100 dark:bg-green-950/40"
+                          : "bg-red-100 dark:bg-red-950/40"
+                      )}>
+                        <Car className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <span className="text-sm truncate">{d.fullname}</span>
+                        <Badge variant="outline" className="ml-auto text-xs shrink-0">
+                          {d.students.length}/{d.capacity}
+                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 shrink-0"
+                          onClick={() =>
+                            unmapMutation.mutate({
+                              driverId: d.id,
+                              hostId: d.hostRefId!,
+                            })
+                          }
+                          disabled={unmapMutation.isPending}
+                        >
+                          <Unlink className="h-3.5 w-3.5 text-destructive" />
+                        </Button>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              ));
+            })()}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

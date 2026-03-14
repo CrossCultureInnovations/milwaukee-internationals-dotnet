@@ -7,7 +7,6 @@ import {
   ToggleRight,
   Save,
   Loader2,
-  Database,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
@@ -17,7 +16,7 @@ import { Skeleton } from "../../components/ui/skeleton";
 import { Container } from "../../components/layout/Container";
 import { useConfig } from "../../lib/hooks/useApiQueries";
 import { api, type GlobalConfigs } from "../../api";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -72,10 +71,6 @@ function CardSkeleton() {
 
 export function ConfigPage() {
   const { data: config, isLoading } = useConfig();
-  const { data: connInfo } = useQuery({
-    queryKey: ["connection-string"],
-    queryFn: api.getConnectionString,
-  });
   const queryClient = useQueryClient();
   const [form, setForm] = useState<GlobalConfigs | null>(null);
   const [saving, setSaving] = useState(false);
@@ -235,10 +230,10 @@ export function ConfigPage() {
               Limits
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="maxStudents" className="text-sm">
-                Max upper limit of students for [{form.yearValue}] year
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Label htmlFor="maxStudents" className="text-sm whitespace-nowrap shrink-0">
+                Max students ({form.yearValue})
               </Label>
               <Input
                 id="maxStudents"
@@ -247,9 +242,9 @@ export function ConfigPage() {
                 onChange={(e) => update("maxLimitStudentSeats", Number(e.target.value))}
               />
             </div>
-            <div>
-              <Label htmlFor="maxDrivers" className="text-sm">
-                Max upper limit of drivers for [{form.yearValue}] year
+            <div className="flex items-center gap-3">
+              <Label htmlFor="maxDrivers" className="text-sm whitespace-nowrap shrink-0">
+                Max drivers ({form.yearValue})
               </Label>
               <Input
                 id="maxDrivers"
@@ -269,10 +264,10 @@ export function ConfigPage() {
               Tour Info
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="tourDate" className="text-sm">
-                Time of the tour (CST Zone)
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Label htmlFor="tourDate" className="text-sm whitespace-nowrap shrink-0">
+                Tour time (CST)
               </Label>
               <Input
                 id="tourDate"
@@ -281,9 +276,9 @@ export function ConfigPage() {
                 onChange={(e) => update("tourDate", e.target.value)}
               />
             </div>
-            <div>
-              <Label htmlFor="arrivalTime" className="text-sm">
-                Student arrival time for hosts (CST Zone)
+            <div className="flex items-center gap-3">
+              <Label htmlFor="arrivalTime" className="text-sm whitespace-nowrap shrink-0">
+                Arrival time (CST)
               </Label>
               <Input
                 id="arrivalTime"
@@ -292,16 +287,16 @@ export function ConfigPage() {
                 onChange={(e) => update("arrivalTimeForHost", e.target.value)}
               />
             </div>
-            <div>
-              <Label htmlFor="tourAddress" className="text-sm">Tour Address</Label>
+            <div className="flex items-center gap-3">
+              <Label htmlFor="tourAddress" className="text-sm whitespace-nowrap shrink-0">Address</Label>
               <Input
                 id="tourAddress"
                 value={form.tourAddress || ""}
                 onChange={(e) => update("tourAddress", e.target.value)}
               />
             </div>
-            <div>
-              <Label htmlFor="tourLocation" className="text-sm">Tour Location</Label>
+            <div className="flex items-center gap-3">
+              <Label htmlFor="tourLocation" className="text-sm whitespace-nowrap shrink-0">Location</Label>
               <Input
                 id="tourLocation"
                 value={form.tourLocation || ""}
@@ -319,9 +314,9 @@ export function ConfigPage() {
               Email
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="emailSender" className="text-sm">Sender (On Behalf)</Label>
+          <CardContent className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Label htmlFor="emailSender" className="text-sm whitespace-nowrap shrink-0">Sender</Label>
               <Input
                 id="emailSender"
                 value={form.emailSenderOnBehalf || ""}
@@ -331,25 +326,6 @@ export function ConfigPage() {
           </CardContent>
         </Card>
 
-        {/* Database */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Database className="h-4 w-4 text-primary" />
-              Database
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label className="text-sm">Provider</Label>
-              <Input readOnly value={connInfo?.provider ?? "Loading..."} />
-            </div>
-            <div>
-              <Label className="text-sm">Connection String</Label>
-              <Input readOnly value={connInfo?.connectionString ?? "Loading..."} className="font-mono text-xs" />
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </Container>
   );

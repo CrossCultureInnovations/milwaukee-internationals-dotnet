@@ -154,33 +154,43 @@ public class Startup
 
         services.AddSingleton<CacheBustingUtility>();
 
+        var telnyxToken = _configuration.GetValue<string>("TELNYX_AUTH_TOKEN");
+        var telnyxPhone = _configuration.GetValue<string>("TELNYX_SENDER_PHONE_NUMBER");
         services.AddTransient<ISmsService>(ctx => new SmsService(
-            _configuration.GetRequiredValue<string>("TELNYX_AUTH_TOKEN"),
-            _configuration.GetRequiredValue<string>("TELNYX_SENDER_PHONE_NUMBER"),
+            telnyxToken ?? "",
+            telnyxPhone ?? "",
             ctx.GetRequiredService<IConfigLogic>(),
             ctx.GetRequiredService<ILogger<SmsService>>()));
 
         // Initialize the email jet client
-        services.AddTransient<IMailjetClient>(ctx => new MailjetClient(
-            Environment.GetEnvironmentVariable("MAIL_JET_KEY"),
-            Environment.GetEnvironmentVariable("MAIL_JET_SECRET"))
-        );
+        var mailJetKey = Environment.GetEnvironmentVariable("MAIL_JET_KEY");
+        var mailJetSecret = Environment.GetEnvironmentVariable("MAIL_JET_SECRET");
+        if (!string.IsNullOrEmpty(mailJetKey) && !string.IsNullOrEmpty(mailJetSecret))
+        {
+            services.AddTransient<IMailjetClient>(ctx => new MailjetClient(mailJetKey, mailJetSecret));
+        }
+        else
+        {
+            services.AddTransient<IMailjetClient>(ctx => new MailjetClient("dummy", "dummy"));
+        }
 
         services.AddDbContext<EntityDbContext>(opt =>
         {
+            var databaseUrl = _configuration.GetValue<string>("DATABASE_URL");
+
             if (_env.IsDevelopment())
             {
                 opt.EnableDetailedErrors();
                 opt.EnableSensitiveDataLogging();
+            }
 
-                opt.UseSqlite(_configuration.GetValue<string>("ConnectionStrings:Sqlite"));
+            if (!string.IsNullOrEmpty(databaseUrl))
+            {
+                opt.UseNpgsql(ConnectionStringUrlToPgResource(databaseUrl));
             }
             else
             {
-                var postgresConnectionString =
-                    ConnectionStringUrlToPgResource(_configuration.GetValue<string>("DATABASE_URL")
-                                                    ?? throw new Exception("DATABASE_URL is null"));
-                opt.UseNpgsql(postgresConnectionString);
+                opt.UseSqlite(_configuration.GetValue<string>("ConnectionStrings:Sqlite"));
             }
         });
 
