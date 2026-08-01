@@ -183,7 +183,13 @@ export type GlobalConfigs = {
   tourAddress: string;
   tourLocation: string;
   locationWizardFeature: boolean;
+  captchaEnabled: boolean;
   emailSenderOnBehalf: string;
+};
+
+export type RegistrationStatus = {
+  isOpen: boolean;
+  captchaEnabled: boolean;
 };
 
 export type TourInfo = {
@@ -217,7 +223,7 @@ export type RegisterViewModel = {
 };
 export type RegistrationRequest<T> = {
   registration: Partial<T>;
-  altcha: string;
+  altcha: string | null;
 };
 export type DriverLoginViewModel = { email: string; driverId: string };
 export type AttendanceViewModel = { id: number; attendance: boolean };
@@ -454,9 +460,9 @@ export const api = {
 
   // Registration (public, no auth)
   getStudentRegistrationStatus: () =>
-    request<{ isOpen: boolean }>("/registration/student/status"),
+    request<RegistrationStatus>("/registration/student/status"),
   getDriverRegistrationStatus: () =>
-    request<{ isOpen: boolean }>("/registration/driver/status"),
+    request<RegistrationStatus>("/registration/driver/status"),
   registerStudent: (payload: RegistrationRequest<Student>) =>
     request<{ success: boolean }>("/registration/student", {
       method: "POST",

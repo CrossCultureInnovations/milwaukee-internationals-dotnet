@@ -2,6 +2,7 @@ using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using DAL.Interfaces;
 using Logic.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,6 +15,7 @@ namespace API.Controllers.API;
 [Route("api/[controller]")]
 public class RegistrationController(
     IRegistrationLogic registrationLogic,
+    IConfigLogic configLogic,
     IHttpClientFactory httpClientFactory,
     IConfiguration configuration) : Controller
 {
@@ -22,7 +24,8 @@ public class RegistrationController(
     public async Task<IActionResult> StudentStatus()
     {
         var isOpen = await registrationLogic.IsRegisterStudentOpen();
-        return Ok(new { isOpen });
+        var captchaEnabled = (await configLogic.ResolveGlobalConfig()).CaptchaEnabled;
+        return Ok(new { isOpen, captchaEnabled });
     }
 
     [HttpGet]
@@ -30,14 +33,15 @@ public class RegistrationController(
     public async Task<IActionResult> DriverStatus()
     {
         var isOpen = await registrationLogic.IsRegisterDriverOpen();
-        return Ok(new { isOpen });
+        var captchaEnabled = (await configLogic.ResolveGlobalConfig()).CaptchaEnabled;
+        return Ok(new { isOpen, captchaEnabled });
     }
 
     [HttpPost]
     [Route("student")]
     public async Task<IActionResult> RegisterStudent([FromBody] RegistrationRequest<Student> request)
     {
-        if (!await VerifyAltcha(request.Altcha))
+        if (!await CaptchaSatisfied(request.Altcha))
         {
             return BadRequest(new { error = "Please complete the anti-spam verification." });
         }
@@ -57,7 +61,7 @@ public class RegistrationController(
     [Route("driver")]
     public async Task<IActionResult> RegisterDriver([FromBody] RegistrationRequest<Driver> request)
     {
-        if (!await VerifyAltcha(request.Altcha))
+        if (!await CaptchaSatisfied(request.Altcha))
         {
             return BadRequest(new { error = "Please complete the anti-spam verification." });
         }
@@ -73,8 +77,13 @@ public class RegistrationController(
         }
     }
 
-    private async Task<bool> VerifyAltcha(string payload)
+    private async Task<bool> CaptchaSatisfied(string payload)
     {
+        if (!(await configLogic.ResolveGlobalConfig()).CaptchaEnabled)
+        {
+            return true;
+        }
+
         var secret = configuration["ALTCHA_SECRET"];
         if (string.IsNullOrWhiteSpace(payload) || string.IsNullOrWhiteSpace(secret))
         {

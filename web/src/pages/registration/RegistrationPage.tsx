@@ -328,7 +328,7 @@ function StudentRegistration() {
 
   const mutation = useMutation({
     mutationFn: (data: Partial<Student>) =>
-      api.registerStudent({ registration: data, altcha: altcha! }),
+      api.registerStudent({ registration: data, altcha }),
     onSuccess: () => setDone(true),
     onError: (err) => {
       setErrors({
@@ -350,7 +350,8 @@ function StudentRegistration() {
     if (!country) e.country = "Country is required";
     if (isFamily && (parseInt(familySize) < 1 || isNaN(parseInt(familySize))))
       e.familySize = "Family size must be at least 1";
-    if (!altcha) e.altcha = "Please confirm you are human";
+    if ((statusQuery.data?.captchaEnabled ?? true) && !altcha)
+      e.altcha = "Please confirm you are human";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -478,10 +479,12 @@ function StudentRegistration() {
         />
       </div>
 
-      <div className="space-y-1.5">
-        <AltchaWidget onVerified={setAltcha} />
-        {errors.altcha && <p className="text-xs text-red-500">{errors.altcha}</p>}
-      </div>
+      {(statusQuery.data?.captchaEnabled ?? true) && (
+        <div className="space-y-1.5">
+          <AltchaWidget onVerified={setAltcha} />
+          {errors.altcha && <p className="text-xs text-red-500">{errors.altcha}</p>}
+        </div>
+      )}
 
       <Button type="submit" className="w-full h-11 text-base" disabled={mutation.isPending}>
         {mutation.isPending ? (
@@ -519,7 +522,7 @@ function DriverRegistration() {
 
   const mutation = useMutation({
     mutationFn: (data: Partial<Driver>) =>
-      api.registerDriver({ registration: data, altcha: altcha! }),
+      api.registerDriver({ registration: data, altcha }),
     onSuccess: () => setDone(true),
     onError: (err) => {
       setErrors({
@@ -541,7 +544,8 @@ function DriverRegistration() {
     if (isNaN(cap) || cap < 1 || cap > 7) e.capacity = "Capacity must be 1-7";
     if (!requireNavigator && !navigator.trim())
       e.navigator = "Navigator name is required";
-    if (!altcha) e.altcha = "Please confirm you are human";
+    if ((statusQuery.data?.captchaEnabled ?? true) && !altcha)
+      e.altcha = "Please confirm you are human";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -636,10 +640,12 @@ function DriverRegistration() {
         )}
       </div>
 
-      <div className="space-y-1.5">
-        <AltchaWidget onVerified={setAltcha} />
-        {errors.altcha && <p className="text-xs text-red-500">{errors.altcha}</p>}
-      </div>
+      {(statusQuery.data?.captchaEnabled ?? true) && (
+        <div className="space-y-1.5">
+          <AltchaWidget onVerified={setAltcha} />
+          {errors.altcha && <p className="text-xs text-red-500">{errors.altcha}</p>}
+        </div>
+      )}
 
       <Button type="submit" className="w-full h-11 text-base" disabled={mutation.isPending}>
         {mutation.isPending ? (

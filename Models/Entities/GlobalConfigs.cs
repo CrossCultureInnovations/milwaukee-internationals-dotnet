@@ -55,6 +55,9 @@ public class GlobalConfigs
     
     [Display(Name = "Location Wizard Feature")]
     public bool LocationWizardFeature { get; set; }
+
+    [Display(Name = "Captcha protection")]
+    public bool CaptchaEnabled { get; set; } = true;
     
     [Display(Name = "Email sender on behalf (double check with mailjet)")]
     public string EmailSenderOnBehalf { get; set; }

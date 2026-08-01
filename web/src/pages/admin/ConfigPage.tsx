@@ -241,6 +241,11 @@ export function ConfigPage() {
                 label="Display QR code in student email"
                 onToggle={() => update("qrInStudentEmail", !form.qrInStudentEmail)}
               />
+              <FeatureToggle
+                enabled={form.captchaEnabled}
+                label="Captcha protection"
+                onToggle={() => update("captchaEnabled", !form.captchaEnabled)}
+              />
             </div>
           </CardContent>
         </Card>
