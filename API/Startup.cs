@@ -93,6 +93,7 @@ public class Startup
             _configuration.GetSection("SecureHeadersMiddlewareConfiguration"));
 
         services.AddLogging();
+        services.AddHttpClient();
             
         services.Configure<JwtSettings>(_configuration.GetSection("JwtSettings"));
 

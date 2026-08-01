@@ -16,6 +16,7 @@ Re-write of back-end using ~.NET core ^3.1~ .NET 6
 
 Notes:
 - Make sure you have the .NET Core SDK installed ([Download](https://www.microsoft.com/net/learn/get-started))
+- Set `ALTCHA_SECRET` in the API environment to the self-hosted ALTCHA Sentinel API key secret before accepting public registrations. The default Sentinel host is `https://altcha.coolify.hesamian.com`; override it with `VITE_ALTCHA_CHALLENGE_URL` when building the SPA and `ALTCHA_VERIFY_URL` for the API.
 - To view environment variables make sure to install `heroku cli` and then
   - `heroku config --json --app="milwaukee-internationals-core"`
 

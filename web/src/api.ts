@@ -215,6 +215,10 @@ export type RegisterViewModel = {
   confirmPassword: string;
   email: string;
 };
+export type RegistrationRequest<T> = {
+  registration: Partial<T>;
+  altcha: string;
+};
 export type DriverLoginViewModel = { email: string; driverId: string };
 export type AttendanceViewModel = { id: number; attendance: boolean };
 export type NewStudentDriverMappingViewModel = {
@@ -453,12 +457,12 @@ export const api = {
     request<{ isOpen: boolean }>("/registration/student/status"),
   getDriverRegistrationStatus: () =>
     request<{ isOpen: boolean }>("/registration/driver/status"),
-  registerStudent: (payload: Partial<Student>) =>
+  registerStudent: (payload: RegistrationRequest<Student>) =>
     request<{ success: boolean }>("/registration/student", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
-  registerDriver: (payload: Partial<Driver>) =>
+  registerDriver: (payload: RegistrationRequest<Driver>) =>
     request<{ success: boolean }>("/registration/driver", {
       method: "POST",
       body: JSON.stringify(payload),
