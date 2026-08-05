@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Models.Entities;
 using Models.Enums;
+using Models.ViewModels;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers.API;
@@ -27,7 +28,7 @@ public class ConfigController(IConfigLogic configLogic, IConfiguration configura
     [HttpPut]
     [Route("")]
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
-    public async Task<IActionResult> Update([FromBody] GlobalConfigs globalConfigs)
+    public async Task<IActionResult> Update([FromBody] GlobalConfigModel globalConfigs)
     {
         await configLogic.SetGlobalConfig(globalConfigs);
         return Ok(await configLogic.ResolveGlobalConfig());

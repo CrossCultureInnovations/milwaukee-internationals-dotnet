@@ -166,8 +166,7 @@ export type User = {
   enable: boolean;
 };
 
-export type GlobalConfigs = {
-  id: number;
+export type GlobalConfigModel = {
   yearValue: number;
   eventFeature: boolean;
   emailTestMode: boolean;
@@ -420,9 +419,9 @@ export const api = {
     request<{ message: string }>(`/user/${id}/SendPasswordReset`, { method: "POST" }),
 
   // Config
-  getConfig: () => request<GlobalConfigs>("/config"),
-  updateConfig: (payload: GlobalConfigs) =>
-    request<GlobalConfigs>("/config", {
+  getConfig: () => request<GlobalConfigModel>("/config"),
+  updateConfig: (payload: GlobalConfigModel) =>
+    request<GlobalConfigModel>("/config", {
       method: "PUT",
       body: JSON.stringify(payload),
     }),

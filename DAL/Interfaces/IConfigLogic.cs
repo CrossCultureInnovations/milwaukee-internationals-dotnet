@@ -1,14 +1,14 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Models.Entities;
+using Models.ViewModels;
 
 namespace DAL.Interfaces;
 
 public interface IConfigLogic
 {
-    Task<GlobalConfigs> ResolveGlobalConfig();
+    Task<GlobalConfigModel> ResolveGlobalConfig();
 
-    Task SetGlobalConfig(GlobalConfigs globalConfigs);
+    Task SetGlobalConfig(GlobalConfigModel globalConfigs);
 
     IEnumerable<int> GetYears();
 }

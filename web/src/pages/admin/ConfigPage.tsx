@@ -14,7 +14,7 @@ import { Label } from "../../components/ui/label";
 import { Skeleton } from "../../components/ui/skeleton";
 import { Container } from "../../components/layout/Container";
 import { useConfig } from "../../lib/hooks/useApiQueries";
-import { api, type GlobalConfigs } from "../../api";
+import { api, type GlobalConfigModel } from "../../api";
 import { useQueryClient } from "@tanstack/react-query";
 
 // ---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ function CardSkeleton() {
 export function ConfigPage() {
   const { data: config, isLoading } = useConfig();
   const queryClient = useQueryClient();
-  const [form, setForm] = useState<GlobalConfigs | null>(null);
+  const [form, setForm] = useState<GlobalConfigModel | null>(null);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
@@ -81,7 +81,7 @@ export function ConfigPage() {
     }
   }, [config, form]);
 
-  function update<K extends keyof GlobalConfigs>(key: K, value: GlobalConfigs[K]) {
+  function update<K extends keyof GlobalConfigModel>(key: K, value: GlobalConfigModel[K]) {
     if (!form) return;
     setForm({ ...form, [key]: value });
     setDirty(true);

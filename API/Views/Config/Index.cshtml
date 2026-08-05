@@ -1,7 +1,7 @@
 @using DAL.Interfaces
 @using Microsoft.AspNetCore.Mvc.Rendering
 @using Models.Constants
-@model Models.Entities.GlobalConfigs
+@model Models.ViewModels.GlobalConfigModel
 @inject IConfigLogic ConfigLogic
 @inject IEmailServiceApi EmailService
 @{
@@ -27,8 +27,6 @@
 
 @using (Html.BeginForm("UpdateConfig", "Config", FormMethod.Post))
 {
-    @Html.TextBoxFor(x => x.Id, new { @class = "hidden" })
-
     <div class="form-group">
         @Html.LabelFor(x => x.YearValue, "Select a year context (for viewing and editing only)")
         @Html.DropDownListFor(x => x.YearValue, ConfigLogic.GetYears().Select(x => new SelectListItem {Text = x.ToString(), Value = x.ToString(), Selected = x == selectedYear}), new {@class = "form-control"})

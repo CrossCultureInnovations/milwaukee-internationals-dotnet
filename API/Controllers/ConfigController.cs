@@ -3,6 +3,7 @@ using API.Attributes;
 using DAL.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Models.Entities;
+using Models.ViewModels;
 using Models.Enums;
 
 namespace API.Controllers;
@@ -24,7 +25,7 @@ public class ConfigController(IConfigLogic configLogic) : Controller
     [HttpPost]
     [Route("")]
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
-    public async Task<IActionResult> UpdateConfig(GlobalConfigs globalConfigs)
+    public async Task<IActionResult> UpdateConfig(GlobalConfigModel globalConfigs)
     {
         await configLogic.SetGlobalConfig(globalConfigs);
 

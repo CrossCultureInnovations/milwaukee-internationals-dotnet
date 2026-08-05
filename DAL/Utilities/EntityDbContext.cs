@@ -40,6 +40,10 @@ public sealed class EntityDbContext: IdentityDbContext<User, IdentityRole<int>, 
         base.OnModelCreating(modelBuilder);
             
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(EntityDbContext).Assembly);
+        modelBuilder.Entity<GlobalConfigs>()
+            .ToTable("GlobalConfigEntries")
+            .HasIndex(config => config.Key)
+            .IsUnique();
     }
 
     /// <summary>

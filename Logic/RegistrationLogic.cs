@@ -117,7 +117,7 @@ public class RegistrationLogic(
     {
         var globalConfigs = await configLogic.ResolveGlobalConfig();
 
-        var year = DateTime.Now.Year;
+        var year = DateTimeOffset.Now.Year;
         var count = await studentLogic.Count(x => x.Year == year);
 
         var overLimit = count >= globalConfigs.MaxLimitStudentSeats;
@@ -131,7 +131,7 @@ public class RegistrationLogic(
     {
         var globalConfigs = await configLogic.ResolveGlobalConfig();
 
-        var year = DateTime.Now.Year;
+        var year = DateTimeOffset.Now.Year;
         var count = await driverLogic.Count(x => x.Year == year);
 
         var overLimit = count >= globalConfigs.MaxLimitDrivers;
@@ -144,7 +144,7 @@ public class RegistrationLogic(
     {
         var globalConfigs = await configLogic.ResolveGlobalConfig();
 
-        return DateTime.Now.Subtract(globalConfigs.TourDate.AddDays(1)).Days >= 0;
+        return DateTimeOffset.Now.Subtract(globalConfigs.TourDate.AddDays(1)).Days >= 0;
     }
     
     public async Task RegisterDriver(Driver driver)
