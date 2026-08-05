@@ -1,8 +1,14 @@
-﻿@model Models.Entities.Driver
+﻿@using API.Interfaces
+@using DAL.Interfaces
+@model Models.Entities.Driver
+@inject IConfigLogic ConfigLogic
+@inject IHttpRequestUtilityBuilder RequestUtilityBuilder;
 
 @{
     ViewBag.Title = "Edit Driver";
     Layout = "_Layout";
+    var globalConfig = await ConfigLogic.ResolveGlobalConfig();
+    var utility = RequestUtilityBuilder.For(Context);
 }
 
 <div class="text-center">
@@ -28,7 +34,17 @@
             </label>
             <toggle class="pull-right" ng-model="agreeSms" on="Agree" off="Disagree" onstyle="btn-primary" offstyle="btn-default" ng-change="agreeSms_val = agreeSms"></toggle>
         </div> 
+
+        if (!utility.IsAuthenticated() && globalConfig.CaptchaEnabled)
+        {
+            <altcha-widget challenge="https://altcha.coolify.hesamian.com/v1/challenge?apiKey=key_1jutkartq00f34k9kb4"></altcha-widget>
+        }
         
         <input class="btn btn-primary" type="submit" value="Register" ng-disabled="!agreeSms" />
+    }
+
+    @if (!utility.IsAuthenticated() && globalConfig.CaptchaEnabled)
+    {
+        <script src="https://cdn.jsdelivr.net/npm/altcha@3/dist/main/altcha.js" type="module" async defer></script>
     }
 </div>

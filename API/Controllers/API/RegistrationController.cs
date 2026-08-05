@@ -1,12 +1,10 @@
 using System;
-using System.Net.Http;
-using System.Net.Http.Json;
 using System.Threading.Tasks;
+using API.Interfaces;
 using DAL.Interfaces;
 using Logic.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Models.Entities;
 
 namespace API.Controllers.API;
@@ -16,8 +14,7 @@ namespace API.Controllers.API;
 public class RegistrationController(
     IRegistrationLogic registrationLogic,
     IConfigLogic configLogic,
-    IHttpClientFactory httpClientFactory,
-    IConfiguration configuration) : Controller
+    IAltchaService altchaService) : Controller
 {
     [HttpGet]
     [Route("student/status")]
@@ -41,7 +38,7 @@ public class RegistrationController(
     [Route("student")]
     public async Task<IActionResult> RegisterStudent([FromBody] RegistrationRequest<Student> request)
     {
-        if (!await CaptchaSatisfied(request.Altcha))
+        if (!await altchaService.IsSatisfied(request.Altcha))
         {
             return BadRequest(new { error = "Please complete the anti-spam verification." });
         }
@@ -61,7 +58,7 @@ public class RegistrationController(
     [Route("driver")]
     public async Task<IActionResult> RegisterDriver([FromBody] RegistrationRequest<Driver> request)
     {
-        if (!await CaptchaSatisfied(request.Altcha))
+        if (!await altchaService.IsSatisfied(request.Altcha))
         {
             return BadRequest(new { error = "Please complete the anti-spam verification." });
         }
@@ -77,40 +74,6 @@ public class RegistrationController(
         }
     }
 
-    private async Task<bool> CaptchaSatisfied(string payload)
-    {
-        if (!(await configLogic.ResolveGlobalConfig()).CaptchaEnabled)
-        {
-            return true;
-        }
-
-        var secret = configuration["ALTCHA_SECRET"];
-        if (string.IsNullOrWhiteSpace(payload) || string.IsNullOrWhiteSpace(secret))
-        {
-            return false;
-        }
-
-        try
-        {
-            var client = httpClientFactory.CreateClient();
-            var verifyUrl = configuration["ALTCHA_VERIFY_URL"]
-                ?? "https://altcha.coolify.hesamian.com/v1/verify/signature";
-            using var response = await client.PostAsJsonAsync(
-                verifyUrl,
-                new { payload, secret });
-            if (!response.IsSuccessStatusCode)
-            {
-                return false;
-            }
-
-            var result = await response.Content.ReadFromJsonAsync<AltchaVerificationResult>();
-            return result?.Verified == true;
-        }
-        catch (Exception exception) when (exception is HttpRequestException or System.Text.Json.JsonException)
-        {
-            return false;
-        }
-    }
 }
 
 public class RegistrationRequest<T>
@@ -119,7 +82,3 @@ public class RegistrationRequest<T>
     public string Altcha { get; set; }
 }
 
-public class AltchaVerificationResult
-{
-    public bool Verified { get; set; }
-}
