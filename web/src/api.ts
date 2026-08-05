@@ -189,6 +189,7 @@ export type GlobalConfigModel = {
 export type RegistrationStatus = {
   isOpen: boolean;
   captchaEnabled: boolean;
+  challengeUrl: string;
 };
 
 export type TourInfo = {

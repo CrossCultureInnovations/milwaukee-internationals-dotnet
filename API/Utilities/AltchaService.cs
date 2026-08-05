@@ -29,8 +29,7 @@ public class AltchaService(
         try
         {
             var client = httpClientFactory.CreateClient();
-            var verifyUrl = configuration["ALTCHA_VERIFY_URL"]
-                ?? "https://altcha.coolify.hesamian.com/v1/verify/signature";
+            var verifyUrl = configuration["AltchaSettings:VerifyUrl"];
             using var response = await client.PostAsJsonAsync(verifyUrl, new { payload, secret });
             if (!response.IsSuccessStatusCode)
             {

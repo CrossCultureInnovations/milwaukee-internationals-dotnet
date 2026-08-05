@@ -1,13 +1,16 @@
 ﻿@using API.Interfaces
 @using DAL.Interfaces
+@using Microsoft.Extensions.Configuration
 @model Models.Entities.Driver
 @inject IConfigLogic ConfigLogic
+@inject IConfiguration Configuration
 @inject IHttpRequestUtilityBuilder RequestUtilityBuilder;
 
 @{
     ViewBag.Title = "Edit Driver";
     Layout = "_Layout";
     var globalConfig = await ConfigLogic.ResolveGlobalConfig();
+    var altchaChallengeUrl = Configuration["AltchaSettings:ChallengeUrl"];
     var utility = RequestUtilityBuilder.For(Context);
 }
 
@@ -37,7 +40,7 @@
 
         if (!utility.IsAuthenticated() && globalConfig.CaptchaEnabled)
         {
-            <altcha-widget challenge="https://altcha.coolify.hesamian.com/v1/challenge?apiKey=key_1jutkartq00f34k9kb4"></altcha-widget>
+            <altcha-widget challenge="@altchaChallengeUrl"></altcha-widget>
         }
         
         <input class="btn btn-primary" type="submit" value="Register" ng-disabled="!agreeSms" />

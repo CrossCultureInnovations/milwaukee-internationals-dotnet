@@ -5,6 +5,7 @@ using DAL.Interfaces;
 using Logic.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Models.Entities;
 
 namespace API.Controllers.API;
@@ -14,7 +15,8 @@ namespace API.Controllers.API;
 public class RegistrationController(
     IRegistrationLogic registrationLogic,
     IConfigLogic configLogic,
-    IAltchaService altchaService) : Controller
+    IAltchaService altchaService,
+    IConfiguration configuration) : Controller
 {
     [HttpGet]
     [Route("student/status")]
@@ -22,7 +24,8 @@ public class RegistrationController(
     {
         var isOpen = await registrationLogic.IsRegisterStudentOpen();
         var captchaEnabled = (await configLogic.ResolveGlobalConfig()).CaptchaEnabled;
-        return Ok(new { isOpen, captchaEnabled });
+        var challengeUrl = configuration["AltchaSettings:ChallengeUrl"];
+        return Ok(new { isOpen, captchaEnabled, challengeUrl });
     }
 
     [HttpGet]
@@ -31,7 +34,8 @@ public class RegistrationController(
     {
         var isOpen = await registrationLogic.IsRegisterDriverOpen();
         var captchaEnabled = (await configLogic.ResolveGlobalConfig()).CaptchaEnabled;
-        return Ok(new { isOpen, captchaEnabled });
+        var challengeUrl = configuration["AltchaSettings:ChallengeUrl"];
+        return Ok(new { isOpen, captchaEnabled, challengeUrl });
     }
 
     [HttpPost]

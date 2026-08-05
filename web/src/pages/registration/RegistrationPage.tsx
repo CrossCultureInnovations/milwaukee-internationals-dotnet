@@ -479,9 +479,12 @@ function StudentRegistration() {
         />
       </div>
 
-      {(statusQuery.data?.captchaEnabled ?? true) && (
+      {statusQuery.data?.captchaEnabled && statusQuery.data.challengeUrl && (
         <div className="space-y-1.5">
-          <AltchaWidget onVerified={setAltcha} />
+          <AltchaWidget
+            challengeUrl={statusQuery.data.challengeUrl}
+            onVerified={setAltcha}
+          />
           {errors.altcha && <p className="text-xs text-red-500">{errors.altcha}</p>}
         </div>
       )}
@@ -640,9 +643,12 @@ function DriverRegistration() {
         )}
       </div>
 
-      {(statusQuery.data?.captchaEnabled ?? true) && (
+      {statusQuery.data?.captchaEnabled && statusQuery.data.challengeUrl && (
         <div className="space-y-1.5">
-          <AltchaWidget onVerified={setAltcha} />
+          <AltchaWidget
+            challengeUrl={statusQuery.data.challengeUrl}
+            onVerified={setAltcha}
+          />
           {errors.altcha && <p className="text-xs text-red-500">{errors.altcha}</p>}
         </div>
       )}
