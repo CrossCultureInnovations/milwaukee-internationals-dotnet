@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useLocation, Link } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import {
-  Globe,
   Loader2,
   CheckCircle2,
   MapPin,
@@ -197,18 +196,29 @@ function ToggleField({
 // Tour info header
 // ---------------------------------------------------------------------------
 
+// TourDate is a wall-clock "CST" value everywhere else in the app — the emails
+// format it with `{TourDate:HH:mm}` and the admin config page edits the raw
+// `yyyy-MM-ddTHH:mm` prefix. The serialized offset just reflects whatever zone
+// the server was in when it was saved, so read the components instead of
+// letting `new Date()` shift the instant into the visitor's timezone.
+function parseTourDate(value: string): Date | null {
+  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!m) return null;
+  const [, year, month, day, hour, minute] = m;
+  return new Date(+year, +month - 1, +day, +hour, +minute);
+}
+
 function TourHeader({ tourDate, tourAddress, tourLocation }: {
   tourDate?: string;
   tourAddress?: string;
   tourLocation?: string;
 }) {
-  const date = tourDate ? new Date(tourDate) : null;
+  const date = tourDate ? parseTourDate(tourDate) : null;
 
   return (
     <div className="text-center">
       <div className="mb-6">
-        <Globe className="mx-auto h-12 w-12 text-primary" />
-        <h1 className="mt-3 font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+        <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
           Tour of Milwaukee
         </h1>
         <p className="mt-1 text-lg text-primary font-medium">
@@ -217,7 +227,7 @@ function TourHeader({ tourDate, tourAddress, tourLocation }: {
       </div>
 
       {date && (
-        <div className="mx-auto max-w-md space-y-2 rounded-xl border border-border bg-card p-4 text-left shadow-sm">
+        <div className="mx-auto max-w-lg space-y-2 rounded-xl border border-border bg-card p-5 text-left shadow-sm">
           <h2 className="text-center font-heading text-lg font-semibold text-foreground">
             {date.getFullYear()} Free Tour of Milwaukee Registration
           </h2>
