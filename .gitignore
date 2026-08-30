@@ -28,3 +28,6 @@ client-build
 imageid.txt
 
 web/dist
+
+appsettings.Development.json
+appsettings.Localhost.json

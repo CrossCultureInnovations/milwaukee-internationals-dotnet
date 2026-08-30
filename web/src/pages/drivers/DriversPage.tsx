@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { useDrivers } from "../../lib/hooks/useApiQueries";
+import { QueryError } from "../../components/QueryError";
 import { api, type Driver, type RolesEnum } from "../../api";
 import { cn } from "../../lib/utils";
 import { exportDriversToExcel } from "../../lib/export";
@@ -285,7 +286,7 @@ function CardSkeleton() {
 
 export function DriversPage() {
   const queryClient = useQueryClient();
-  const { data: drivers, isLoading } = useDrivers();
+  const { data: drivers, isLoading, isError, error, refetch } = useDrivers();
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
@@ -370,6 +371,8 @@ export function DriversPage() {
         <Container>
           {isLoading ? (
             <CardSkeleton />
+          ) : isError ? (
+            <QueryError error={error} onRetry={() => refetch()} label="drivers" />
           ) : filtered.length === 0 ? (
             <div className="rounded-xl border border-border bg-card py-16 text-center text-muted-foreground">
               {search || roleFilter !== "all"

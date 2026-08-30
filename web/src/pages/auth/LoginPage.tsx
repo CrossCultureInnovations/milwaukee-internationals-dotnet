@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,9 +18,13 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginPage() {
-  const { login } = useAuth();
+  const { login, sessionExpired } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [serverError, setServerError] = useState<string | null>(null);
+
+  // RequireAuth records where the user was before the session ended.
+  const from = (location.state as { from?: string } | null)?.from;
 
   const {
     register,
@@ -34,7 +38,7 @@ export function LoginPage() {
     setServerError(null);
     try {
       await login(data.username, data.password);
-      navigate("/dashboard", { replace: true });
+      navigate(from ?? "/dashboard", { replace: true });
     } catch (err) {
       if (err instanceof ApiError) {
         setServerError(err.message);
@@ -64,6 +68,12 @@ export function LoginPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {sessionExpired && !serverError && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/50 dark:text-amber-400">
+                  Your session expired. Please sign in again.
+                </div>
+              )}
+
               {serverError && (
                 <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/50 dark:text-red-400">
                   {serverError}

@@ -14,6 +14,7 @@ import { Label } from "../../components/ui/label";
 import { Skeleton } from "../../components/ui/skeleton";
 import { Container } from "../../components/layout/Container";
 import { useConfig } from "../../lib/hooks/useApiQueries";
+import { QueryError } from "../../components/QueryError";
 import { api, type GlobalConfigModel } from "../../api";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -69,7 +70,7 @@ function CardSkeleton() {
 // ---------------------------------------------------------------------------
 
 export function ConfigPage() {
-  const { data: config, isLoading } = useConfig();
+  const { data: config, isLoading, isError, error, refetch } = useConfig();
   const queryClient = useQueryClient();
   const [form, setForm] = useState<GlobalConfigModel | null>(null);
   const [saving, setSaving] = useState(false);
@@ -99,6 +100,20 @@ export function ConfigPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+  if (isError) {
+    return (
+      <Container className="py-8">
+        <div className="mb-6 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Settings className="h-5 w-5" />
+          </div>
+          <h1 className="font-heading text-2xl text-foreground">Configuration</h1>
+        </div>
+        <QueryError error={error} onRetry={() => refetch()} label="configuration" />
+      </Container>
+    );
   }
 
   if (isLoading || !form) {

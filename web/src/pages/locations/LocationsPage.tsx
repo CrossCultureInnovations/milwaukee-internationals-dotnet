@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
+import { QueryError } from "../../components/QueryError";
 import {
   Table,
   TableHeader,
@@ -145,7 +146,7 @@ function DeleteConfirmation({
 
 export function LocationsPage() {
   const queryClient = useQueryClient();
-  const { data: locations, isLoading } = useLocations();
+  const { data: locations, isLoading, isError, error, refetch } = useLocations();
 
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -254,6 +255,8 @@ export function LocationsPage() {
                 <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
+          ) : isError ? (
+            <QueryError error={error} onRetry={() => refetch()} label="locations" />
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <MapPin className="mb-3 h-10 w-10 text-muted-foreground/40" />
