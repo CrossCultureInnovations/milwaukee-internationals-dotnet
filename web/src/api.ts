@@ -21,20 +21,44 @@ export function setToken(token: string | null) {
   else localStorage.setItem("token", token);
 }
 
+// ---------------------------------------------------------------------------
+// Session expiry
+//
+// The API returns 401 once the bearer token expires or the server restarts with
+// a new signing key. Without a central handler the SPA keeps rendering with a
+// stale auth state while every request silently fails, so requests that were
+// made *with* a token clear it and notify the AuthProvider, which redirects to
+// the login page.
+// ---------------------------------------------------------------------------
+
+type UnauthorizedHandler = () => void;
+
+let unauthorizedHandler: UnauthorizedHandler | null = null;
+
+export function setUnauthorizedHandler(handler: UnauthorizedHandler | null) {
+  unauthorizedHandler = handler;
+}
+
+type RequestOptions = RequestInit & {
+  /** Endpoints where a 401 means "bad credentials", not "session expired". */
+  skipSessionExpiry?: boolean;
+};
+
 async function request<T = unknown>(
   path: string,
-  opts: RequestInit = {},
+  opts: RequestOptions = {},
   absolutePath?: string
 ): Promise<T> {
+  const { skipSessionExpiry, ...init } = opts;
   const token = getToken();
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    ...(opts.headers as Record<string, string> | undefined),
+    ...(init.headers as Record<string, string> | undefined),
   };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   const url = absolutePath ?? `${API_URL}${path}`;
-  const res = await fetch(url, { ...opts, headers });
+  const res = await fetch(url, { ...init, headers });
 
   if (!res.ok) {
     const contentType = res.headers.get("content-type") || "";
@@ -55,6 +79,12 @@ async function request<T = unknown>(
     }
     if (res.status === 401) message = message || "Unauthorized.";
     if (res.status === 403) message = message || "Forbidden.";
+    // A 401 on a request we authenticated means the session is gone. A 401 with
+    // no token attached is just an anonymous call to a protected route.
+    if (res.status === 401 && token && !skipSessionExpiry) {
+      setToken(null);
+      unauthorizedHandler?.();
+    }
     throw new ApiError(message, res.status, body);
   }
 
@@ -254,6 +284,7 @@ export const api = {
     request<LoginResponse>("/jwtidentity/Login", {
       method: "POST",
       body: JSON.stringify(payload),
+      skipSessionExpiry: true,
     }),
   register: (payload: RegisterViewModel) =>
     request("/jwtidentity/Register", {

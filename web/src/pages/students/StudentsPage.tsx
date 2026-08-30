@@ -20,6 +20,7 @@ import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
 import { useStudents } from "../../lib/hooks/useApiQueries";
+import { QueryError } from "../../components/QueryError";
 import { api, type Student } from "../../api";
 import { exportStudentsToExcel } from "../../lib/export";
 import { cn } from "../../lib/utils";
@@ -267,7 +268,7 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 
 export function StudentsPage() {
   const queryClient = useQueryClient();
-  const { data: students, isLoading } = useStudents();
+  const { data: students, isLoading, isError, error, refetch } = useStudents();
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("fullname");
   const [sortDesc, setSortDesc] = useState(false);
@@ -393,9 +394,11 @@ export function StudentsPage() {
       {/* Scrollable list */}
       <div className="min-h-0 flex-1 overflow-y-auto pb-8">
         <Container>
-          {!isLoading && filtered.length > 0 && <ColumnHeader />}
+          {!isLoading && !isError && filtered.length > 0 && <ColumnHeader />}
           {isLoading ? (
             <CardSkeleton />
+          ) : isError ? (
+            <QueryError error={error} onRetry={() => refetch()} label="students" />
           ) : filtered.length === 0 ? (
             <div className="rounded-xl border border-border bg-card py-16 text-center text-muted-foreground">
               {search ? "No students match your search." : "No students yet."}

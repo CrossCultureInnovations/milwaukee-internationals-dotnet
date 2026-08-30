@@ -36,6 +36,7 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { useUsers } from "../../lib/hooks/useApiQueries";
+import { QueryError } from "../../components/QueryError";
 import { api, type User, type UserRoleEnum } from "../../api";
 import { cn } from "../../lib/utils";
 
@@ -530,7 +531,7 @@ function CardSkeleton() {
 // ---------------------------------------------------------------------------
 
 export function UsersPage() {
-  const { data: users, isLoading } = useUsers();
+  const { data: users, isLoading, isError, error, refetch } = useUsers();
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -592,6 +593,8 @@ export function UsersPage() {
       {/* User list */}
       {isLoading ? (
         <CardSkeleton />
+      ) : isError ? (
+        <QueryError error={error} onRetry={() => refetch()} label="users" />
       ) : filtered.length === 0 ? (
         <div className="rounded-xl border border-border bg-card py-16 text-center text-muted-foreground">
           {search ? "No users match your search." : "No users yet."}

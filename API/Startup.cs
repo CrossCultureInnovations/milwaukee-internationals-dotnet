@@ -45,6 +45,11 @@ namespace API;
 
 public class Startup
 {
+    /// <summary>
+    /// HMAC-SHA256 signing requires a key of at least 256 bits.
+    /// </summary>
+    private const int MinimumJwtKeyLength = 32;
+
     private readonly IConfigurationRoot _configuration;
 
     private readonly IWebHostEnvironment _env;
@@ -210,8 +215,37 @@ public class Startup
             .GetSection("JwtSettings")
             .Get<JwtSettings>();
 
-        // Random JWT key
-        jwtSetting.Key = PasswordGenerator.Generate(length: 100, allowed: Sets.Alphanumerics);
+        // Prefer a persisted signing key (JwtSettings:Key, or the JWT_SIGNING_KEY
+        // environment variable). Generating a fresh key on every start invalidates
+        // every token already in the wild, so any restart — a deploy, a dyno
+        // recycling after an idle period — silently signs everyone out mid-session.
+        var configuredJwtKey = _configuration.GetValue<string>("JWT_SIGNING_KEY")
+                               ?? jwtSetting.Key;
+
+        if (string.IsNullOrWhiteSpace(configuredJwtKey))
+        {
+            // No key configured: fall back to a random one so the app still boots.
+            // Sessions will not survive a restart in this mode.
+            jwtSetting.Key = PasswordGenerator.Generate(length: 100, allowed: Sets.Alphanumerics);
+
+            Console.WriteLine(
+                "WARNING: No JWT signing key configured. Using a random key — " +
+                "all sessions will be invalidated on the next restart. " +
+                "Set JWT_SIGNING_KEY (or JwtSettings:Key) to a value of at least " +
+                $"{MinimumJwtKeyLength} characters.");
+        }
+        else if (configuredJwtKey.Length < MinimumJwtKeyLength)
+        {
+            // HMAC-SHA256 requires a 256-bit key; failing here beats a confusing
+            // crypto error on the first login attempt.
+            throw new Exception(
+                $"JWT signing key must be at least {MinimumJwtKeyLength} characters " +
+                $"long, but the configured key is {configuredJwtKey.Length}.");
+        }
+        else
+        {
+            jwtSetting.Key = configuredJwtKey;
+        }
 
         services.AddSingleton(jwtSetting);
             

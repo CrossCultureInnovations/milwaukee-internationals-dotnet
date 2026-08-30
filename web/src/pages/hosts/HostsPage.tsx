@@ -28,6 +28,7 @@ import {
 } from "../../components/ui/sheet";
 import { Container } from "../../components/layout/Container";
 import { useHosts } from "../../lib/hooks/useApiQueries";
+import { QueryError } from "../../components/QueryError";
 import { api, type Host } from "../../api";
 import { exportHostsToExcel } from "../../lib/export";
 import { cn } from "../../lib/utils";
@@ -247,7 +248,7 @@ function CardSkeleton() {
 
 export function HostsPage() {
   const queryClient = useQueryClient();
-  const { data: hosts, isLoading } = useHosts();
+  const { data: hosts, isLoading, isError, error, refetch } = useHosts();
   const [search, setSearch] = useState("");
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -375,6 +376,8 @@ export function HostsPage() {
       {/* Host cards */}
       {isLoading ? (
         <CardSkeleton />
+      ) : isError ? (
+        <QueryError error={error} onRetry={() => refetch()} label="hosts" />
       ) : filtered.length === 0 ? (
         <div className="rounded-xl border border-border bg-card py-16 text-center text-muted-foreground">
           {search ? "No hosts match your search." : "No hosts yet."}

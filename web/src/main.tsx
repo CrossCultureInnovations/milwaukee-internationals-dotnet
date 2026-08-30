@@ -6,6 +6,7 @@ import "@fontsource/inter/latin-400.css";
 import "@fontsource/inter/latin-500.css";
 import "@fontsource/inter/latin-600.css";
 import "@fontsource/fraunces/latin-500.css";
+import { ApiError } from "./api";
 import { App } from "./app/App";
 import { AuthProvider } from "./lib/auth/AuthContext";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -15,7 +16,14 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 30_000,
-      retry: 1,
+      // Retrying a 4xx never helps, and retrying a 401 just delays the
+      // redirect to the login page.
+      retry: (failureCount, error) => {
+        if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+          return false;
+        }
+        return failureCount < 1;
+      },
       refetchOnWindowFocus: false,
     },
   },
