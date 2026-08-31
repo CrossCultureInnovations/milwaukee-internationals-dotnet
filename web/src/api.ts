@@ -242,7 +242,7 @@ export type StatsViewModel = {
 };
 
 // View models
-export type LoginViewModel = { username: string; password: string };
+export type LoginViewModel = { username: string; password: string; altcha: string | null };
 export type RegisterViewModel = {
   phoneNumber: string;
   fullname: string;
@@ -250,7 +250,9 @@ export type RegisterViewModel = {
   password: string;
   confirmPassword: string;
   email: string;
+  altcha: string | null;
 };
+export type CaptchaStatus = { captchaEnabled: boolean; challengeUrl: string };
 export type RegistrationRequest<T> = {
   registration: Partial<T>;
   altcha: string | null;
@@ -280,6 +282,7 @@ export type LoginResponse = {
 
 export const api = {
   // Auth
+  getAuthCaptchaStatus: () => request<CaptchaStatus>("/jwtidentity/captcha"),
   login: (payload: LoginViewModel) =>
     request<LoginResponse>("/jwtidentity/Login", {
       method: "POST",

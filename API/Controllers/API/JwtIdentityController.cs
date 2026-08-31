@@ -2,12 +2,14 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using API.Abstracts;
+using API.Interfaces;
 using API.Utilities;
 using DAL.Interfaces;
 using Logic.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Models.Entities;
 using Models.ViewModels.Identities;
 using Swashbuckle.AspNetCore.Annotations;
@@ -22,9 +24,21 @@ public class JwtIdentityController(
     SignInManager<User> signManager,
     RoleManager<IdentityRole<int>> roleManager,
     IUserLogic userLogic,
-    IApiEventService apiEventService)
+    IApiEventService apiEventService,
+    IConfigLogic configLogic,
+    IAltchaService altchaService,
+    IConfiguration configuration)
     : AbstractIdentityController
 {
+    [HttpGet]
+    [Route("captcha")]
+    public async Task<IActionResult> Captcha()
+    {
+        var captchaEnabled = (await configLogic.ResolveGlobalConfig()).CaptchaEnabled;
+        var challengeUrl = configuration["AltchaSettings:ChallengeUrl"];
+        return Ok(new { captchaEnabled, challengeUrl });
+    }
+
     [HttpGet]
     [Route("")]
     [SwaggerOperation("AccountInfo")]
@@ -72,6 +86,11 @@ public class JwtIdentityController(
     {
         TempData.Clear();
 
+        if (!await altchaService.IsSatisfied(registerViewModel.Altcha))
+        {
+            return BadRequest(new { error = "Please complete the anti-spam verification." });
+        }
+
         if (registerViewModel.Password != registerViewModel.ConfirmPassword)
         {
             TempData["Error"] = "Password and Password Confirmation do not match. Please try again!";
@@ -100,6 +119,11 @@ public class JwtIdentityController(
     public new async Task<IActionResult> Login([FromBody] LoginViewModel loginViewModel)
     {
         TempData.Clear();
+
+        if (!await altchaService.IsSatisfied(loginViewModel.Altcha))
+        {
+            return BadRequest(new { error = "Please complete the anti-spam verification." });
+        }
             
         var (result, message) = await base.Login(loginViewModel);
             

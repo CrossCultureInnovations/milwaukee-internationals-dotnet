@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Globe, Loader2 } from "lucide-react";
 import { useAuth } from "../../lib/auth/AuthContext";
-import { ApiError } from "../../api";
+import { api, ApiError } from "../../api";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { AltchaWidget } from "../../components/AltchaWidget";
 
 const registerSchema = z
   .object({
@@ -30,6 +32,12 @@ export function RegisterPage() {
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [altcha, setAltcha] = useState<string | null>(null);
+  const [captchaError, setCaptchaError] = useState<string | null>(null);
+  const captchaQuery = useQuery({
+    queryKey: ["auth", "captcha"],
+    queryFn: api.getAuthCaptchaStatus,
+  });
 
   const {
     register,
@@ -41,6 +49,11 @@ export function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormValues) => {
     setServerError(null);
+    if ((captchaQuery.data?.captchaEnabled ?? true) && !altcha) {
+      setCaptchaError("Please confirm you are human");
+      return;
+    }
+    setCaptchaError(null);
     try {
       await registerUser({
         fullname: data.fullname,
@@ -49,6 +62,7 @@ export function RegisterPage() {
         phoneNumber: data.phoneNumber,
         password: data.password,
         confirmPassword: data.confirmPassword,
+        altcha,
       });
       navigate("/login", { replace: true });
     } catch (err) {
@@ -179,6 +193,16 @@ export function RegisterPage() {
                   <p className="text-xs text-red-500">{errors.confirmPassword.message}</p>
                 )}
               </div>
+
+              {captchaQuery.data?.captchaEnabled && captchaQuery.data.challengeUrl && (
+                <div className="space-y-1.5">
+                  <AltchaWidget
+                    challengeUrl={captchaQuery.data.challengeUrl}
+                    onVerified={setAltcha}
+                  />
+                  {captchaError && <p className="text-xs text-red-500">{captchaError}</p>}
+                </div>
+              )}
 
               <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
                 {isSubmitting ? (

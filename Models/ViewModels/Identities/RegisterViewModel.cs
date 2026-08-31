@@ -33,4 +33,6 @@ public class RegisterViewModel
     [Required]
     [EmailAddress]
     public string Email { get; set; }
+
+    public string Altcha { get; set; }
 }

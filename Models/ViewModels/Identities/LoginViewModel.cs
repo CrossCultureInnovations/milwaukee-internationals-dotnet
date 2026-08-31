@@ -15,4 +15,6 @@ public class LoginViewModel
     [Required]
     [PasswordValidation]
     public string Password { get; set; }
+
+    public string Altcha { get; set; }
 }
