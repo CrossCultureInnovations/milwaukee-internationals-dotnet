@@ -66,6 +66,8 @@ const editUserSchema = z.object({
 
 type EditUserFormValues = z.infer<typeof editUserSchema>;
 
+const passwordPattern = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/;
+
 // ---------------------------------------------------------------------------
 // Create user form (Sheet)
 // ---------------------------------------------------------------------------
@@ -251,6 +253,36 @@ function InlineEditForm({
     onSuccess: () => setResetSent(true),
   });
 
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordChanged, setPasswordChanged] = useState(false);
+  const passwordMutation = useMutation({
+    mutationFn: () => api.changeUserPassword(user.id, newPassword, confirmPassword),
+    onSuccess: () => {
+      setNewPassword("");
+      setConfirmPassword("");
+      setPasswordError(null);
+      setPasswordChanged(true);
+    },
+  });
+
+  const changePassword = () => {
+    setPasswordChanged(false);
+    if (!passwordPattern.test(newPassword)) {
+      setPasswordError("Use at least 8 characters with upper and lower case, a number, and a special character.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+    setPasswordError(null);
+    if (window.confirm(`Change the password for ${user.fullname}?`)) {
+      passwordMutation.mutate();
+    }
+  };
+
   const onSubmit = (values: EditUserFormValues) => mutation.mutate(values);
 
   return (
@@ -323,9 +355,9 @@ function InlineEditForm({
         </div>
       </div>
 
-      {(mutation.isError || deleteMutation.isError || resetMutation.isError) && (
+      {(mutation.isError || deleteMutation.isError || resetMutation.isError || passwordMutation.isError) && (
         <p className="mt-2 text-xs text-red-500">
-          {((mutation.error || deleteMutation.error || resetMutation.error) as Error)?.message ||
+          {((mutation.error || deleteMutation.error || resetMutation.error || passwordMutation.error) as Error)?.message ||
             "Something went wrong."}
         </p>
       )}
@@ -336,6 +368,45 @@ function InlineEditForm({
           Password reset email sent to {user.email}
         </p>
       )}
+
+      <div className="mt-4 border-t border-border pt-4">
+        <p className="mb-2 text-xs font-medium text-muted-foreground">Set new password</p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto]">
+          <Input
+            type="password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            placeholder="New password"
+            autoComplete="new-password"
+            className="h-9 text-sm"
+          />
+          <Input
+            type="password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            placeholder="Confirm password"
+            autoComplete="new-password"
+            className="h-9 text-sm"
+          />
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={passwordMutation.isPending || !newPassword || !confirmPassword}
+            onClick={changePassword}
+          >
+            <KeyRound className="mr-1 h-3.5 w-3.5" />
+            {passwordMutation.isPending ? "Changing..." : "Change Password"}
+          </Button>
+        </div>
+        {passwordError && <p className="mt-1 text-xs text-red-500">{passwordError}</p>}
+        {passwordChanged && (
+          <p className="mt-1 flex items-center gap-1 text-xs text-green-600">
+            <Check className="h-3 w-3" />
+            Password changed successfully
+          </p>
+        )}
+      </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <Button type="submit" size="sm" disabled={mutation.isPending}>

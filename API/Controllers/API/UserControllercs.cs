@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using API.Abstracts;
 using API.Attributes;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Models.Entities;
 using Models.Enums;
+using Models.ViewModels.Identities;
 
 namespace API.Controllers.API;
 
@@ -34,5 +36,38 @@ public class UserController(
         var token = await userManager.GeneratePasswordResetTokenAsync(user);
         await passwordResetLogic.SendPasswordResetEmail(user, token);
         return Ok(new { message = "Password reset email sent successfully." });
+    }
+
+    [HttpPost]
+    [Route("{id:int}/Password")]
+    [AuthorizeMiddleware(UserRoleEnum.Admin)]
+    public async Task<IActionResult> ChangePassword(
+        [FromRoute] int id,
+        [FromBody] ChangePasswordViewModel changePasswordViewModel)
+    {
+        if (!ModelState.IsValid)
+        {
+            return ValidationProblem(ModelState);
+        }
+
+        if (changePasswordViewModel.Password != changePasswordViewModel.ConfirmPassword)
+        {
+            return BadRequest(new { error = "Password and password confirmation do not match." });
+        }
+
+        var user = await userManager.FindByIdAsync(id.ToString());
+        if (user == null)
+        {
+            return NotFound(new { error = "User not found." });
+        }
+
+        var token = await userManager.GeneratePasswordResetTokenAsync(user);
+        var result = await userManager.ResetPasswordAsync(user, token, changePasswordViewModel.Password);
+        if (!result.Succeeded)
+        {
+            return BadRequest(new { error = string.Join(" ", result.Errors.Select(error => error.Description)) });
+        }
+
+        return Ok(new { message = "Password changed successfully." });
     }
 }

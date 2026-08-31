@@ -452,6 +452,11 @@ export const api = {
   deleteUser: (id: number) => request(`/user/${id}`, { method: "DELETE" }),
   sendPasswordReset: (id: number) =>
     request<{ message: string }>(`/user/${id}/SendPasswordReset`, { method: "POST" }),
+  changeUserPassword: (id: number, password: string, confirmPassword: string) =>
+    request<{ message: string }>(`/user/${id}/Password`, {
+      method: "POST",
+      body: JSON.stringify({ password, confirmPassword }),
+    }),
 
   // Config
   getConfig: () => request<GlobalConfigModel>("/config"),
