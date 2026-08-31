@@ -38,7 +38,7 @@ export function AppRoutes() {
     { path: "/registration", element: <RegistrationPage /> },
     { path: "/registration/student", element: <RegistrationPage /> },
     { path: "/registration/driver", element: <RegistrationPage /> },
-    { path: "/host", element: <Navigate to="/hosts" replace /> },
+    { path: "/registration/host", element: <Navigate to="/hosts" replace /> },
     {
       path: "/dashboard",
       element: (
