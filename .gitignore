@@ -31,3 +31,10 @@ web/dist
 
 appsettings.Development.json
 appsettings.Localhost.json
+
+# Local database backups
+*.sqlite.bak
+
+# Design handoff artifacts (not source)
+design_handoff_*/
+*.zip
