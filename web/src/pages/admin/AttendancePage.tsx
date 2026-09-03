@@ -10,27 +10,116 @@ import {
 import { Container } from "../../components/layout/Container";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
-import { Checkbox } from "../../components/ui/checkbox";
 import {
   Table,
-  TableHeader,
   TableBody,
   TableRow,
-  TableHead,
   TableCell,
 } from "../../components/ui/table";
 import { Card, CardContent } from "../../components/ui/card";
 import { cn } from "../../lib/utils";
 import { useStudents, useDrivers } from "../../lib/hooks/useApiQueries";
-import { api, type AttendanceViewModel } from "../../api";
+import {
+  api,
+  type AttendanceViewModel,
+  type Student,
+  type Driver,
+} from "../../api";
 
 // ---------------------------------------------------------------------------
 // Tab type
 // ---------------------------------------------------------------------------
 
 type Tab = "students" | "drivers";
+
+// ---------------------------------------------------------------------------
+// Attendance toggle
+// ---------------------------------------------------------------------------
+
+function AttendanceToggle({
+  present,
+  disabled,
+  onToggle,
+}: {
+  present: boolean;
+  disabled: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={present}
+      disabled={disabled}
+      onClick={onToggle}
+      className={cn(
+        "inline-flex min-h-11 w-32 items-center justify-center rounded-full border text-sm font-medium transition-colors disabled:opacity-60",
+        present
+          ? "border-green-500/30 bg-green-500/10 text-green-600 hover:bg-green-500/20 dark:text-green-400"
+          : "border-border bg-muted text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+      )}
+    >
+      {present ? "Present" : "Absent"}
+    </button>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Summary card — doubles as the students / drivers switcher
+// ---------------------------------------------------------------------------
+
+function SummaryCard({
+  active,
+  icon,
+  label,
+  present,
+  total,
+  loading,
+  onSelect,
+}: {
+  active: boolean;
+  icon: React.ReactNode;
+  label: string;
+  present: number;
+  total: number;
+  loading: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onSelect}
+      className="rounded-2xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+    >
+      <Card
+        className={cn(
+          "h-full",
+          active && "border-primary/30 ring-2 ring-primary/40"
+        )}
+      >
+        <CardContent className="flex items-center gap-4 p-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            {icon}
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">{label}</p>
+            {loading ? (
+              <Skeleton className="mt-1 h-6 w-16" />
+            ) : (
+              <p className="text-xl font-semibold text-foreground">
+                {present}{" "}
+                <span className="text-sm font-normal text-muted-foreground">
+                  / {total}
+                </span>
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </button>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Table skeleton
@@ -41,11 +130,12 @@ function TableSkeleton() {
     <>
       {Array.from({ length: 6 }).map((_, i) => (
         <TableRow key={i}>
-          {Array.from({ length: 3 }).map((_, j) => (
-            <TableCell key={j}>
-              <Skeleton className="h-4 w-full" />
-            </TableCell>
-          ))}
+          <TableCell>
+            <Skeleton className="h-4 w-48" />
+          </TableCell>
+          <TableCell className="text-right">
+            <Skeleton className="ml-auto h-11 w-32 rounded-full" />
+          </TableCell>
         </TableRow>
       ))}
     </>
@@ -60,15 +150,42 @@ export function AttendancePage() {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState<Tab>("students");
   const [search, setSearch] = useState("");
+  // Keyed "student-<id>" / "driver-<id>" so the two lists cannot collide on id
+  const [pendingKeys, setPendingKeys] = useState<ReadonlySet<string>>(new Set());
 
   const { data: students, isLoading: studentsLoading } = useStudents();
   const { data: drivers, isLoading: driversLoading } = useDrivers();
 
-  // Mutations
+  const markPending = (key: string, pending: boolean) =>
+    setPendingKeys((prev) => {
+      const next = new Set(prev);
+      if (pending) next.add(key);
+      else next.delete(key);
+      return next;
+    });
+
+  // Mutations — optimistic so the toggle flips instantly, rolled back on error
   const studentAttendance = useMutation({
     mutationFn: (payload: AttendanceViewModel) =>
       api.setStudentAttendance(payload),
-    onSuccess: () => {
+    onMutate: async (payload) => {
+      markPending(`student-${payload.id}`, true);
+      await queryClient.cancelQueries({ queryKey: ["students"] });
+      const previous = queryClient.getQueryData<Student[]>(["students"]);
+      queryClient.setQueryData<Student[]>(["students"], (old) =>
+        old?.map((s) =>
+          s.id === payload.id ? { ...s, isPresent: payload.attendance } : s
+        )
+      );
+      return { previous };
+    },
+    onError: (_error, _payload, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["students"], context.previous);
+      }
+    },
+    onSettled: (_data, _error, payload) => {
+      markPending(`student-${payload.id}`, false);
       queryClient.invalidateQueries({ queryKey: ["students"] });
     },
   });
@@ -76,7 +193,24 @@ export function AttendancePage() {
   const driverAttendance = useMutation({
     mutationFn: (payload: AttendanceViewModel) =>
       api.setDriverAttendance(payload),
-    onSuccess: () => {
+    onMutate: async (payload) => {
+      markPending(`driver-${payload.id}`, true);
+      await queryClient.cancelQueries({ queryKey: ["drivers"] });
+      const previous = queryClient.getQueryData<Driver[]>(["drivers"]);
+      queryClient.setQueryData<Driver[]>(["drivers"], (old) =>
+        old?.map((d) =>
+          d.id === payload.id ? { ...d, isPresent: payload.attendance } : d
+        )
+      );
+      return { previous };
+    },
+    onError: (_error, _payload, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(["drivers"], context.previous);
+      }
+    },
+    onSettled: (_data, _error, payload) => {
+      markPending(`driver-${payload.id}`, false);
       queryClient.invalidateQueries({ queryKey: ["drivers"] });
     },
   });
@@ -94,7 +228,7 @@ export function AttendancePage() {
   const [sendStudentSuccess, setSendStudentSuccess] = useState(false);
   const [sendDriverSuccess, setSendDriverSuccess] = useState(false);
 
-  // Filtered lists
+  // Filtered lists — email is still searchable even though it is no longer shown
   const filteredStudents = useMemo(() => {
     if (!students) return [];
     if (!search.trim()) return students;
@@ -175,86 +309,34 @@ export function AttendancePage() {
         )}
       </div>
 
-      {/* Summary cards */}
+      {/* Summary cards — clicking one switches the list below */}
       <div className="mb-6 grid gap-4 sm:grid-cols-2">
-        <Card>
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <GraduationCap className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Students present</p>
-              {studentsLoading ? (
-                <Skeleton className="mt-1 h-6 w-16" />
-              ) : (
-                <p className="text-xl font-semibold text-foreground">
-                  {presentStudents}{" "}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    / {students?.length ?? 0}
-                  </span>
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Car className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Drivers present</p>
-              {driversLoading ? (
-                <Skeleton className="mt-1 h-6 w-16" />
-              ) : (
-                <p className="text-xl font-semibold text-foreground">
-                  {presentDrivers}{" "}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    / {drivers?.length ?? 0}
-                  </span>
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabs */}
-      <div className="mb-4 flex gap-1 rounded-lg border border-border bg-muted p-1">
-        <button
-          type="button"
-          className={cn(
-            "flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-            tab === "students"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          onClick={() => {
+        <SummaryCard
+          active={tab === "students"}
+          icon={<GraduationCap className="h-5 w-5" />}
+          label="Students present"
+          present={presentStudents}
+          total={students?.length ?? 0}
+          loading={studentsLoading}
+          onSelect={() => {
             setTab("students");
             setSearch("");
             setSendStudentSuccess(false);
           }}
-        >
-          <GraduationCap className="h-4 w-4" />
-          Students
-        </button>
-        <button
-          type="button"
-          className={cn(
-            "flex flex-1 items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-            tab === "drivers"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-          onClick={() => {
+        />
+        <SummaryCard
+          active={tab === "drivers"}
+          icon={<Car className="h-5 w-5" />}
+          label="Drivers present"
+          present={presentDrivers}
+          total={drivers?.length ?? 0}
+          loading={driversLoading}
+          onSelect={() => {
             setTab("drivers");
             setSearch("");
             setSendDriverSuccess(false);
           }}
-        >
-          <Car className="h-4 w-4" />
-          Drivers
-        </button>
+        />
       </div>
 
       {/* Search */}
@@ -271,14 +353,6 @@ export function AttendancePage() {
       {/* Table */}
       <div className="rounded-2xl border border-border bg-card">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-12">Present</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead className="hidden sm:table-cell">Email</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableSkeleton />
@@ -286,7 +360,7 @@ export function AttendancePage() {
               filteredStudents.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={2}
                     className="py-12 text-center text-muted-foreground"
                   >
                     {search
@@ -297,32 +371,20 @@ export function AttendancePage() {
               ) : (
                 filteredStudents.map((student) => (
                   <TableRow key={student.id}>
-                    <TableCell>
-                      <Checkbox
-                        checked={student.isPresent}
-                        disabled={studentAttendance.isPending}
-                        onCheckedChange={(checked) => {
-                          studentAttendance.mutate({
-                            id: student.id,
-                            attendance: !!checked,
-                          });
-                        }}
-                      />
-                    </TableCell>
                     <TableCell className="font-medium text-foreground">
                       {student.fullname}
                     </TableCell>
-                    <TableCell className="hidden text-muted-foreground sm:table-cell">
-                      {student.email}
-                    </TableCell>
-                    <TableCell>
-                      {student.isPresent ? (
-                        <Badge className="border-green-500/30 text-green-600" variant="outline">
-                          Present
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">Absent</Badge>
-                      )}
+                    <TableCell className="text-right">
+                      <AttendanceToggle
+                        present={student.isPresent}
+                        disabled={pendingKeys.has(`student-${student.id}`)}
+                        onToggle={() =>
+                          studentAttendance.mutate({
+                            id: student.id,
+                            attendance: !student.isPresent,
+                          })
+                        }
+                      />
                     </TableCell>
                   </TableRow>
                 ))
@@ -330,7 +392,7 @@ export function AttendancePage() {
             ) : filteredDrivers.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={2}
                   className="py-12 text-center text-muted-foreground"
                 >
                   {search
@@ -341,32 +403,20 @@ export function AttendancePage() {
             ) : (
               filteredDrivers.map((driver) => (
                 <TableRow key={driver.id}>
-                  <TableCell>
-                    <Checkbox
-                      checked={driver.isPresent}
-                      disabled={driverAttendance.isPending}
-                      onCheckedChange={(checked) => {
-                        driverAttendance.mutate({
-                          id: driver.id,
-                          attendance: !!checked,
-                        });
-                      }}
-                    />
-                  </TableCell>
                   <TableCell className="font-medium text-foreground">
                     {driver.fullname}
                   </TableCell>
-                  <TableCell className="hidden text-muted-foreground sm:table-cell">
-                    {driver.email}
-                  </TableCell>
-                  <TableCell>
-                    {driver.isPresent ? (
-                      <Badge className="border-green-500/30 text-green-600" variant="outline">
-                        Present
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">Absent</Badge>
-                    )}
+                  <TableCell className="text-right">
+                    <AttendanceToggle
+                      present={driver.isPresent}
+                      disabled={pendingKeys.has(`driver-${driver.id}`)}
+                      onToggle={() =>
+                        driverAttendance.mutate({
+                          id: driver.id,
+                          attendance: !driver.isPresent,
+                        })
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               ))
