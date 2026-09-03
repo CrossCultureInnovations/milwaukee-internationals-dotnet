@@ -20,7 +20,7 @@ import { cn } from "../../lib/utils";
 // Constants (mirrored from backend)
 // ---------------------------------------------------------------------------
 
-const UNIVERSITIES = ["UWM", "Marquette", "MSOE", "Concordia", "MCW", "Other"];
+const UNIVERSITIES = ["UWM", "Marquette", "MSOE", "MATC", "Concordia", "MCW", "Other"];
 
 const COUNTRIES = [
   "India", "China",
