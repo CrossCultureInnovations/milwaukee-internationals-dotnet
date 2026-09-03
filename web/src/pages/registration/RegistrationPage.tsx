@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   MapPin,
   Calendar,
-  Clock,
   AlertTriangle,
 } from "lucide-react";
 import { api, ApiError, type Student, type Driver } from "../../api";
@@ -208,6 +207,30 @@ function parseTourDate(value: string): Date | null {
   return new Date(+year, +month - 1, +day, +hour, +minute);
 }
 
+const TOUR_HIGHLIGHTS = ["No cost", "Dinner included", "Families welcome"];
+
+function InfoRow({
+  icon: Icon,
+  title,
+  sub,
+}: {
+  icon: typeof Calendar;
+  title: string;
+  sub?: string;
+}) {
+  return (
+    <div className="flex items-start gap-3.5 p-4 sm:p-5">
+      <span className="flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-[9px] bg-primary/10 text-primary">
+        <Icon className="h-[18px] w-[18px]" />
+      </span>
+      <div className="min-w-0">
+        <p className="font-semibold leading-snug text-foreground">{title}</p>
+        {sub && <p className="text-sm leading-snug text-muted-foreground">{sub}</p>}
+      </div>
+    </div>
+  );
+}
+
 function TourHeader({ tourDate, tourAddress, tourLocation }: {
   tourDate?: string;
   tourAddress?: string;
@@ -216,54 +239,53 @@ function TourHeader({ tourDate, tourAddress, tourLocation }: {
   const date = tourDate ? parseTourDate(tourDate) : null;
 
   return (
-    <div className="text-center">
-      <div className="mb-6">
-        <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-          Tour of Milwaukee
+    <div className="flex flex-col gap-5 sm:gap-6">
+      <div>
+        <h1 className="font-heading text-[2.6rem] font-normal leading-[1.02] tracking-[-0.02em] text-foreground sm:text-5xl lg:text-[3.4rem]">
+          {date ? `${date.getFullYear()} Free Tour` : "Free Tour"}
+          <br />
+          of Milwaukee
         </h1>
-        <p className="mt-1 text-lg text-primary font-medium">
-          For International Students
+        <p className="mt-3.5 max-w-[46ch] text-base leading-[1.55] text-muted-foreground [text-wrap:pretty] sm:text-lg">
+          A personal tour — 2 to 4 people per vehicle, not a bus — that ends with
+          dinner in an American home.
         </p>
       </div>
 
-      {date && (
-        <div className="mx-auto max-w-lg space-y-2 rounded-xl border border-border bg-card p-5 text-left shadow-sm">
-          <h2 className="text-center font-heading text-lg font-semibold text-foreground">
-            {date.getFullYear()} Free Tour of Milwaukee Registration
-          </h2>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4 shrink-0 text-primary" />
-            <span>
-              {date.toLocaleDateString("en-US", {
+      {(date || tourLocation) && (
+        <div className="divide-y divide-border rounded-2xl border border-border bg-card">
+          {date && (
+            <InfoRow
+              icon={Calendar}
+              title={date.toLocaleDateString("en-US", {
                 weekday: "long",
                 year: "numeric",
                 month: "long",
                 day: "numeric",
               })}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4 shrink-0 text-primary" />
-            <span>
-              {date.toLocaleTimeString("en-US", {
+              sub={date.toLocaleTimeString("en-US", {
                 hour: "numeric",
                 minute: "2-digit",
                 hour12: true,
               })}
-            </span>
-          </div>
-          {tourLocation && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <MapPin className="h-4 w-4 shrink-0 text-primary" />
-              <span>{tourLocation}{tourAddress ? ` — ${tourAddress}` : ""}</span>
-            </div>
+            />
           )}
-          <p className="pt-2 text-xs text-muted-foreground text-center">
-            Note that this is not a bus tour; it's a personal tour with 2-4 people
-            in each vehicle. The tour concludes with a dinner at an American home.
-          </p>
+          {tourLocation && (
+            <InfoRow icon={MapPin} title={tourLocation} sub={tourAddress} />
+          )}
         </div>
       )}
+
+      <div className="flex flex-wrap gap-2">
+        {TOUR_HIGHLIGHTS.map((label) => (
+          <span
+            key={label}
+            className="rounded-full bg-secondary px-3.5 py-1.5 text-sm font-medium text-muted-foreground"
+          >
+            {label}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -691,20 +713,24 @@ export function RegistrationPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
-      <div className="mx-auto max-w-xl px-4 py-8 sm:py-12">
-        {/* Tour header */}
-        <TourHeader
-          tourDate={tourQuery.data?.tourDate}
-          tourAddress={tourQuery.data?.tourAddress}
-          tourLocation={tourQuery.data?.tourLocation}
-        />
+      <div className="mx-auto max-w-xl px-4 py-8 sm:py-12 md:max-w-6xl">
+        <div className="grid gap-8 md:grid-cols-2 md:items-start md:gap-10 lg:gap-12">
+          {/* Tour header */}
+          <div className="md:sticky md:top-12">
+            <TourHeader
+              tourDate={tourQuery.data?.tourDate}
+              tourAddress={tourQuery.data?.tourAddress}
+              tourLocation={tourQuery.data?.tourLocation}
+            />
+          </div>
 
-        {/* Registration form */}
-        <Card className="mt-8">
-          <CardContent className="pt-6">
-            {mode === "student" ? <StudentRegistration /> : <DriverRegistration />}
-          </CardContent>
-        </Card>
+          {/* Registration form */}
+          <Card>
+            <CardContent className="pt-6">
+              {mode === "student" ? <StudentRegistration /> : <DriverRegistration />}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* Footer link */}
         <p className="mt-6 text-center text-xs text-muted-foreground">
