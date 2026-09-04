@@ -20,6 +20,7 @@ import { AttendancePage } from "../pages/admin/AttendancePage";
 import { ReportsPage } from "../pages/reports/ReportsPage";
 import { RegistrationPage } from "../pages/registration/RegistrationPage";
 import { EmailToolsPage } from "../pages/email/EmailToolsPage";
+import { SmsPage } from "../pages/sms/SmsPage";
 import { LandingPage } from "../pages/landing/LandingPage";
 
 function HomeRedirect() {
@@ -164,6 +165,14 @@ export function AppRoutes() {
       element: (
         <RequireAuth>
           <EmailToolsPage />
+        </RequireAuth>
+      ),
+    },
+    {
+      path: "/sms",
+      element: (
+        <RequireAuth>
+          <SmsPage />
         </RequireAuth>
       ),
     },

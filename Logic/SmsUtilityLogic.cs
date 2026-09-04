@@ -95,6 +95,12 @@ public class SmsUtilityLogic(
         return true;
     }
 
+    public async Task SendAdHocSms(string phoneNumber, string message)
+    {
+        await smsService.SendMessage(phoneNumber, message);
+        await apiEventService.RecordEvent($"Sent ad-hoc SMS to {phoneNumber}");
+    }
+
     public async Task<SmsFormViewModel> GetSmsForm()
     {
         var globalConfigs = await configLogic.ResolveGlobalConfig();

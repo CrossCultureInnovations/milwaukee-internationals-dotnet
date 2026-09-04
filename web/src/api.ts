@@ -272,6 +272,7 @@ export type NewDriverHostMappingViewModel = {
   hostId: number;
 };
 export type TokenViewModel = { token: string };
+export type SendSmsRequest = { phoneNumber: string; message: string };
 
 // Auth response
 export type LoginResponse = {
@@ -487,6 +488,13 @@ export const api = {
     request("/attendance/Driver/SendCheckIn", { method: "POST" }),
   sendStudentCheckIn: () =>
     request("/attendance/Student/SendCheckIn", { method: "POST" }),
+
+  // SMS
+  sendSms: (payload: SendSmsRequest) =>
+    request<{ message: string }>("/sms", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
 
   // Push Notifications
   getPushTokens: () => request("/pushnotification/token"),

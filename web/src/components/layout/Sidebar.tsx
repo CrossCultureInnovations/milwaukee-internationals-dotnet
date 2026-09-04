@@ -14,6 +14,7 @@ import {
   Link2,
   BarChart3,
   Mail,
+  MessageSquareText,
   ClipboardCheck,
   Users,
   Settings,
@@ -60,6 +61,7 @@ const navGroups: NavGroup[] = [
     items: [
       { to: "/reports", label: "Reports", icon: BarChart3 },
       { to: "/email", label: "Email", icon: Mail },
+      { to: "/sms", label: "SMS", icon: MessageSquareText },
       { to: "/users", label: "Users", icon: Users },
       { to: "/config", label: "Config", icon: Settings },
       { to: "/registration/student", label: "Register Student", icon: GraduationCap },

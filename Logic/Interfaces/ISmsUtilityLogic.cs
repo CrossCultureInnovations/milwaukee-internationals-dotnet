@@ -7,6 +7,8 @@ namespace Logic.Interfaces;
 public interface ISmsUtilityLogic
 {
     Task<bool> HandleAdHocSms(SmsFormViewModel smsFormViewModel);
+
+    Task SendAdHocSms(string phoneNumber, string message);
     
     Task<SmsFormViewModel> GetSmsForm();
     
