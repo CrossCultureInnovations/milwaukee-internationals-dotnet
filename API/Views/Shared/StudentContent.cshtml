@@ -60,7 +60,7 @@
 
     <div ng-show="isFamily" class="form-group">
         @Html.LabelFor(x => x.FamilySize)
-        @Html.TextBoxFor(x => x.FamilySize, new { @class = "form-control", type = "number", placeholder = "1", min = "1", max = "10" })
+        @Html.TextBoxFor(x => x.FamilySize, new { @class = "form-control", type = "number", placeholder = "1", min = "1", max = "10", ng_disabled = "!isFamily" })
     </div>
 
     <div ng-show="isFamily" class="form-group" ng-init="needCarSeat = @Model.NeedCarSeat.ToString().ToLower(); needCarSeat_val = needCarSeat">

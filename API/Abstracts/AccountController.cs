@@ -131,7 +131,7 @@ public abstract class AbstractIdentityController : Controller
     }
 
     [NonAction]
-    protected string ResolveToken(User user)
+    protected async Task<string> ResolveToken(User user)
     {
         var jwtSettings = ResolveJwtSettings();
             
@@ -145,10 +145,19 @@ public abstract class AbstractIdentityController : Controller
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
 
-        // Add role claims so [Authorize(Roles = "...")] works
-        foreach (var role in user.UserRoleEnum.SubRoles())
+        // Identity roles are the source of truth for authorization. The UserRoleEnum
+        // column is a denormalized copy that any account update can write, so deriving
+        // claims from it would let a user grant themselves a role by editing their own
+        // record. Fall back to the column only for accounts that predate role assignment.
+        var identityRoles = await ResolveUserManager().GetRolesAsync(user);
+
+        var roles = identityRoles.Count > 0
+            ? identityRoles
+            : user.UserRoleEnum.SubRoles().Select(x => x.ToString()).ToList();
+
+        foreach (var role in roles)
         {
-            claims.Add(new Claim(ClaimTypes.Role, role.ToString()));
+            claims.Add(new Claim(ClaimTypes.Role, role));
         }
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key));

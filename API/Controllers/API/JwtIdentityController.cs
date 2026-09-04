@@ -138,7 +138,7 @@ public class JwtIdentityController(
 
             await userLogic.Update(user.Id, user);
 
-            var token = ResolveToken(user);
+            var token = await ResolveToken(user);
 
             return Ok(new
             {
@@ -178,7 +178,7 @@ public class JwtIdentityController(
         {
             var user = await userManager.FindByEmailAsync(User.Identity.Name);
                 
-            var token = base.ResolveToken(user);
+            var token = await base.ResolveToken(user);
 
             return Ok(new
             {

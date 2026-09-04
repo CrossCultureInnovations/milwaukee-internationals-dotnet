@@ -205,7 +205,7 @@ public class IdentityController(
     {
         var user = await userManager.FindByNameAsync(User.Identity!.Name);
                 
-        var token = ResolveToken(user);
+        var token = await ResolveToken(user);
 
         return Ok(new { token });
     }

@@ -34,19 +34,30 @@ import { api, type Student } from "../../api";
 // Edit form schema (same fields as create)
 // ---------------------------------------------------------------------------
 
-const studentSchema = z.object({
-  fullname: z.string().min(1, "Name is required"),
-  email: z.string().email("Invalid email"),
-  phone: z.string().optional().default(""),
-  university: z.string().optional().default(""),
-  major: z.string().optional().default(""),
-  country: z.string().optional().default(""),
-  interests: z.string().optional().default(""),
-  familySize: z.coerce.number().int().min(1).default(1),
-  needCarSeat: z.boolean().default(false),
-  kosherFood: z.boolean().default(false),
-  isFamily: z.boolean().default(false),
-});
+const studentSchema = z
+  .object({
+    fullname: z.string().min(1, "Name is required"),
+    email: z.string().email("Invalid email"),
+    phone: z.string().optional().default(""),
+    university: z.string().optional().default(""),
+    major: z.string().optional().default(""),
+    country: z.string().optional().default(""),
+    interests: z.string().optional().default(""),
+    familySize: z.coerce.number().int().min(0).default(0),
+    needCarSeat: z.boolean().default(false),
+    kosherFood: z.boolean().default(false),
+    isFamily: z.boolean().default(false),
+  })
+  .superRefine((values, ctx) => {
+    // Family size is only required — and only meaningful — for a family
+    if (values.isFamily && values.familySize < 1) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["familySize"],
+        message: "Family size must be at least 1",
+      });
+    }
+  });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
 
@@ -69,6 +80,7 @@ function EditForm({
     register,
     handleSubmit,
     control,
+    watch,
     formState: { errors },
   } = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema),
@@ -80,16 +92,24 @@ function EditForm({
       major: student.major ?? "",
       country: student.country ?? "",
       interests: student.interests ?? "",
-      familySize: student.familySize,
+      familySize: student.familySize ?? 0,
       needCarSeat: student.needCarSeat,
       kosherFood: student.kosherFood,
       isFamily: student.isFamily,
     },
   });
 
+  const isFamily = watch("isFamily");
+
   const mutation = useMutation({
     mutationFn: (values: StudentFormValues) =>
-      api.updateStudent(student.id, values),
+      api.updateStudent(student.id, {
+        ...values,
+        // The server updates the display ID from the payload, so round trip it
+        displayId: student.displayId,
+        familySize: values.isFamily ? values.familySize : 0,
+        needCarSeat: values.isFamily ? values.needCarSeat : false,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["students", student.id] });
@@ -100,7 +120,7 @@ function EditForm({
   const onSubmit = (values: StudentFormValues) => mutation.mutate(values);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
       <div className="grid gap-4 sm:grid-cols-2">
         {/* Fullname */}
         <div>
@@ -163,28 +183,10 @@ function EditForm({
           </label>
           <Input {...register("interests")} />
         </div>
-
-        {/* Family size */}
-        <div>
-          <label className="mb-1.5 block text-sm font-medium text-foreground">
-            Family size
-          </label>
-          <Input {...register("familySize")} type="number" min={1} className="w-24" />
-        </div>
       </div>
 
       {/* Checkboxes */}
-      <div className="flex flex-wrap gap-6 pt-1">
-        <Controller
-          control={control}
-          name="needCarSeat"
-          render={({ field }) => (
-            <label className="flex items-center gap-2 text-sm text-foreground">
-              <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-              Needs car seat
-            </label>
-          )}
-        />
+      <div className="space-y-3 pt-1">
         <Controller
           control={control}
           name="kosherFood"
@@ -205,6 +207,32 @@ function EditForm({
             </label>
           )}
         />
+
+        {isFamily && (
+          <div className="ml-1 space-y-3 border-l-2 border-primary/20 pl-4">
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground">
+                Family members joining them (not including themselves)
+              </label>
+              <Input {...register("familySize")} type="number" className="w-24" />
+              {errors.familySize && (
+                <p className="mt-1 text-xs text-red-500">
+                  {errors.familySize.message}
+                </p>
+              )}
+            </div>
+            <Controller
+              control={control}
+              name="needCarSeat"
+              render={({ field }) => (
+                <label className="flex items-center gap-2 text-sm text-foreground">
+                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                  Needs car seat
+                </label>
+              )}
+            />
+          </div>
+        )}
       </div>
 
       {/* Actions */}
@@ -433,7 +461,7 @@ export function StudentDetailPage() {
                 <InfoRow
                   icon={Users}
                   label="Family size"
-                  value={String(student.familySize)}
+                  value={student.isFamily ? String(student.familySize) : undefined}
                 />
                 <InfoRow
                   icon={GraduationCap}

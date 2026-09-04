@@ -31,6 +31,25 @@ public class UserLogic(IEfRepository repository, UserManager<User> userManager, 
         return user;
     }
 
+    /// <summary>
+    /// Update only the profile fields an account edit owns. Everything else on the
+    /// Identity user — password hash, security stamp, lockout state — belongs to
+    /// UserManager and must survive an edit untouched.
+    /// </summary>
+    public override Task<User> Update(int id, User user)
+    {
+        return base.Update(id, x =>
+        {
+            x.Fullname = user.Fullname;
+            x.UserName = user.UserName;
+            x.Email = user.Email;
+            x.PhoneNumber = user.PhoneNumber;
+            x.UserRoleEnum = user.UserRoleEnum;
+            x.LastLoggedInDate = user.LastLoggedInDate;
+            x.Enable = user.Enable;
+        });
+    }
+
     public async Task Disable(int id)
     {
         await _dal.Update(id, x => x.Enable = false);

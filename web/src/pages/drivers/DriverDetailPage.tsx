@@ -82,7 +82,13 @@ export function DriverDetailPage() {
 
   // --- mutations ---
   const updateMutation = useMutation({
-    mutationFn: (payload: EditDriverForm) => api.updateDriver(driverId, payload),
+    mutationFn: (payload: EditDriverForm) =>
+      api.updateDriver(driverId, {
+        ...payload,
+        // The server updates the display ID from the payload and drivers log in
+        // with it, so round trip it rather than letting it be blanked
+        displayId: driver?.displayId,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["drivers", driverId] });
       queryClient.invalidateQueries({ queryKey: ["drivers"] });

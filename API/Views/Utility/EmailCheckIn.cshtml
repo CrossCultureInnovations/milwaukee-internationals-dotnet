@@ -21,7 +21,7 @@
                 <div class="col-sm-5 col-sm-offset-7 col-md-4 col-md-offset-8 col-lg-3 col-lg-offset-9">
                     <div class="pull-right">
                         <div ng-init="present = @driver.IsPresent.ToString().ToLower()">
-                            <toggle ng-model="present" ng-change="changeAttendance('driver', '@driver.Id', present)" on="Present" off="Check-In" size="btn" onstyle="btn-success" offstyle="btn-default" toggle-class="quick"></toggle>
+                            <toggle ng-model="present" ng-change="changeAttendance('driver', '@ViewData["Hashcode"]', present)" on="Present" off="Check-In" size="btn" onstyle="btn-success" offstyle="btn-default" toggle-class="quick"></toggle>
                         </div>
                     </div>
                 </div>
@@ -100,7 +100,7 @@
                 <div class="col-sm-5 col-sm-offset-7 col-md-4 col-md-offset-8 col-lg-3 col-lg-offset-9">
                     <div class="pull-right">
                         <div ng-init="present = @student.IsPresent.ToString().ToLower()">
-                            <toggle ng-model="present" ng-change="changeAttendance('student', '@student.Id', present)" on="Present" off="Check-In" size="btn" onstyle="btn-success" offstyle="btn-default" toggle-class="quick"></toggle>
+                            <toggle ng-model="present" ng-change="changeAttendance('student', '@ViewData["Hashcode"]', present)" on="Present" off="Check-In" size="btn" onstyle="btn-success" offstyle="btn-default" toggle-class="quick"></toggle>
                         </div>
                     </div>
                 </div>

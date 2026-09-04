@@ -71,6 +71,9 @@ public class UtilityController(
     [Route("EmailCheckIn/{type}/{hashcode}")]
     public async Task<IActionResult> EmailCheckIn([FromRoute] EntitiesEnum type, [FromRoute] string hashcode)
     {
+        // The view posts back to EmailCheckInAction with this same hashcode
+        ViewData["Hashcode"] = hashcode;
+
         // ReSharper disable once SwitchStatementMissingSomeCases
         switch (type)
         {
@@ -88,11 +91,27 @@ public class UtilityController(
     /// </summary>
     /// <returns></returns>
     [HttpPost]
-    [Route("EmailCheckInAction/{type}/{id:int}")]
-    public async Task<IActionResult> EmailCheckInHandler([FromRoute] EntitiesEnum type, [FromRoute] int id,
+    [Route("EmailCheckInAction/{type}/{hashcode}")]
+    public async Task<IActionResult> EmailCheckInHandler([FromRoute] EntitiesEnum type, [FromRoute] string hashcode,
         [FromQuery] bool present)
     {
-        var result = await emailUtilityLogic.HandleEmailCheckIn(type, id, present);
+        // This endpoint is anonymous by design — students and drivers check themselves
+        // in from an emailed link. The hashcode is the only thing standing in for
+        // authentication, so it has to identify the record; a caller must never be able
+        // to name an arbitrary row id.
+        var id = type switch
+        {
+            EntitiesEnum.Student => (await studentLogic.GetByHashcode(hashcode))?.Id,
+            EntitiesEnum.Driver => (await driverLogic.GetByHashcode(hashcode))?.Id,
+            _ => null
+        };
+
+        if (id == null)
+        {
+            return NotFound();
+        }
+
+        var result = await emailUtilityLogic.HandleEmailCheckIn(type, id.Value, present);
 
         // Redirect to home page
         return Ok(result);

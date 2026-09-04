@@ -76,10 +76,16 @@ public class DriverLogic(IEfRepository repository, IConfigLogic configLogic, IAp
         // Update only subset of properties
         return await base.Update(id, x =>
         {
-            x.DisplayId = driver.DisplayId;
+            // Not every client round trips the display ID, and drivers authenticate
+            // with it, so never blank out an existing one
+            if (!string.IsNullOrWhiteSpace(driver.DisplayId))
+            {
+                x.DisplayId = driver.DisplayId;
+            }
+
             x.Fullname = driver.Fullname;
             x.Email = driver.Email;
-            x.Phone = driver.Phone;
+            x.Phone = NormalizePhoneNumber(driver.Phone);
             x.Role = driver.Role;
             x.Capacity = driver.Capacity;
             x.HaveChildSeat = driver.HaveChildSeat;

@@ -11,7 +11,9 @@ using Models.ViewModels.Identities;
 
 namespace API.Controllers.API;
 
-[AuthorizeMiddleware]
+// Every action here exposes or mutates accounts, including the inherited CRUD
+// verbs, so the whole controller is admin-only
+[AuthorizeMiddleware(UserRoleEnum.Admin)]
 [Route("api/[controller]")]
 public class UserController(
     IUserLogic userLogic,
