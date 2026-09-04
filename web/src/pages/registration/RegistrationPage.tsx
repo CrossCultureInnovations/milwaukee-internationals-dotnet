@@ -323,7 +323,7 @@ function ThankYou({ type }: { type: "student" | "driver" }) {
       </h2>
       <p className="mt-2 text-sm text-muted-foreground max-w-sm mx-auto">
         {type === "student"
-          ? "You will receive a confirmation email shortly with your tour details and QR code."
+          ? "You will receive a confirmation email shortly with your tour details."
           : "You will receive a confirmation email shortly with your driver details."}
       </p>
       <p className="mt-4 text-sm text-muted-foreground">

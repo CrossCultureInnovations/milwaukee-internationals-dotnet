@@ -13,6 +13,7 @@ import {
   UtensilsCrossed,
   Car,
   Calendar,
+  CopyCheck,
 } from "lucide-react";
 import { Container } from "../../components/layout/Container";
 import { Button } from "../../components/ui/button";
@@ -61,6 +62,128 @@ function StudentStats({ students }: { students: Student[] }) {
 }
 
 // ---------------------------------------------------------------------------
+// Duplicate detection
+//
+// Two students are considered duplicates when they share a name, an email, or
+// a phone number. Blank values never match — otherwise every student
+// missing a phone would flag every other one.
+// ---------------------------------------------------------------------------
+
+type DuplicateField = "name" | "email" | "phone";
+
+const normName = (v: string | null | undefined) =>
+  (v || "").toLowerCase().replace(/\s+/g, " ").trim();
+
+const normEmail = (v: string | null | undefined) => (v || "").toLowerCase().trim();
+
+// Compare on the last 10 digits so "+1 951-556-3828" and "9515563828" match
+const normPhone = (v: string | null | undefined) => {
+  const digits = (v || "").replace(/\D/g, "");
+  return digits.length >= 10 ? digits.slice(-10) : digits;
+};
+
+/** One set of students that all collide with each other. */
+type DuplicateGroup = {
+  key: string;
+  fields: DuplicateField[];
+  members: Student[];
+};
+
+const FIELD_ACCESSORS: { field: DuplicateField; key: (s: Student) => string }[] = [
+  { field: "name", key: (s) => normName(s.fullname) },
+  { field: "email", key: (s) => normEmail(s.email) },
+  { field: "phone", key: (s) => normPhone(s.phone) },
+];
+
+/**
+ * Finds duplicate students, returning both a per-student flag (for highlighting
+ * rows in the normal list) and the matched sets grouped together (for the
+ * duplicates-only view). Grouping is transitive: if A shares a phone with B and
+ * B shares an email with C, all three land in one set so you see the whole
+ * cluster before deciding what to delete.
+ */
+function findDuplicates(students: Student[]): {
+  flags: Map<number, DuplicateField[]>;
+  groups: DuplicateGroup[];
+} {
+  const flags = new Map<number, DuplicateField[]>();
+
+  // Union-find over student indices
+  const parent = students.map((_, i) => i);
+  const find = (x: number): number => {
+    while (parent[x] !== x) {
+      parent[x] = parent[parent[x]];
+      x = parent[x];
+    }
+    return x;
+  };
+  const union = (a: number, b: number) => {
+    const ra = find(a);
+    const rb = find(b);
+    if (ra !== rb) parent[rb] = ra;
+  };
+
+  for (const { field, key } of FIELD_ACCESSORS) {
+    const buckets = new Map<string, number[]>();
+    students.forEach((s, i) => {
+      const k = key(s);
+      if (!k) return;
+      const bucket = buckets.get(k);
+      if (bucket) bucket.push(i);
+      else buckets.set(k, [i]);
+    });
+    for (const idxs of buckets.values()) {
+      if (idxs.length < 2) continue;
+      for (const i of idxs) {
+        const id = students[i].id;
+        const existing = flags.get(id);
+        if (existing) existing.push(field);
+        else flags.set(id, [field]);
+        union(idxs[0], i);
+      }
+    }
+  }
+
+  // Collect components of size > 1
+  const components = new Map<number, Student[]>();
+  students.forEach((s, i) => {
+    if (!flags.has(s.id)) return;
+    const root = find(i);
+    const c = components.get(root);
+    if (c) c.push(s);
+    else components.set(root, [s]);
+  });
+
+  const groups: DuplicateGroup[] = [];
+  for (const [root, members] of components) {
+    if (members.length < 2) continue;
+
+    // Which fields actually collide somewhere inside this set
+    const fields = FIELD_ACCESSORS.filter(({ key }) => {
+      const seen = new Set<string>();
+      return members.some((m) => {
+        const k = key(m);
+        if (!k) return false;
+        if (seen.has(k)) return true;
+        seen.add(k);
+        return false;
+      });
+    }).map(({ field }) => field);
+
+    // Oldest registration first — usually the one worth keeping
+    members.sort((a, b) => (a.registeredOn || "").localeCompare(b.registeredOn || ""));
+
+    groups.push({ key: String(root), fields, members });
+  }
+
+  groups.sort((a, b) =>
+    normName(a.members[0].fullname).localeCompare(normName(b.members[0].fullname))
+  );
+
+  return { flags, groups };
+}
+
+// ---------------------------------------------------------------------------
 // Date formatter
 // ---------------------------------------------------------------------------
 
@@ -92,12 +215,29 @@ function ColumnHeader() {
 // Student card (Google Flights style)
 // ---------------------------------------------------------------------------
 
-function StudentCard({ student, onDelete }: { student: Student; onDelete: (id: number) => void }) {
-  const [expanded, setExpanded] = useState(false);
+function StudentCard({
+  student,
+  duplicateOf,
+  defaultExpanded = false,
+  onDelete,
+}: {
+  student: Student;
+  duplicateOf?: DuplicateField[];
+  defaultExpanded?: boolean;
+  onDelete: (id: number) => void;
+}) {
+  const [expanded, setExpanded] = useState(defaultExpanded);
   const navigate = useNavigate();
 
   return (
-    <div className="rounded-xl border border-border bg-card transition-shadow hover:shadow-md">
+    <div
+      className={cn(
+        "rounded-xl border transition-shadow hover:shadow-md",
+        duplicateOf
+          ? "border-red-300 bg-red-50 dark:border-red-900/60 dark:bg-red-950/25"
+          : "border-border bg-card"
+      )}
+    >
       {/* Main row — always visible */}
       <button
         type="button"
@@ -122,6 +262,15 @@ function StudentCard({ student, onDelete }: { student: Student; onDelete: (id: n
               <span className="flex shrink-0 items-center gap-0.5 text-xs font-normal text-muted-foreground">
                 <Users className="h-3 w-3" />
                 {student.familySize}
+              </span>
+            )}
+            {duplicateOf && (
+              <span
+                className="flex shrink-0 items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-medium text-red-700 dark:bg-red-950/60 dark:text-red-300"
+                title={`Same ${duplicateOf.join(", ")} as another student`}
+              >
+                <CopyCheck className="h-3 w-3" />
+                Same {duplicateOf.join(", ")}
               </span>
             )}
           </p>
@@ -226,6 +375,43 @@ function StudentCard({ student, onDelete }: { student: Student; onDelete: (id: n
 
 
 // ---------------------------------------------------------------------------
+// Duplicate set panel — the matched students shown together, details open, so
+// the differences are visible without expanding each row separately
+// ---------------------------------------------------------------------------
+
+function DuplicateGroupPanel({
+  group,
+  onDelete,
+}: {
+  group: DuplicateGroup;
+  onDelete: (id: number) => void;
+}) {
+  return (
+    <div className="rounded-xl border border-red-300 bg-red-50/60 p-3 dark:border-red-900/60 dark:bg-red-950/20">
+      <div className="mb-2 flex items-center gap-2 px-1">
+        <CopyCheck className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
+        <p className="text-xs font-medium text-red-700 dark:text-red-300">
+          {group.members.length} records share the same {group.fields.join(" and ")}
+        </p>
+        <span className="text-xs text-muted-foreground">
+          &middot; oldest first &mdash; delete the extras
+        </span>
+      </div>
+      <div className="space-y-2">
+        {group.members.map((student) => (
+          <StudentCard
+            key={student.id}
+            student={student}
+            defaultExpanded
+            onDelete={onDelete}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Loading skeleton
 // ---------------------------------------------------------------------------
 
@@ -272,6 +458,32 @@ export function StudentsPage() {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("fullname");
   const [sortDesc, setSortDesc] = useState(false);
+  const [dupsOnly, setDupsOnly] = useState(false);
+
+  // Computed over every student, not the filtered list, so the count stays
+  // accurate while a search is active
+  const { flags: duplicates, groups: duplicateGroups } = useMemo(
+    () => findDuplicates(students ?? []),
+    [students]
+  );
+
+  // In duplicates-only mode a search keeps whole sets, so both sides of a
+  // match stay visible even when only one of them matches the query
+  const visibleGroups = useMemo(() => {
+    if (!search.trim()) return duplicateGroups;
+    const q = search.toLowerCase();
+    return duplicateGroups.filter((g) =>
+      g.members.some(
+        (s) =>
+          s.fullname?.toLowerCase().includes(q) ||
+          s.email?.toLowerCase().includes(q) ||
+          s.country?.toLowerCase().includes(q) ||
+          s.university?.toLowerCase().includes(q) ||
+          s.displayId?.toLowerCase().includes(q) ||
+          s.major?.toLowerCase().includes(q)
+      )
+    );
+  }, [duplicateGroups, search]);
 
   const handleSort = useCallback(
     (key: SortKey) => {
@@ -371,21 +583,43 @@ export function StudentsPage() {
               />
             </div>
             <div className="flex items-center gap-1 overflow-x-auto">
-              <span className="text-xs text-muted-foreground whitespace-nowrap mr-1">Sort by</span>
-              {SORT_OPTIONS.map((opt) => (
-                <Button
-                  key={opt.key}
-                  variant={sortKey === opt.key ? "default" : "outline"}
-                  size="sm"
-                  className="text-xs h-8 px-2.5"
-                  onClick={() => handleSort(opt.key)}
-                >
-                  {opt.label}
-                  {sortKey === opt.key && (
-                    <span className="ml-1">{sortDesc ? "\u2193" : "\u2191"}</span>
-                  )}
-                </Button>
-              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                aria-pressed={dupsOnly}
+                disabled={duplicateGroups.length === 0}
+                onClick={() => setDupsOnly((v) => !v)}
+                className={cn(
+                  "text-xs h-8 px-2.5 mr-2 shrink-0",
+                  duplicateGroups.length > 0 &&
+                    (dupsOnly
+                      ? "border-red-500 bg-red-500 text-white hover:bg-red-600 hover:text-white"
+                      : "border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40")
+                )}
+              >
+                <CopyCheck className="mr-1 h-3.5 w-3.5" />
+                Duplicates
+                <span className="ml-1 font-semibold">{duplicateGroups.length}</span>
+              </Button>
+              {!dupsOnly && (
+                <>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap mr-1">Sort by</span>
+                  {SORT_OPTIONS.map((opt) => (
+                    <Button
+                      key={opt.key}
+                      variant={sortKey === opt.key ? "default" : "outline"}
+                      size="sm"
+                      className="text-xs h-8 px-2.5"
+                      onClick={() => handleSort(opt.key)}
+                    >
+                      {opt.label}
+                      {sortKey === opt.key && (
+                        <span className="ml-1">{sortDesc ? "\u2193" : "\u2191"}</span>
+                      )}
+                    </Button>
+                  ))}
+                </>
+              )}
             </div>
           </div>
         </Container>
@@ -399,6 +633,24 @@ export function StudentsPage() {
             <CardSkeleton />
           ) : isError ? (
             <QueryError error={error} onRetry={() => refetch()} label="students" />
+          ) : dupsOnly ? (
+            visibleGroups.length === 0 ? (
+              <div className="rounded-xl border border-border bg-card py-16 text-center text-muted-foreground">
+                {search
+                  ? "No duplicate sets match your search."
+                  : "No duplicate students found."}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {visibleGroups.map((group) => (
+                  <DuplicateGroupPanel
+                    key={group.key}
+                    group={group}
+                    onDelete={(id) => deleteMutation.mutate(id)}
+                  />
+                ))}
+              </div>
+            )
           ) : filtered.length === 0 ? (
             <div className="rounded-xl border border-border bg-card py-16 text-center text-muted-foreground">
               {search ? "No students match your search." : "No students yet."}
@@ -409,6 +661,7 @@ export function StudentsPage() {
                 <StudentCard
                   key={student.id}
                   student={student}
+                  duplicateOf={duplicates.get(student.id)}
                   onDelete={(id) => deleteMutation.mutate(id)}
                 />
               ))}

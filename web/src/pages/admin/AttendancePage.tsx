@@ -6,6 +6,7 @@ import {
   GraduationCap,
   Car,
   Send,
+  Users,
 } from "lucide-react";
 import { Container } from "../../components/layout/Container";
 import { Button } from "../../components/ui/button";
@@ -372,7 +373,19 @@ export function AttendancePage() {
                 filteredStudents.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell className="font-medium text-foreground">
-                      {student.fullname}
+                      <span className="flex items-center gap-2">
+                        <span>{student.fullname}</span>
+                        {student.isFamily && student.familySize > 0 && (
+                          <span
+                            className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
+                            title={`${student.familySize} family member${
+                              student.familySize === 1 ? "" : "s"
+                            } joining`}
+                          >
+                            <Users className="h-3 w-3" />+{student.familySize}
+                          </span>
+                        )}
+                      </span>
                     </TableCell>
                     <TableCell className="text-right">
                       <AttendanceToggle
