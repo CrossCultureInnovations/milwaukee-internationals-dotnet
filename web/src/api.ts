@@ -173,6 +173,16 @@ export type Location = {
   name: string;
   address: string;
   description: string;
+  /** Null until the address has been geocoded, or when geocoding failed. */
+  latitude: number | null;
+  longitude: number | null;
+};
+
+export type GeocodeSummary = {
+  processed: number;
+  geocoded: number;
+  failed: number;
+  remaining: number;
 };
 
 export type LocationMapping = {
@@ -391,6 +401,15 @@ export const api = {
     }),
   deleteLocation: (id: number) =>
     request(`/location/${id}`, { method: "DELETE" }),
+  geocodeMissingLocations: (limit = 10) =>
+    request<GeocodeSummary>(`/location/geocode-missing?limit=${limit}`, {
+      method: "POST",
+    }),
+  setLocationCoordinates: (id: number, latitude: number, longitude: number) =>
+    request<Location>(`/location/${id}/coordinates`, {
+      method: "PATCH",
+      body: JSON.stringify({ latitude, longitude }),
+    }),
 
   // Location Mappings
   getLocationMappings: () => request<LocationMapping[]>("/locationmapping"),

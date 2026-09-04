@@ -7,6 +7,7 @@ import {
   Car,
   Send,
   Users,
+  Baby,
 } from "lucide-react";
 import { Container } from "../../components/layout/Container";
 import { Button } from "../../components/ui/button";
@@ -275,6 +276,17 @@ export function AttendancePage() {
     [drivers]
   );
 
+  // Seats taken per driver, counted from the student list so the number holds
+  // even when the driver payload does not hydrate its students collection
+  const assignedByDriverId = useMemo(() => {
+    const counts = new Map<number, number>();
+    for (const student of students ?? []) {
+      if (student.driverRefId == null) continue;
+      counts.set(student.driverRefId, (counts.get(student.driverRefId) ?? 0) + 1);
+    }
+    return counts;
+  }, [students]);
+
   // Counts
   const presentStudents = students?.filter((s) => s.isPresent).length ?? 0;
   const presentDrivers = drivers?.filter((d) => d.isPresent).length ?? 0;
@@ -450,10 +462,45 @@ export function AttendancePage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredDrivers.map((driver) => (
+              filteredDrivers.map((driver) => {
+                const assigned =
+                  assignedByDriverId.get(driver.id) ??
+                  driver.students?.length ??
+                  0;
+                const full = assigned >= driver.capacity;
+                return (
                 <TableRow key={driver.id}>
                   <TableCell className="font-medium text-foreground">
-                    {driver.fullname}
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span>{driver.fullname}</span>
+                      <span
+                        className={cn(
+                          "inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium tabular-nums",
+                          full
+                            ? "bg-muted text-muted-foreground"
+                            : "bg-primary/10 text-primary"
+                        )}
+                        title={`${assigned} of ${driver.capacity} seat${
+                          driver.capacity === 1 ? "" : "s"
+                        } assigned`}
+                      >
+                        {assigned}/{driver.capacity}
+                      </span>
+                      {driver.navigator && (
+                        <span className="font-normal text-muted-foreground">
+                          &mdash; {driver.navigator}
+                        </span>
+                      )}
+                      {driver.haveChildSeat && (
+                        <span
+                          className="inline-flex shrink-0 items-center rounded-full bg-primary/10 p-1 text-primary"
+                          title="Has a child seat"
+                        >
+                          <Baby className="h-3.5 w-3.5" aria-hidden="true" />
+                          <span className="sr-only">Has a child seat</span>
+                        </span>
+                      )}
+                    </span>
                   </TableCell>
                   <TableCell className="text-right">
                     <AttendanceToggle
@@ -468,7 +515,8 @@ export function AttendancePage() {
                     />
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>

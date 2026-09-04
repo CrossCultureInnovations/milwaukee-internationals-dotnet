@@ -23,6 +23,14 @@ public class Location : ObjectHash<Location>, IYearlyEntity, IEqualityComparer<L
     
     public string Description { get; set; }
     
+    /// <summary>
+    /// Geocoded position, null until the address has been resolved. Set automatically
+    /// from the address and overridden manually by dragging the pin on the map.
+    /// </summary>
+    public double? Latitude { get; set; }
+    
+    public double? Longitude { get; set; }
+    
     public List<LocationMapping> LocationMappingsSources { get; set; }
     
     public List<LocationMapping> LocationMappingsSinks { get; set; }

@@ -6,7 +6,7 @@ import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { MapPin, Search, Plus, Pencil, Trash2 } from "lucide-react";
 import { api, type Location } from "../../api";
 import { useLocations } from "../../lib/hooks/useApiQueries";
-import { LocationGraph } from "./LocationGraph";
+import { LocationMap } from "./LocationMap";
 import { Container } from "../../components/layout/Container";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
@@ -370,9 +370,9 @@ export function LocationsPage() {
         </SheetContent>
       </Sheet>
 
-      {/* Location mapping graph */}
+      {/* Geocoded map of all locations */}
       <div className="mt-6">
-        <LocationGraph />
+        <LocationMap />
       </div>
     </Container>
   );
