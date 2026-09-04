@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using DAL.Interfaces;
 using Logic.Interfaces;
 using Logic.Utilities;
-using Models.Constants;
 using Models.Enums;
 using Models.ViewModels;
 using SmsProxyHub.Contracts;
@@ -19,7 +18,6 @@ public class SmsUtilityLogic(
     IDriverLogic driverLogic,
     IHostLogic hostLogic,
     IUserLogic userLogic,
-    IEmailServiceApi emailServiceApi,
     IApiEventService apiEventService,
     IRegistrationLogic registrationLogic)
     : ISmsUtilityLogic
@@ -189,9 +187,6 @@ public class SmsUtilityLogic(
                    $"{middle}" +
                    $"{body}";
         
-        await emailServiceApi.SendEmailAsync(
-            [ApiConstants.SiteEmail], 
-            $"SMS received {middle}", 
-            text);
+        await apiEventService.RecordEvent(text);
     }
 }
