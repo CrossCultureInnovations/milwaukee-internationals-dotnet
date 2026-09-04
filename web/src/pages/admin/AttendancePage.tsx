@@ -35,6 +35,23 @@ import {
 type Tab = "students" | "drivers";
 
 // ---------------------------------------------------------------------------
+// Assigned driver label — "<displayId>-<fullname>", or null when unassigned
+// ---------------------------------------------------------------------------
+
+function driverLabel(
+  student: Student,
+  driversById: ReadonlyMap<number, Driver>
+): string | null {
+  const driver =
+    (student.driverRefId != null ? driversById.get(student.driverRefId) : null) ??
+    student.driver;
+  if (!driver) return null;
+  return driver.displayId
+    ? `${driver.displayId}-${driver.fullname}`
+    : driver.fullname;
+}
+
+// ---------------------------------------------------------------------------
 // Attendance toggle
 // ---------------------------------------------------------------------------
 
@@ -252,6 +269,12 @@ export function AttendancePage() {
     );
   }, [drivers, search]);
 
+  // Driver lookup so each student row can name their assigned driver
+  const driversById = useMemo(
+    () => new Map((drivers ?? []).map((d) => [d.id, d])),
+    [drivers]
+  );
+
   // Counts
   const presentStudents = students?.filter((s) => s.isPresent).length ?? 0;
   const presentDrivers = drivers?.filter((d) => d.isPresent).length ?? 0;
@@ -370,10 +393,12 @@ export function AttendancePage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredStudents.map((student) => (
+                filteredStudents.map((student) => {
+                  const assignedDriver = driverLabel(student, driversById);
+                  return (
                   <TableRow key={student.id}>
                     <TableCell className="font-medium text-foreground">
-                      <span className="flex items-center gap-2">
+                      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span>{student.fullname}</span>
                         {student.isFamily && student.familySize > 0 && (
                           <span
@@ -383,6 +408,16 @@ export function AttendancePage() {
                             } joining`}
                           >
                             <Users className="h-3 w-3" />+{student.familySize}
+                          </span>
+                        )}
+                        {student.country && (
+                          <span className="font-normal text-muted-foreground">
+                            ({student.country})
+                          </span>
+                        )}
+                        {assignedDriver && (
+                          <span className="font-normal text-muted-foreground">
+                            &mdash; {assignedDriver}
                           </span>
                         )}
                       </span>
@@ -400,7 +435,8 @@ export function AttendancePage() {
                       />
                     </TableCell>
                   </TableRow>
-                ))
+                  );
+                })
               )
             ) : filteredDrivers.length === 0 ? (
               <TableRow>
