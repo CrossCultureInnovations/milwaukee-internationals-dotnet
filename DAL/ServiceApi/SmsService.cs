@@ -1,65 +1,87 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using DAL.Interfaces;
 using Microsoft.Extensions.Logging;
-using Models.Constants;
+using Models.ViewModels;
 using PhoneNumbers;
-using Telnyx;
+using SmsProxyHub.Client;
 
 namespace DAL.ServiceApi;
 
-public class SmsService : ISmsService
+public class SmsService(
+    IConfigLogic configLogic,
+    IHttpClientFactory httpClientFactory,
+    ILogger<SmsService> logger) : ISmsService
 {
-    private readonly ILogger<SmsService> _logger;
-    private readonly string _senderPhoneNumber;
-    private readonly IConfigLogic _configLogic;
-
-    public SmsService(string telnyxApiKey, string senderPhoneNumber, IConfigLogic configLogic, ILogger<SmsService> logger)
-    {
-        _senderPhoneNumber = senderPhoneNumber;
-        _configLogic = configLogic;
-        _logger = logger;
-        TelnyxConfiguration.SetApiKey(telnyxApiKey);
-    }
-
     public async Task SendMessage(string phoneNumber, string message)
     {
-        if (!string.IsNullOrWhiteSpace(phoneNumber))
-        { 
-            // ReSharper disable once TemplateIsNotCompileTimeConstantProblem
-            _logger.LogInformation("Sending SMS to {}", phoneNumber);
-
-            try
-            {
-                
-                var service = new MessagingSenderIdService();
-                var options = new NewMessagingSenderId
-                {
-                    From = NormalizePhoneNumberForSms(_senderPhoneNumber),
-                    To = NormalizePhoneNumberForSms(phoneNumber),
-                    Text = message
-                };
-
-                var messageResponse = await service.CreateAsync(options);
-
-                _logger.LogInformation("SMS sent successfully {}", messageResponse);
-            }
-            catch (Exception e)
-            {
-                _logger.LogInformation("SMS sent failed {}", e);
-            }
-        }
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
+        await SendMessage(phoneNumber, message, globalConfigs);
     }
 
     public async Task SendMessage(IEnumerable<string> phoneNumbers, string message)
     {
-        var globalConfigs = await _configLogic.ResolveGlobalConfig();
-        
-        await Task.WhenAll(phoneNumbers.Select(phoneNumber => SendMessage(globalConfigs.SmsTestMode
-            ? ApiConstants.SitePhoneNumber
-            : phoneNumber, message)));
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
+        await Task.WhenAll(phoneNumbers.Select(phoneNumber => SendMessage(phoneNumber, message, globalConfigs)));
+    }
+
+    private async Task SendMessage(string phoneNumber, string message, GlobalConfigModel globalConfigs)
+    {
+        if (string.IsNullOrWhiteSpace(phoneNumber)) return;
+
+        if (string.IsNullOrWhiteSpace(globalConfigs.SmsProxyHubUrl) ||
+            string.IsNullOrWhiteSpace(globalConfigs.SmsProxyHubToken) ||
+            string.IsNullOrWhiteSpace(globalConfigs.SmsProxyHubConnectionId))
+        {
+            logger.LogWarning("SMS Proxy Hub is not configured. Set URL, API token and connection ID in global configuration");
+            return;
+        }
+
+        if (!Guid.TryParse(globalConfigs.SmsProxyHubConnectionId, out var connectionId))
+        {
+            logger.LogError("SMS Proxy Hub connection ID is invalid");
+            return;
+        }
+
+        var recipient = phoneNumber;
+        if (globalConfigs.SmsTestMode)
+        {
+            if (string.IsNullOrWhiteSpace(globalConfigs.AdminPhoneNumber))
+            {
+                logger.LogWarning("SMS test mode is enabled but the admin phone number is not configured");
+                return;
+            }
+
+            recipient = globalConfigs.AdminPhoneNumber;
+            message = $"[for {phoneNumber}] {message}";
+        }
+
+        try
+        {
+            var httpClient = httpClientFactory.CreateClient("SmsProxyHub");
+            httpClient.BaseAddress = new Uri(globalConfigs.SmsProxyHubUrl.TrimEnd('/'));
+            var client = new SmsProxyHubClient(httpClient, globalConfigs.SmsProxyHubToken);
+            var response = await client.SendSmsAsync<string>(
+                connectionId,
+                [NormalizePhoneNumberForSms(recipient)],
+                message);
+            var result = response.Results?.FirstOrDefault();
+
+            if (result is { Status: "sent" })
+            {
+                logger.LogInformation("SMS sent via Proxy Hub to {PhoneNumber}, message ID {MessageId}", phoneNumber, result.MessageId);
+                return;
+            }
+
+            logger.LogWarning("SMS Proxy Hub returned status {Status} for {PhoneNumber}", result?.Status, phoneNumber);
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "SMS Proxy Hub failed to send to {PhoneNumber}", phoneNumber);
+        }
     }
 
     private static string NormalizePhoneNumberForSms(string phoneNumberRaw)

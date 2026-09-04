@@ -19,6 +19,4 @@ public static class ApiConstants
     public const string SiteEmail = "tourofmilwaukee@gmail.com";
 
     public const string ApplicationName = "Milwaukee Internationals";
-    
-    public const string SitePhoneNumber = "+14144995360";
 }

@@ -4,7 +4,7 @@ using Logic.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Models.Enums;
-using Models.ViewModels;
+using SmsProxyHub.Contracts;
 
 namespace API.Controllers;
 
@@ -31,12 +31,12 @@ public class SmsController(ISmsUtilityLogic smsUtilityLogic) : Controller
         return RedirectToAction("Student", "Attendance");
     }
     
-    [HttpPost]
-    [Route("Incoming")]
+    [HttpPost("Incoming")]
+    [HttpPost("/api/sms/webhook-callback")]
     [AllowAnonymous]
-    public async Task<ActionResult> IncomingSms([FromBody]IncomingSmsViewModel body)
+    public async Task<ActionResult> IncomingSms([FromBody] WebhookCallbackPayload callback)
     {
-        await smsUtilityLogic.IncomingSms(body);
+        await smsUtilityLogic.IncomingSms(callback);
 
         return Ok("received");
     }

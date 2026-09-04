@@ -24,10 +24,10 @@
     <PackageReference Include="NETCore.MailKit" Version="2.1.0" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="SimpleEfCoreRepository" Version="3.1.16" />
+    <PackageReference Include="SmsProxyHub.Client" Version="1.6.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.8" />
     <PackageReference Include="System.Data.Common" Version="4.3.0" />
     <PackageReference Include="System.Data.SQLite" Version="2.0.1" />
-    <PackageReference Include="Telnyx.net" Version="2.9.2" />
     <PackageReference Include="libphonenumber-csharp" Version="9.0.12" />
   </ItemGroup>
   <ItemGroup>

@@ -160,13 +160,8 @@ public class Startup
 
         services.AddSingleton<CacheBustingUtility>();
 
-        var telnyxToken = _configuration.GetValue<string>("TELNYX_AUTH_TOKEN");
-        var telnyxPhone = _configuration.GetValue<string>("TELNYX_SENDER_PHONE_NUMBER");
-        services.AddTransient<ISmsService>(ctx => new SmsService(
-            telnyxToken ?? "",
-            telnyxPhone ?? "",
-            ctx.GetRequiredService<IConfigLogic>(),
-            ctx.GetRequiredService<ILogger<SmsService>>()));
+        services.AddHttpClient("SmsProxyHub");
+        services.AddTransient<ISmsService, SmsService>();
 
         // Initialize the email jet client
         var mailJetKey = Environment.GetEnvironmentVariable("MAIL_JET_KEY");

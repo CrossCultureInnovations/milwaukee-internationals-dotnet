@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Models.ViewModels;
+using SmsProxyHub.Contracts;
 
 namespace Logic.Interfaces;
 
@@ -15,5 +16,5 @@ public interface ISmsUtilityLogic
 
     Task HandleHostSms();
     
-    Task IncomingSms(IncomingSmsViewModel body);
+    Task IncomingSms(WebhookCallbackPayload callback);
 }

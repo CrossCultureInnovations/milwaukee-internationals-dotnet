@@ -3,6 +3,7 @@ import {
   Settings,
   MapPin,
   Mail,
+  MessageSquare,
   ToggleRight,
   Save,
   Loader2,
@@ -330,6 +331,55 @@ export function ConfigPage() {
                 id="emailSender"
                 value={form.emailSenderOnBehalf || ""}
                 onChange={(e) => update("emailSenderOnBehalf", e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* SMS */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <MessageSquare className="h-4 w-4 text-primary" />
+              SMS Proxy Hub
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="smsProxyHubUrl" className="text-sm">Proxy Hub URL</Label>
+              <Input
+                id="smsProxyHubUrl"
+                type="url"
+                placeholder="https://sms-proxy-hub.example.com"
+                value={form.smsProxyHubUrl || ""}
+                onChange={(e) => update("smsProxyHubUrl", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="smsProxyHubToken" className="text-sm">API token</Label>
+              <Input
+                id="smsProxyHubToken"
+                type="password"
+                autoComplete="off"
+                value={form.smsProxyHubToken || ""}
+                onChange={(e) => update("smsProxyHubToken", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="smsProxyHubConnectionId" className="text-sm">Connection ID</Label>
+              <Input
+                id="smsProxyHubConnectionId"
+                value={form.smsProxyHubConnectionId || ""}
+                onChange={(e) => update("smsProxyHubConnectionId", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="adminPhoneNumber" className="text-sm">Admin phone</Label>
+              <Input
+                id="adminPhoneNumber"
+                type="tel"
+                value={form.adminPhoneNumber || ""}
+                onChange={(e) => update("adminPhoneNumber", e.target.value)}
               />
             </div>
           </CardContent>

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using DAL.Interfaces;
 using Logic.Interfaces;
@@ -9,6 +8,7 @@ using Logic.Utilities;
 using Models.Constants;
 using Models.Enums;
 using Models.ViewModels;
+using SmsProxyHub.Contracts;
 
 namespace Logic;
 
@@ -79,7 +79,10 @@ public class SmsUtilityLogic(
         }
         
         // CC to website admin
-        phoneNumbers.Add(ApiConstants.SitePhoneNumber);
+        if (!string.IsNullOrWhiteSpace(globalConfigs.AdminPhoneNumber))
+        {
+            phoneNumbers.Add(globalConfigs.AdminPhoneNumber);
+        }
 
         // Remove duplicates
         phoneNumbers = phoneNumbers.Distinct().ToList();
@@ -144,10 +147,16 @@ public class SmsUtilityLogic(
         }
     }
     
-    public async Task IncomingSms(IncomingSmsViewModel request)
+    public async Task IncomingSms(WebhookCallbackPayload callback)
     {
-        // Ignore spam messages
-        if (request?.data?.payload?.is_spam ?? true)
+        if (callback.Event != WebhookEventType.SmsReply || string.IsNullOrWhiteSpace(callback.Phone))
+        {
+            return;
+        }
+
+        var globalConfigs = await configLogic.ResolveGlobalConfig();
+        if (Guid.TryParse(globalConfigs.SmsProxyHubConnectionId, out var connectionId) &&
+            callback.ConnectionId != connectionId)
         {
             return;
         }
@@ -158,9 +167,8 @@ public class SmsUtilityLogic(
         var hosts = (await hostLogic.GetAll()).Select(x => (Role: "host", x.Fullname, x.Phone));
         var everyone = users.Concat(students).Concat(drivers).Concat(hosts);
 
-        var from = request.data?.payload?.from?.phone_number;
-        var carrier = request.data?.payload?.from?.carrier;
-        var body = request.data?.payload?.text;
+        var from = callback.Phone;
+        var body = callback.Message?.Trim();
         var normalizedFrom = RegistrationUtility.NormalizePhoneNumber(from);
 
         var find = everyone.FirstOrDefault(x => RegistrationUtility.NormalizePhoneNumber(x.Phone) == normalizedFrom);
@@ -171,26 +179,13 @@ public class SmsUtilityLogic(
             middle = $"(from {find.Role} {find.Fullname})\n";
         }
 
-        var text = $"SMS from {from} [{carrier}]\n" +
+        var text = $"SMS from {from}\n" +
                    $"{middle}" +
                    $"{body}";
-
-        var httpClient = new HttpClient();
-        var responses = await Task.WhenAll(request.data!.payload!.media.Select(async x => (Media: x, Response: await httpClient.GetAsync(x.url))));
-
-        var attachments = await Task.WhenAll(responses.Select(async x =>
-        {
-            var (media, response) = x;
-            var fileBytes = await response.Content.ReadAsByteArrayAsync();
-            var base64File = Convert.ToBase64String(fileBytes);
-           
-            return (media.url.LocalPath.Split('/').Last(), media.content_type, base64File);
-        }));
         
         await emailServiceApi.SendEmailAsync(
             [ApiConstants.SiteEmail], 
             $"SMS received {middle}", 
-            text,
-            attachments);
+            text);
     }
 }

@@ -18,6 +18,18 @@ public class GlobalConfigModel : IViewModel
     [Display(Name = "SMS Test Mode")]
     public bool SmsTestMode { get; set; }
 
+    [Display(Name = "SMS Proxy Hub URL")]
+    public string SmsProxyHubUrl { get; set; }
+
+    [Display(Name = "SMS Proxy Hub API Token")]
+    public string SmsProxyHubToken { get; set; }
+
+    [Display(Name = "SMS Proxy Hub Connection ID")]
+    public string SmsProxyHubConnectionId { get; set; }
+
+    [Display(Name = "Admin Phone Number")]
+    public string AdminPhoneNumber { get; set; }
+
     [Display(Name = "Website Theme")]
     public string Theme { get; set; }
 

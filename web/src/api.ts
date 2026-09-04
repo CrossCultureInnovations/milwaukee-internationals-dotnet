@@ -201,6 +201,10 @@ export type GlobalConfigModel = {
   eventFeature: boolean;
   emailTestMode: boolean;
   smsTestMode: boolean;
+  smsProxyHubUrl: string;
+  smsProxyHubToken: string;
+  smsProxyHubConnectionId: string;
+  adminPhoneNumber: string;
   theme: string;
   disallowDuplicateStudents: boolean;
   recordApiEvents: boolean;

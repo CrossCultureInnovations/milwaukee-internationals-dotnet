@@ -12,6 +12,7 @@
     <PackageReference Include="MlkPwgen" Version="0.3.0" />
     <PackageReference Include="Net.Codecrete.QrCodeGenerator" Version="2.0.7" />
     <PackageReference Include="SixLabors.ImageSharp.Drawing" Version="2.1.7" />
+    <PackageReference Include="SmsProxyHub.Client" Version="1.6.0" />
     <PackageReference Include="Svg" Version="3.4.7" />
   </ItemGroup>
 </Project>
