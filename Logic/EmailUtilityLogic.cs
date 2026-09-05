@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using DAL.Interfaces;
 using EnumsNET;
 using Logic.Interfaces;
+using Models.Constants;
 using Models.Enums;
 using Models.ViewModels;
 
@@ -24,9 +25,7 @@ public class EmailUtilityLogic(
 {
     public async Task<EmailFormViewModel> GetEmailForm()
     {
-        var globalConfigs = await configLogic.ResolveGlobalConfig();
-        
-        var year = globalConfigs.YearValue;
+        var year = ApiConstants.CurrentYear;
             
         return new EmailFormViewModel
         {
@@ -55,9 +54,7 @@ public class EmailUtilityLogic(
     /// <returns></returns>
     public async Task<bool> HandleAdHocEmail(EmailFormViewModel emailFormViewModel)
     {
-        var globalConfigs = await configLogic.ResolveGlobalConfig();
-
-        var year = globalConfigs.YearValue;
+        var year = ApiConstants.CurrentYear;
             
         var emailAddresses = new List<string>();
 
@@ -164,9 +161,7 @@ public class EmailUtilityLogic(
 
     public async Task SendConfirmationEmail(EntitiesEnum rolesEnum)
     {
-        var globalConfigs = await configLogic.ResolveGlobalConfig();
-
-        var year = globalConfigs.YearValue;
+        var year = ApiConstants.CurrentYear;
 
         switch (rolesEnum)
         {

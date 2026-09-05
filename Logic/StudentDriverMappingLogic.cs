@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DAL.Interfaces;
 using Logic.Interfaces;
+using Models.Constants;
 using Models.Entities;
 using Models.Enums;
 using Models.ViewModels;
@@ -109,7 +110,7 @@ public class StudentDriverMappingLogic : IStudentDriverMappingLogic
     /// <returns></returns>
     public async Task<bool> EmailMappings()
     {
-        var drivers = await _driverLogic.GetAll(DateTime.UtcNow.Year);
+        var drivers = await _driverLogic.GetAll(ApiConstants.CurrentYear);
 
         // Send the email to drivers
         var tasks = drivers.Select(x =>
@@ -133,7 +134,7 @@ public class StudentDriverMappingLogic : IStudentDriverMappingLogic
     /// <returns></returns>
     public async Task<EmailPreviewViewModel> PreviewMappingEmail(int? driverId)
     {
-        var drivers = (await _driverLogic.GetAll(DateTime.UtcNow.Year)).ToList();
+        var drivers = (await _driverLogic.GetAll(ApiConstants.CurrentYear)).ToList();
 
         var driver = driverId.HasValue
             ? drivers.FirstOrDefault(x => x.Id == driverId.Value)

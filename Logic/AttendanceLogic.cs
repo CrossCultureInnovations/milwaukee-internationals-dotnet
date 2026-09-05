@@ -62,7 +62,7 @@ public class AttendanceLogic(
     /// <returns></returns>
     public async Task<bool> HandleStudentSendCheckIn()
     {
-        foreach (var x in await studentLogic.GetAll())
+        foreach (var x in await studentLogic.GetAll(ApiConstants.CurrentYear))
         {
             var email = BuildStudentCheckInEmail(x);
 
@@ -81,7 +81,7 @@ public class AttendanceLogic(
     /// <returns></returns>
     public async Task<EmailPreviewViewModel> PreviewStudentCheckInEmail(int? studentId)
     {
-        var students = (await studentLogic.GetAll()).ToList();
+        var students = (await studentLogic.GetAll(ApiConstants.CurrentYear)).ToList();
 
         var student = studentId.HasValue
             ? students.FirstOrDefault(x => x.Id == studentId.Value)
@@ -121,7 +121,7 @@ public class AttendanceLogic(
     /// <returns></returns>
     public async Task<bool> HandleDriverSendCheckIn()
     {
-        foreach (var x in await driverLogic.GetAll())
+        foreach (var x in await driverLogic.GetAll(ApiConstants.CurrentYear))
         {
             var email = BuildDriverCheckInEmail(x);
 
@@ -140,7 +140,7 @@ public class AttendanceLogic(
     /// <returns></returns>
     public async Task<EmailPreviewViewModel> PreviewDriverCheckInEmail(int? driverId)
     {
-        var drivers = (await driverLogic.GetAll()).ToList();
+        var drivers = (await driverLogic.GetAll(ApiConstants.CurrentYear)).ToList();
 
         var driver = driverId.HasValue
             ? drivers.FirstOrDefault(x => x.Id == driverId.Value)

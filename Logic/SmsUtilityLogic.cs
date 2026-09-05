@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DAL.Interfaces;
 using Logic.Interfaces;
 using Logic.Utilities;
+using Models.Constants;
 using Models.Enums;
 using Models.ViewModels;
 using SmsProxyHub.Contracts;
@@ -26,7 +27,8 @@ public class SmsUtilityLogic(
     {
         var globalConfigs = await configLogic.ResolveGlobalConfig();
 
-        var year = globalConfigs.YearValue;
+        // Outbound always addresses this year's people, never a previous cohort
+        var year = ApiConstants.CurrentYear;
             
         var phoneNumbers = new List<string>();
 
@@ -101,9 +103,7 @@ public class SmsUtilityLogic(
 
     public async Task<SmsFormViewModel> GetSmsForm()
     {
-        var globalConfigs = await configLogic.ResolveGlobalConfig();
-
-        var year = globalConfigs.YearValue;
+        var year = ApiConstants.CurrentYear;
             
         return new SmsFormViewModel
         {
@@ -117,9 +117,7 @@ public class SmsUtilityLogic(
 
     public async Task HandleDriverSms()
     {
-        var globalConfigs = await configLogic.ResolveGlobalConfig();
-
-        var year = globalConfigs.YearValue;
+        var year = ApiConstants.CurrentYear;
 
         foreach (var driver in await driverLogic.GetAll(year))
         {
@@ -129,9 +127,7 @@ public class SmsUtilityLogic(
 
     public async Task HandleStudentSms()
     {
-        var globalConfigs = await configLogic.ResolveGlobalConfig();
-
-        var year = globalConfigs.YearValue;
+        var year = ApiConstants.CurrentYear;
 
         foreach (var student in await studentLogic.GetAll(year))
         {
@@ -141,9 +137,7 @@ public class SmsUtilityLogic(
 
     public async Task HandleHostSms()
     {
-        var globalConfigs = await configLogic.ResolveGlobalConfig();
-        
-        var year = globalConfigs.YearValue;
+        var year = ApiConstants.CurrentYear;
 
         foreach (var host in await hostLogic.GetAll(year))
         {

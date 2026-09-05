@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using DAL.Interfaces;
 using Logic.Interfaces;
+using Models.Constants;
 using Models.Entities;
 using Models.Enums;
 using Models.ViewModels;
@@ -101,7 +102,7 @@ public class DriverHostMappingLogic : IDriverHostMappingLogic
     /// <returns></returns>
     public async Task<bool> EmailMappings()
     {
-        var hosts = await _hostLogic.GetAll(DateTime.UtcNow.Year);
+        var hosts = await _hostLogic.GetAll(ApiConstants.CurrentYear);
 
         // Send the email to hosts
         var tasks = hosts.Select(x =>
@@ -125,13 +126,29 @@ public class DriverHostMappingLogic : IDriverHostMappingLogic
     /// <returns></returns>
     public async Task<EmailPreviewViewModel> PreviewMappingEmail(int? hostId)
     {
-        var hosts = (await _hostLogic.GetAll(DateTime.UtcNow.Year)).ToList();
+        var hosts = (await _hostLogic.GetAll(ApiConstants.CurrentYear)).ToList();
 
         var host = hostId.HasValue
             ? hosts.FirstOrDefault(x => x.Id == hostId.Value)
             : hosts.FirstOrDefault();
 
         return host == null ? null : BuildMappingEmail(host);
+    }
+
+    /// <summary>
+    /// Reads as " - plus 2 family members" when the student is bringing family,
+    /// so a host can see how many people to expect, not just how many students.
+    /// </summary>
+    /// <param name="student"></param>
+    /// <returns></returns>
+    private static string FamilySuffix(Student student)
+    {
+        if (!student.IsFamily || student.FamilySize <= 0)
+        {
+            return string.Empty;
+        }
+
+        return $" &mdash; plus {student.FamilySize} family member{(student.FamilySize == 1 ? string.Empty : "s")}";
     }
 
     /// <summary>
@@ -159,7 +176,7 @@ public class DriverHostMappingLogic : IDriverHostMappingLogic
                         {(!string.IsNullOrEmpty(driver.Navigator) ? $"<p>Navigator: {driver.Navigator}</p>" : string.Empty)}
                         <ul>
                             {string.Join(Environment.NewLine, driver.Students?.Select(student => $@"
-                                <li>{student.Fullname} ({student.Country})</li>
+                                <li>{student.Fullname} ({student.Country}){FamilySuffix(student)}</li>
                             ") ?? new List<string> { "<li>No student assigned to this driver yet.</li>"})}
                         </ul>
                     </li>
