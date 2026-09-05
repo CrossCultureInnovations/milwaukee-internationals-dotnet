@@ -28,6 +28,7 @@ import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
 import { cn, displayNumber, seatCount } from "../../lib/utils";
+import { DriverNumber } from "../../components/DriverNumber";
 
 type Tab = "student-driver" | "driver-host";
 
@@ -369,11 +370,7 @@ function StudentDriverSection() {
                     >
                       <Car className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <span className="truncate">{d.fullname}</span>
-                      {displayNumber(d.displayId) && (
-                        <span className="shrink-0 text-xs font-medium text-muted-foreground">
-                          {displayNumber(d.displayId)}
-                        </span>
-                      )}
+                      <DriverNumber displayId={d.displayId} />
                       {hostName && (
                         <span className="shrink-0 text-xs text-muted-foreground">
                           ({hostName})
@@ -434,11 +431,7 @@ function StudentDriverSection() {
                     <CardTitle className="flex items-center gap-2 text-sm">
                       <Car className="h-4 w-4 text-primary" />
                       <span>{driver.fullname}</span>
-                      {displayNumber(driver.displayId) && (
-                        <span className="text-xs font-medium text-muted-foreground">
-                          {displayNumber(driver.displayId)}
-                        </span>
-                      )}
+                      <DriverNumber displayId={driver.displayId} />
                       {getHostName(driver) && (
                         <span className="text-xs font-normal text-muted-foreground">
                           ({getHostName(driver)})
@@ -657,11 +650,7 @@ function DriverHostSection() {
                   >
                     <Car className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <span className="truncate">{d.fullname}</span>
-                    {displayNumber(d.displayId) && (
-                      <span className="shrink-0 text-xs font-medium text-muted-foreground">
-                        {displayNumber(d.displayId)}
-                      </span>
-                    )}
+                    <DriverNumber displayId={d.displayId} />
                     <Badge variant="outline" className="ml-auto text-xs">
                       {d.students.length} students
                     </Badge>
@@ -780,11 +769,7 @@ function DriverHostSection() {
                       )}>
                         <Car className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                         <span className="text-sm truncate">{d.fullname}</span>
-                        {displayNumber(d.displayId) && (
-                          <span className="shrink-0 text-xs font-medium text-muted-foreground">
-                            {displayNumber(d.displayId)}
-                          </span>
-                        )}
+                        <DriverNumber displayId={d.displayId} />
                         <Badge variant="outline" className="ml-auto text-xs shrink-0">
                           {d.students.length}/{d.capacity}
                         </Badge>
@@ -824,14 +809,6 @@ export function MappingsPage() {
 
   return (
     <Container className="py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="font-heading text-2xl text-foreground">Mappings</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Manage student-driver and driver-host assignments
-        </p>
-      </div>
-
       {/* Tabs */}
       <div className="mb-6 flex gap-1 rounded-lg border bg-muted/40 p-1">
         <button

@@ -21,6 +21,7 @@ import {
 } from "../../components/ui/table";
 import { Card, CardContent } from "../../components/ui/card";
 import { cn, displayNumber, seatCount, studentSeats } from "../../lib/utils";
+import { DriverNumber } from "../../components/DriverNumber";
 import { useStudents, useDrivers } from "../../lib/hooks/useApiQueries";
 import {
   api,
@@ -475,11 +476,7 @@ export function AttendancePage() {
                   <TableCell className="font-medium text-foreground">
                     <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span>{driver.fullname}</span>
-                      {displayNumber(driver.displayId) && (
-                        <span className="shrink-0 text-xs font-medium text-muted-foreground">
-                          {displayNumber(driver.displayId)}
-                        </span>
-                      )}
+                      <DriverNumber displayId={driver.displayId} />
                       <span
                         className={cn(
                           "inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium tabular-nums",
