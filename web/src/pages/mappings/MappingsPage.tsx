@@ -282,7 +282,7 @@ function StudentDriverSection() {
                   </p>
                 )}
                 {filteredUnmapped.map((s) => {
-                  const studentNumber = s.displayId ? s.displayId.split("-").pop() : s.id;
+                  const studentNumber = s.displayId || (s.id ? `#${s.id}` : "");
                   return (
                     <button
                       key={s.id}
@@ -295,7 +295,7 @@ function StudentDriverSection() {
                       <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <span className="truncate">{s.fullname}</span>
                       <span className="shrink-0 text-xs font-medium text-muted-foreground">
-                        #{studentNumber}
+                        {studentNumber}
                       </span>
                       <div className="ml-auto flex shrink-0 items-center gap-1.5">
                         {s.kosherFood && (
@@ -441,7 +441,7 @@ function StudentDriverSection() {
                   </CardHeader>
                   <CardContent className="space-y-1">
                     {driverStudents.map((s) => {
-                      const studentNumber = s.displayId ? s.displayId.split("-").pop() : s.id;
+                      const studentNumber = s.displayId || (s.id ? `#${s.id}` : "");
                       return (
                         <div key={s.id} className={cn(
                           "flex items-center gap-2 rounded-md px-2 py-1.5",
@@ -452,7 +452,7 @@ function StudentDriverSection() {
                           <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                           <span className="text-sm truncate">{s.fullname}</span>
                           <span className="shrink-0 text-xs text-muted-foreground">
-                            #{studentNumber}
+                            {studentNumber}
                           </span>
                           <div className="ml-auto flex shrink-0 items-center gap-1.5">
                             {s.kosherFood && (

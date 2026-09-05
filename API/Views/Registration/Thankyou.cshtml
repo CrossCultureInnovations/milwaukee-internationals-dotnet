@@ -1,4 +1,4 @@
-﻿@model Models.Enums.EntitiesEnum
+@model Models.Enums.EntitiesEnum
 @using DAL.Interfaces
 @using Models.Enums
 @inject IConfigLogic ConfigLogic
@@ -15,14 +15,12 @@
 
 @if (Model == EntitiesEnum.Student)
 {
-    <br/>
-    <h4>@(globalConfig.TourDate.Year) Tour of Milwaukee Registration</h4>
-    <h4>Date: @(globalConfig.TourDate.ToString("dddd, MMMM d, yyyy"))</h4>
-    <h4>Time: @(globalConfig.TourDate.ToString("HH:mm")) </h4>
-    <h4>Address: @(globalConfig.TourAddress)</h4>
-    <h4>Location: @(globalConfig.TourLocation)</h4>
-    <h4>If you need any sort of help (furniture, etc.), please contact Asher Imtiaz (414-499-5360) or reply to the registration email.</h4>
     <h4>
         Follow us on <a href="https://www.facebook.com/Milwaukeeinternationals/">our Facebook page</a> for more information.
     </h4>
+    @if (!string.IsNullOrEmpty(ViewBag.DisplayId as string))
+    {
+        <br/>
+        <p class="text-muted small">Student number: <strong>@ViewBag.DisplayId</strong></p>
+    }
 }

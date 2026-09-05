@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Models.Entities;
 
 namespace Logic.Interfaces;
@@ -7,7 +7,7 @@ public interface IRegistrationLogic
 {
     Task RegisterDriver(Driver driver);
 
-    Task RegisterStudent(Student student);
+    Task<Student> RegisterStudent(Student student);
         
     Task<bool> IsRegisterStudentOpen();
 
