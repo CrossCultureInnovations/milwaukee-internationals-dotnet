@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Models.Entities;
 using Models.Enums;
 using Models.ViewModels.Identities;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers.API;
 
@@ -27,6 +28,31 @@ public class UserController(
     protected override IBasicCrudLogic<User> BasicCrudLogic()
     {
         return userLogic;
+    }
+
+    [HttpPost]
+    [Route("")]
+    [SwaggerOperation("Save")]
+    public override async Task<IActionResult> Save([FromBody] User user)
+    {
+        if (string.IsNullOrWhiteSpace(user.Password))
+        {
+            return BadRequest(new { error = "Password is required." });
+        }
+
+        try
+        {
+            var savedUser = await userLogic.Save(user);
+            return Ok(savedUser);
+        }
+        catch (System.InvalidOperationException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+        catch (System.ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpPost]

@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Threading.Tasks;
 using Logic.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -47,7 +47,7 @@ public abstract class BasicCrudController<T> : Controller
     [HttpPost]
     [Route("")]
     [SwaggerOperation("Save")]
-    public async Task<IActionResult> Save([FromBody] T instance)
+    public virtual async Task<IActionResult> Save([FromBody] T instance)
     {
         return Ok(await BasicCrudLogic().Save(instance));
     }
