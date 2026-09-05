@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
@@ -281,6 +281,17 @@ function CardSkeleton() {
 }
 
 // ---------------------------------------------------------------------------
+// Sort options
+// ---------------------------------------------------------------------------
+
+type SortKey = "displayId" | "fullname";
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: "displayId", label: "Display ID" },
+  { key: "fullname", label: "Name" },
+];
+
+// ---------------------------------------------------------------------------
 // DriversPage
 // ---------------------------------------------------------------------------
 
@@ -290,6 +301,20 @@ export function DriversPage() {
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("fullname");
+  const [sortDesc, setSortDesc] = useState(false);
+
+  const handleSort = useCallback(
+    (key: SortKey) => {
+      if (sortKey === key) {
+        setSortDesc((prev) => !prev);
+      } else {
+        setSortKey(key);
+        setSortDesc(false);
+      }
+    },
+    [sortKey]
+  );
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => api.deleteDriver(id),
@@ -301,7 +326,7 @@ export function DriversPage() {
   const filtered = useMemo(() => {
     if (!drivers) return [];
     const q = search.toLowerCase();
-    return drivers.filter((d) => {
+    const list = drivers.filter((d) => {
       const matchesSearch =
         !q ||
         d.fullname.toLowerCase().includes(q) ||
@@ -311,7 +336,25 @@ export function DriversPage() {
       const matchesRole = roleFilter === "all" || d.role === roleFilter;
       return matchesSearch && matchesRole;
     });
-  }, [drivers, search, roleFilter]);
+
+    return list.sort((a, b) => {
+      let aVal: string | number;
+      let bVal: string | number;
+
+      if (sortKey === "displayId") {
+        // Unnumbered drivers sort last regardless of direction
+        aVal = parseInt((a.displayId || "").split("-").pop() || "") || Number.MAX_SAFE_INTEGER;
+        bVal = parseInt((b.displayId || "").split("-").pop() || "") || Number.MAX_SAFE_INTEGER;
+      } else {
+        aVal = (a.fullname || "").toLowerCase();
+        bVal = (b.fullname || "").toLowerCase();
+      }
+
+      if (aVal < bVal) return sortDesc ? 1 : -1;
+      if (aVal > bVal) return sortDesc ? -1 : 1;
+      return 0;
+    });
+  }, [drivers, search, roleFilter, sortKey, sortDesc]);
 
   return (
     <div className="flex h-screen flex-col">
@@ -342,7 +385,7 @@ export function DriversPage() {
           {!isLoading && drivers && <DriverStats drivers={drivers} />}
 
           {/* Search & filters */}
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -351,6 +394,23 @@ export function DriversPage() {
                 placeholder="Search by name, email, phone, ID..."
                 className="pl-9"
               />
+            </div>
+            <div className="flex items-center gap-1 overflow-x-auto">
+              <span className="text-xs text-muted-foreground whitespace-nowrap mr-1">Sort by</span>
+              {SORT_OPTIONS.map((opt) => (
+                <Button
+                  key={opt.key}
+                  variant={sortKey === opt.key ? "default" : "outline"}
+                  size="sm"
+                  className="text-xs h-8 px-2.5 shrink-0"
+                  onClick={() => handleSort(opt.key)}
+                >
+                  {opt.label}
+                  {sortKey === opt.key && (
+                    <span className="ml-1">{sortDesc ? "\u2193" : "\u2191"}</span>
+                  )}
+                </Button>
+              ))}
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
               <SelectTrigger className="w-full sm:w-44">
