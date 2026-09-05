@@ -411,7 +411,9 @@ export function AttendancePage() {
   }, [driverOptions]);
 
   // Counts
-  const presentStudents = students?.filter((s) => s.isPresent).length ?? 0;
+  // People, not records — a present student brings their family with them
+  const presentStudents = seatCount((students ?? []).filter((s) => s.isPresent));
+  const totalStudents = seatCount(students ?? []);
   const presentDrivers = drivers?.filter((d) => d.isPresent).length ?? 0;
 
   const isLoading = tab === "students" ? studentsLoading : driversLoading;
@@ -556,7 +558,7 @@ export function AttendancePage() {
           icon={<GraduationCap className="h-5 w-5" />}
           label="Students present"
           present={presentStudents}
-          total={students?.length ?? 0}
+          total={totalStudents}
           loading={studentsLoading}
           onSelect={() => {
             setTab("students");

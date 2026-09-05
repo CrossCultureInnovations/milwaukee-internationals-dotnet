@@ -759,12 +759,29 @@ function DriverHostSection() {
                 }
                 grouped.get(host.id)!.drivers.push(d);
               }
-              return Array.from(grouped.values()).map(({ host, drivers: hostDrivers }) => (
+              return Array.from(grouped.values()).map(({ host, drivers: hostDrivers }) => {
+                // What the house is actually getting: people, not driver rows
+                const taken = hostDrivers.reduce(
+                  (sum, d) => sum + seatCount(d.students ?? []),
+                  0
+                );
+                const capacity = hostDrivers.reduce((sum, d) => sum + d.capacity, 0);
+
+                return (
                 <Card key={host.id}>
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-sm">
-                      <Home className="h-4 w-4 text-primary" />
-                      {host.fullname}
+                      <Home className="h-4 w-4 shrink-0 text-primary" />
+                      <span className="truncate">{host.fullname}</span>
+                      <Badge
+                        variant="outline"
+                        className="ml-auto shrink-0 text-xs tabular-nums"
+                        title={`${taken} of ${capacity} seats filled across ${
+                          hostDrivers.length
+                        } driver${hostDrivers.length === 1 ? "" : "s"}`}
+                      >
+                        {taken}/{capacity}
+                      </Badge>
                     </CardTitle>
                     {host.address && (
                       <p className="text-xs text-muted-foreground truncate">{host.address}</p>
@@ -781,8 +798,8 @@ function DriverHostSection() {
                         <Car className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                         <span className="text-sm truncate">{d.fullname}</span>
                         <DriverNumber displayId={d.displayId} />
-                        <Badge variant="outline" className="ml-auto text-xs shrink-0">
-                          {d.students.length}/{d.capacity}
+                        <Badge variant="outline" className="ml-auto text-xs shrink-0 tabular-nums">
+                          {seatCount(d.students ?? [])}/{d.capacity}
                         </Badge>
                         <Button
                           variant="ghost"
@@ -802,7 +819,8 @@ function DriverHostSection() {
                     ))}
                   </CardContent>
                 </Card>
-              ));
+                );
+              });
             })()}
           </div>
         )}
