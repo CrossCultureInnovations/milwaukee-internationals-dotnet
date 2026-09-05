@@ -23,19 +23,19 @@ export default defineConfig(({ command }) => ({
     port: 5173,
     proxy: {
       "/api": {
-        target: "http://localhost:5000",
+        target: "http://localhost:5005",
         changeOrigin: true,
       },
       "/stats": {
-        target: "http://localhost:5000",
+        target: "http://localhost:5005",
         changeOrigin: true,
       },
       "/hub": {
-        target: "http://localhost:5000",
+        target: "http://localhost:5005",
         ws: true,
       },
       "/log": {
-        target: "http://localhost:5000",
+        target: "http://localhost:5005",
         ws: true,
       },
     },

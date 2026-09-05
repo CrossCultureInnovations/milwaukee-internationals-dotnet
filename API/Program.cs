@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
@@ -27,7 +27,7 @@ public class Program
                 var portConfig = Environment.GetEnvironmentVariable("PORT");
                 if (string.IsNullOrEmpty(portConfig) || !int.TryParse(portConfig, out var port))
                 {
-                    port = 5000;
+                    port = 5005;
                 }
                     
                 webBuilder.ConfigureKestrel(serverOptions =>
