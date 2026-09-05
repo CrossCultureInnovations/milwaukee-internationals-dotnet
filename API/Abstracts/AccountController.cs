@@ -84,6 +84,11 @@ public abstract class AbstractIdentityController : Controller
             return (false, "Could not find account associated with this username.");
         }
 
+        if (!result.Enable)
+        {
+            return (false, "Your account is awaiting activation by an administrator.");
+        }
+
         var loginResult = await ResolveSignInManager().PasswordSignInAsync(result, loginViewModel.Password, true, true);
 
         if (loginResult.IsLockedOut)

@@ -150,7 +150,7 @@ public class JwtIdentityController(
 
         await apiEventService.RecordEvent($"User [{loginViewModel.Username}] failed to login because of {message}");
 
-        return Unauthorized();
+        return Unauthorized(new { error = message });
     }
 
     [Authorize]
