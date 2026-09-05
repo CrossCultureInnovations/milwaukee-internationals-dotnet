@@ -24,8 +24,12 @@ RUN cp -r client-build/* ./out/wwwroot/
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine
 
 # Timezones
-RUN apk add --no-cache tzdata
+RUN apk add --no-cache tzdata curl
 
 WORKDIR /app/build
 COPY --from=build-env "/app/stage/out" .
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+	CMD curl --fail --silent --show-error "http://127.0.0.1:${PORT:-5005}/api/health" > /dev/null || exit 1
+
 ENTRYPOINT ["dotnet", "API.dll"]

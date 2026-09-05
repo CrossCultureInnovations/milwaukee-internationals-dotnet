@@ -5,9 +5,11 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using API.Extensions;
+using API.HealthChecks;
 using API.Middlewares;
 using API.Utilities;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.SignalR;
 using DAL.Interfaces;
 using DAL.ServiceApi;
@@ -100,6 +102,8 @@ public class Startup
 
         services.AddLogging();
         services.AddHttpClient();
+        services.AddHealthChecks()
+            .AddCheck<DatabaseHealthCheck>("database");
             
         services.Configure<JwtSettings>(_configuration.GetSection("JwtSettings"));
 
@@ -335,7 +339,7 @@ public class Startup
         {
             await next();
                 
-            if (context.Response.IsFailure())
+            if (context.Response.IsFailure() && !context.Request.Path.StartsWithSegments("/api/health"))
             {
                 var apiEventServiceCtx = context.RequestServices.GetRequiredService<IApiEventService>();
                 var exHandlerFeature = context.Features.Get<IExceptionHandlerFeature>();
@@ -364,6 +368,7 @@ public class Startup
             .UseAuthorization()
             .UseEndpoints(endpoints =>
             {
+                endpoints.MapHealthChecks("/api/health").AllowAnonymous();
                 endpoints.MapControllers();
                 endpoints.MapHub<MessageHub>("/hub");
                 endpoints.MapHub<LogHub>("/log");
