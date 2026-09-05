@@ -426,7 +426,16 @@ function StudentDriverSection() {
                 grouped.get(driver.id)!.students.push(s);
               }
               return Array.from(grouped.values()).map(({ driver, students: driverStudents }) => (
-                <Card key={driver.id}>
+                // Tinted by the driver's own attendance, a shade lighter than the
+                // student rows nested inside so both stay readable at a glance
+                <Card
+                  key={driver.id}
+                  className={cn(
+                    driver.isPresent
+                      ? "bg-green-50 dark:bg-green-950/20"
+                      : "bg-red-50 dark:bg-red-950/20"
+                  )}
+                >
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-sm">
                       <Car className="h-4 w-4 text-primary" />

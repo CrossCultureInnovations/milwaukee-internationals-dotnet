@@ -24,11 +24,19 @@ import {
 import { Card, CardContent } from "../../components/ui/card";
 import { cn, displayNumber, seatCount, studentSeats } from "../../lib/utils";
 import { DriverNumber } from "../../components/DriverNumber";
-import { useStudents, useDrivers } from "../../lib/hooks/useApiQueries";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "../../components/ui/select";
+import { useStudents, useDrivers, useHosts } from "../../lib/hooks/useApiQueries";
 import {
   api,
   type AttendanceViewModel,
   type EmailPreviewKind,
+  type NewStudentDriverMappingViewModel,
   type Student,
   type Driver,
 } from "../../api";
@@ -43,21 +51,9 @@ import {
 
 type Tab = "students" | "drivers";
 
-// ---------------------------------------------------------------------------
-// Assigned driver label — "<number>-<fullname>", or null when unassigned
-// ---------------------------------------------------------------------------
-
-function driverLabel(
-  student: Student,
-  driversById: ReadonlyMap<number, Driver>
-): string | null {
-  const driver =
-    (student.driverRefId != null ? driversById.get(student.driverRefId) : null) ??
-    student.driver;
-  if (!driver) return null;
-  const number = displayNumber(driver.displayId);
-  return number ? `${number}-${driver.fullname}` : driver.fullname;
-}
+// Radix Select cannot carry an empty-string value, so the clear action needs
+// a sentinel that no driver id can collide with
+const UNASSIGN = "unassign";
 
 // ---------------------------------------------------------------------------
 // Attendance toggle
@@ -181,6 +177,7 @@ export function AttendancePage() {
 
   const { data: students, isLoading: studentsLoading } = useStudents();
   const { data: drivers, isLoading: driversLoading } = useDrivers();
+  const { data: hosts } = useHosts();
 
   const markPending = (key: string, pending: boolean) =>
     setPendingKeys((prev) => {
@@ -237,6 +234,30 @@ export function AttendancePage() {
     },
     onSettled: (_data, _error, payload) => {
       markPending(`driver-${payload.id}`, false);
+      queryClient.invalidateQueries({ queryKey: ["drivers"] });
+    },
+  });
+
+  // Assigning a driver overwrites any previous one server-side, so reassigning
+  // is a single call. Both invalidate drivers too, to keep seat counts honest.
+  const assignDriver = useMutation({
+    mutationFn: (payload: NewStudentDriverMappingViewModel) =>
+      api.mapStudentToDriver(payload),
+    onMutate: (payload) => markPending(`map-${payload.studentId}`, true),
+    onSettled: (_data, _error, payload) => {
+      markPending(`map-${payload.studentId}`, false);
+      queryClient.invalidateQueries({ queryKey: ["students"] });
+      queryClient.invalidateQueries({ queryKey: ["drivers"] });
+    },
+  });
+
+  const unassignDriver = useMutation({
+    mutationFn: (payload: NewStudentDriverMappingViewModel) =>
+      api.unmapStudentFromDriver(payload),
+    onMutate: (payload) => markPending(`map-${payload.studentId}`, true),
+    onSettled: (_data, _error, payload) => {
+      markPending(`map-${payload.studentId}`, false);
+      queryClient.invalidateQueries({ queryKey: ["students"] });
       queryClient.invalidateQueries({ queryKey: ["drivers"] });
     },
   });
@@ -318,10 +339,10 @@ export function AttendancePage() {
     [drivers]
   );
 
-  // Driver lookup so each student row can name their assigned driver
-  const driversById = useMemo(
-    () => new Map((drivers ?? []).map((d) => [d.id, d])),
-    [drivers]
+  // Host lookup, since a driver payload may carry only the reference
+  const hostsById = useMemo(
+    () => new Map((hosts ?? []).map((h) => [h.id, h.fullname])),
+    [hosts]
   );
 
   // Seats taken per driver, counted from the student list so the number holds
@@ -338,6 +359,31 @@ export function AttendancePage() {
     }
     return counts;
   }, [students]);
+
+  // Drivers as dropdown options, in display-number order — on tour day you are
+  // hunting for one specific car, not balancing load across the fleet
+  const driverOptions = useMemo(() => {
+    return (drivers ?? [])
+      .map((d) => {
+        const hostName =
+          d.host?.fullname ??
+          (d.hostRefId != null ? hostsById.get(d.hostRefId) : undefined);
+        const taken = assignedByDriverId.get(d.id) ?? seatCount(d.students ?? []);
+
+        return {
+          id: d.id,
+          number: displayNumber(d.displayId),
+          name: d.fullname,
+          hostName,
+          taken,
+          capacity: d.capacity,
+          full: taken >= d.capacity,
+          // Unnumbered drivers sort last rather than jumping to the front
+          sortKey: parseInt(displayNumber(d.displayId)) || Number.MAX_SAFE_INTEGER,
+        };
+      })
+      .sort((a, b) => a.sortKey - b.sortKey || a.name.localeCompare(b.name));
+  }, [drivers, hostsById, assignedByDriverId]);
 
   // Counts
   const presentStudents = students?.filter((s) => s.isPresent).length ?? 0;
@@ -529,7 +575,7 @@ export function AttendancePage() {
               filteredStudents.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={2}
+                    colSpan={4}
                     className="py-12 text-center text-muted-foreground"
                   >
                     {search
@@ -539,9 +585,18 @@ export function AttendancePage() {
                 </TableRow>
               ) : (
                 filteredStudents.map((student) => {
-                  const assignedDriver = driverLabel(student, driversById);
+                  const assignedId =
+                    student.driverRefId ?? student.driver?.id ?? null;
+                  const assigned =
+                    assignedId != null
+                      ? driverOptions.find((d) => d.id === assignedId)
+                      : undefined;
+                  const mapPending = pendingKeys.has(`map-${student.id}`);
                   return (
                   <TableRow key={student.id}>
+                    <TableCell className="w-12 pr-0 text-sm tabular-nums text-muted-foreground">
+                      {displayNumber(student.displayId) || "\u2014"}
+                    </TableCell>
                     <TableCell className="font-medium text-foreground">
                       <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                         <span>{student.fullname}</span>
@@ -560,12 +615,70 @@ export function AttendancePage() {
                             ({student.country})
                           </span>
                         )}
-                        {assignedDriver && (
-                          <span className="font-normal text-muted-foreground">
-                            &mdash; {assignedDriver}
-                          </span>
-                        )}
                       </span>
+                    </TableCell>
+                    <TableCell className="w-64">
+                      <Select
+                        value={assignedId != null ? String(assignedId) : undefined}
+                        disabled={mapPending}
+                        onValueChange={(value) => {
+                          if (value === UNASSIGN) {
+                            if (assignedId == null) return;
+                            unassignDriver.mutate({
+                              studentId: student.id,
+                              driverId: assignedId,
+                            });
+                            return;
+                          }
+                          assignDriver.mutate({
+                            studentId: student.id,
+                            driverId: Number(value),
+                          });
+                        }}
+                      >
+                        <SelectTrigger className="h-9 w-full text-sm">
+                          {assigned ? (
+                            <SelectValue placeholder="Assign driver">
+                              <span className="truncate">
+                                {[assigned.number, assigned.name]
+                                  .filter(Boolean)
+                                  .join(" ")}
+                              </span>
+                            </SelectValue>
+                          ) : (
+                            <SelectValue placeholder="Assign driver" />
+                          )}
+                        </SelectTrigger>
+                        <SelectContent>
+                          {assignedId != null && (
+                            <SelectItem value={UNASSIGN}>Unassign</SelectItem>
+                          )}
+                          {driverOptions.map((d) => (
+                            <SelectItem
+                              key={d.id}
+                              value={String(d.id)}
+                              className={cn(d.full && "text-muted-foreground")}
+                            >
+                              <span className="flex w-full items-center gap-2">
+                                {d.number && (
+                                  <span className="w-6 shrink-0 tabular-nums">
+                                    {d.number}
+                                  </span>
+                                )}
+                                <span className="truncate">{d.name}</span>
+                                {d.hostName && (
+                                  <span className="truncate text-muted-foreground">
+                                    &middot; {d.hostName}
+                                  </span>
+                                )}
+                                <span className="ml-auto shrink-0 pl-3 tabular-nums text-muted-foreground">
+                                  {d.taken}/{d.capacity}
+                                </span>
+                              </span>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                     <TableCell className="text-right">
                       <AttendanceToggle
