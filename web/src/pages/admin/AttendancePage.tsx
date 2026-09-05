@@ -9,6 +9,7 @@ import {
   Users,
   Baby,
   Eye,
+  MessageSquare,
 } from "lucide-react";
 import { Container } from "../../components/layout/Container";
 import { Button } from "../../components/ui/button";
@@ -250,8 +251,22 @@ export function AttendancePage() {
     onSuccess: () => setSendDriverSuccess(true),
   });
 
+  // Texting is metered and goes straight to people's phones, so both of these are
+  // confirmed at the click site before the mutation fires.
+  const smsStudentCheckIn = useMutation({
+    mutationFn: () => api.sendStudentCheckInSms(),
+    onSuccess: () => setSmsStudentSuccess(true),
+  });
+
+  const smsDriverCheckIn = useMutation({
+    mutationFn: () => api.sendDriverCheckInSms(),
+    onSuccess: () => setSmsDriverSuccess(true),
+  });
+
   const [sendStudentSuccess, setSendStudentSuccess] = useState(false);
   const [sendDriverSuccess, setSendDriverSuccess] = useState(false);
+  const [smsStudentSuccess, setSmsStudentSuccess] = useState(false);
+  const [smsDriverSuccess, setSmsDriverSuccess] = useState(false);
 
   // Which check-in preview dialog is open, if any
   const [preview, setPreview] = useState<EmailPreviewKind | null>(null);
@@ -359,6 +374,28 @@ export function AttendancePage() {
               </Button>
               <Button
                 variant="outline"
+                disabled={smsStudentCheckIn.isPending}
+                onClick={() => {
+                  if (
+                    !window.confirm(
+                      `Text the check-in link to all ${students?.length ?? 0} students?`
+                    )
+                  ) {
+                    return;
+                  }
+                  setSmsStudentSuccess(false);
+                  smsStudentCheckIn.mutate();
+                }}
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                {smsStudentCheckIn.isPending
+                  ? "Sending..."
+                  : smsStudentSuccess
+                    ? "SMS Sent!"
+                    : "Send check-in SMS"}
+              </Button>
+              <Button
+                variant="outline"
                 disabled={sendStudentCheckIn.isPending}
                 onClick={() => {
                   setSendStudentSuccess(false);
@@ -381,6 +418,28 @@ export function AttendancePage() {
               >
                 <Eye className="mr-2 h-4 w-4" />
                 Preview
+              </Button>
+              <Button
+                variant="outline"
+                disabled={smsDriverCheckIn.isPending}
+                onClick={() => {
+                  if (
+                    !window.confirm(
+                      `Text the check-in link to all ${drivers?.length ?? 0} drivers?`
+                    )
+                  ) {
+                    return;
+                  }
+                  setSmsDriverSuccess(false);
+                  smsDriverCheckIn.mutate();
+                }}
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                {smsDriverCheckIn.isPending
+                  ? "Sending..."
+                  : smsDriverSuccess
+                    ? "SMS Sent!"
+                    : "Send check-in SMS"}
               </Button>
               <Button
                 variant="outline"

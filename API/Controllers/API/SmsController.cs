@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using API.Attributes;
 using Logic.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -32,6 +32,32 @@ public class SmsController(ISmsUtilityLogic smsUtilityLogic) : Controller
         await smsUtilityLogic.SendAdHocSms(request.PhoneNumber.Trim(), request.Message.Trim());
 
         return Ok(new { message = "SMS sent successfully." });
+    }
+
+    /// <summary>
+    /// Texts every driver their check-in link
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost]
+    [Route("Driver/SendCheckIn")]
+    public async Task<IActionResult> DriverSendCheckIn()
+    {
+        await smsUtilityLogic.HandleDriverSms();
+
+        return Ok(new { message = "Check-in texts sent to drivers." });
+    }
+
+    /// <summary>
+    /// Texts every student their check-in link
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost]
+    [Route("Student/SendCheckIn")]
+    public async Task<IActionResult> StudentSendCheckIn()
+    {
+        await smsUtilityLogic.HandleStudentSms();
+
+        return Ok(new { message = "Check-in texts sent to students." });
     }
 }
 

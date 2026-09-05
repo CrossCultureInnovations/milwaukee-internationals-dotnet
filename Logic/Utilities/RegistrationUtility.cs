@@ -35,6 +35,16 @@ public static class RegistrationUtility
     }
         
     /// <summary>
+    /// Name to greet someone by. Falls back to the whole name when it is a single word.
+    /// </summary>
+    /// <param name="fullname"></param>
+    /// <returns></returns>
+    public static string FirstName(string fullname)
+    {
+        return fullname?.Trim().Split(' ').FirstOrDefault() ?? string.Empty;
+    }
+
+    /// <summary>
     /// Generates a display Id
     /// </summary>
     /// <param name="person"></param>

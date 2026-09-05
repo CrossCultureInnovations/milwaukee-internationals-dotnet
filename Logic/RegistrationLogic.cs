@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
 using DAL.Interfaces;
@@ -203,7 +203,7 @@ public class RegistrationLogic(
     {
         var url = $"{ApiConstants.SiteUrl}/utility/EmailCheckIn/Driver/{driver.GenerateHash()}";
 
-        var text = $"Tour of MKE.Your display ID is {driver.DisplayId.Split('-')[1]}, link to check-in and see tour details {url}";
+        var text = $"{RegistrationUtility.FirstName(driver.Fullname)}: Info & check-in: {url}";
         
         await smsService.SendMessage(driver.Phone, text);
     }
@@ -212,7 +212,7 @@ public class RegistrationLogic(
     {
         var url = $"{ApiConstants.SiteUrl}/utility/EmailCheckIn/Student/{student.GenerateHash()}";
 
-        var text = $"Tour of MKE.Link to check-in and see tour details {url}";
+        var text = $"{RegistrationUtility.FirstName(student.Fullname)}: Info & check-in: {url}";
         
         await smsService.SendMessage(student.Phone, text);
     }

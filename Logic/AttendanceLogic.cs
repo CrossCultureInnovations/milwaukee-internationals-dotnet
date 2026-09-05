@@ -6,6 +6,7 @@ using Logic.Interfaces;
 using Models.Constants;
 using Models.Entities;
 using Models.ViewModels;
+using static Logic.Utilities.RegistrationUtility;
 
 namespace Logic;
 
@@ -164,15 +165,16 @@ public class AttendanceLogic(
             RecipientName = driver.Fullname,
             Subject = $"Tour Driver Check-In and Host Info ({DateTime.UtcNow.Year})",
             Body = $@"
-                    <h4>Hello {driver.Fullname},</h4>
-                    <h4>Please use the following link to see details and to check-in</h4>
-                    <p><a href=""{url}"">{url}</a></p>
-                    <p>Most important thing to remember is your -Display ID-. Students are matched to this ID. The number next to your initials is unique.</p>
-                    <p>The link has information about your host where you will go for dinner with students. </p>
-                    <br>
-                    <p>To save time when you arrive at UWM, just click on the button which says 'Check-In'. We will know that you are there and ready to drive students. Remember to pick up your Display ID when you arrive at the drivers area.</p>
-                    <p>Reach out to us if there are issues.</p>
-                    <p>Thank you</p>
+                    <p>Hi {FirstName(driver.Fullname)},</p>
+                    <p>Your details and check-in are here: <a href=""{url}"">{url}</a></p>
+                    <p>Three things to know:</p>
+                    <ol>
+                        <li>Your Display ID (the number next to your initials) is what matches students to you &ndash; please remember it.</li>
+                        <li>The link includes your host&rsquo;s info for dinner with the students.</li>
+                        <li>When you arrive at UWM, tap &quot;Check-In&quot; on the link so we know you&rsquo;re ready, then pick up your Display ID at the drivers area.</li>
+                    </ol>
+                    <p>Questions or issues? Just reply to this email.</p>
+                    <p>Thank you!</p>
                 "
         };
     }

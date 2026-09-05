@@ -533,6 +533,10 @@ export const api = {
     request("/attendance/Student/SendCheckIn", { method: "POST" }),
 
   // SMS
+  sendDriverCheckInSms: () =>
+    request<{ message: string }>("/sms/Driver/SendCheckIn", { method: "POST" }),
+  sendStudentCheckInSms: () =>
+    request<{ message: string }>("/sms/Student/SendCheckIn", { method: "POST" }),
   sendSms: (payload: SendSmsRequest) =>
     request<{ message: string }>("/sms", {
       method: "POST",
