@@ -12,4 +12,8 @@ public interface IAttendanceLogic
     Task<bool> HandleStudentSendCheckIn();
 
     Task<bool> HandleDriverSendCheckIn();
+
+    Task<EmailPreviewViewModel> PreviewStudentCheckInEmail(int? studentId);
+
+    Task<EmailPreviewViewModel> PreviewDriverCheckInEmail(int? driverId);
 }

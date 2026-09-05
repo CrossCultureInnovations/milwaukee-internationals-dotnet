@@ -12,4 +12,6 @@ public interface IStudentDriverMappingLogic
     Task<StudentDriverMappingViewModel> MappingStatus();
         
     Task<bool> EmailMappings();
+
+    Task<EmailPreviewViewModel> PreviewMappingEmail(int? driverId);
 }

@@ -104,8 +104,11 @@ public class DriverHostMappingLogic : IDriverHostMappingLogic
         var hosts = await _hostLogic.GetAll(DateTime.UtcNow.Year);
 
         // Send the email to hosts
-        var tasks = hosts
-            .Select(x => _emailServiceApi.SendEmailAsync([x.Email], "Tour of Milwaukee - Assigned Drivers", MessageFunc(x)));
+        var tasks = hosts.Select(x =>
+        {
+            var email = BuildMappingEmail(x);
+            return _emailServiceApi.SendEmailAsync([email.To], email.Subject, email.Body);
+        });
 
         await Task.WhenAll(tasks);
             
@@ -113,10 +116,38 @@ public class DriverHostMappingLogic : IDriverHostMappingLogic
             
         // Return true
         return true;
+    }
 
-        string MessageFunc(Host host)
+    /// <summary>
+    /// Renders the mapping email for a single host, without sending it
+    /// </summary>
+    /// <param name="hostId">Host to render for, or null for the first one that would be sent to</param>
+    /// <returns></returns>
+    public async Task<EmailPreviewViewModel> PreviewMappingEmail(int? hostId)
+    {
+        var hosts = (await _hostLogic.GetAll(DateTime.UtcNow.Year)).ToList();
+
+        var host = hostId.HasValue
+            ? hosts.FirstOrDefault(x => x.Id == hostId.Value)
+            : hosts.FirstOrDefault();
+
+        return host == null ? null : BuildMappingEmail(host);
+    }
+
+    /// <summary>
+    /// Builds the mapping email for a host. Shared by sending and preview so
+    /// the two can never disagree.
+    /// </summary>
+    /// <param name="host"></param>
+    /// <returns></returns>
+    private static EmailPreviewViewModel BuildMappingEmail(Host host)
+    {
+        return new EmailPreviewViewModel
         {
-            return $@"               
+            To = host.Email,
+            RecipientName = host.Fullname,
+            Subject = "Tour of Milwaukee - Assigned Drivers",
+            Body = $@"               
         <br />
         <p> Hello {host.Fullname}</p>                                                 
         {(host.Drivers != null && host.Drivers.Any() ? $@"
@@ -139,7 +170,7 @@ public class DriverHostMappingLogic : IDriverHostMappingLogic
         <br />                                                                     
         <p> Thank you for helping with the tour this year. Reply to this email will be sent automatically to the team.</p>      
         <p> For questions, comments and feedback, please contact Asher Imtiaz (414-499-5360) or Marie Wilke (414-852-5132).</p> 
-        ";
-        }
+        "
+        };
     }
 }

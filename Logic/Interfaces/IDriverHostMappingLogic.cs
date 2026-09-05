@@ -12,4 +12,6 @@ public interface IDriverHostMappingLogic
     Task<DriverHostMappingViewModel> MappingStatus();
 
     Task<bool> EmailMappings();
+
+    Task<EmailPreviewViewModel> PreviewMappingEmail(int? hostId);
 }

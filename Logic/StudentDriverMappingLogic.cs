@@ -109,9 +109,53 @@ public class StudentDriverMappingLogic : IStudentDriverMappingLogic
     /// <returns></returns>
     public async Task<bool> EmailMappings()
     {
-        string MessageFunc(Driver driver)
+        var drivers = await _driverLogic.GetAll(DateTime.UtcNow.Year);
+
+        // Send the email to drivers
+        var tasks = drivers.Select(x =>
         {
-            return $@"                 
+            var email = BuildMappingEmail(x);
+            return _emailServiceApi.SendEmailAsync([email.To], email.Subject, email.Body);
+        });
+
+        await Task.WhenAll(tasks);
+
+        await _apiEventService.RecordEvent("Sent student-driver mapping emails");
+
+        // Return true
+        return true;
+    }
+
+    /// <summary>
+    /// Renders the mapping email for a single driver, without sending it
+    /// </summary>
+    /// <param name="driverId">Driver to render for, or null for the first one that would be sent to</param>
+    /// <returns></returns>
+    public async Task<EmailPreviewViewModel> PreviewMappingEmail(int? driverId)
+    {
+        var drivers = (await _driverLogic.GetAll(DateTime.UtcNow.Year)).ToList();
+
+        var driver = driverId.HasValue
+            ? drivers.FirstOrDefault(x => x.Id == driverId.Value)
+            : drivers.FirstOrDefault();
+
+        return driver == null ? null : BuildMappingEmail(driver);
+    }
+
+    /// <summary>
+    /// Builds the mapping email for a driver. Shared by sending and preview so
+    /// the two can never disagree.
+    /// </summary>
+    /// <param name="driver"></param>
+    /// <returns></returns>
+    private static EmailPreviewViewModel BuildMappingEmail(Driver driver)
+    {
+        return new EmailPreviewViewModel
+        {
+            To = driver.Email,
+            RecipientName = driver.Fullname,
+            Subject = "Tour of Milwaukee - Assigned Students",
+            Body = $@"                 
         <br />                                                                    
         <p> Hello {driver.Fullname},</p>
         <p> Your Driver ID:<strong> {driver.DisplayId} </strong></p> 
@@ -132,20 +176,7 @@ public class StudentDriverMappingLogic : IStudentDriverMappingLogic
         <br />                                                                
         <p> Thank you for helping with the tour this year. Reply to this email will be sent automatically to the team.</p>      
         <p> For questions, comments and feedback, please contact Asher Imtiaz (414-499-5360) or Marie Wilke (414-852-5132).</p> 
-        ";
-        }
-
-        var drivers = await _driverLogic.GetAll(DateTime.UtcNow.Year);
-            
-        // Send the email to drivers
-        var tasks = drivers.Select(x =>
-            _emailServiceApi.SendEmailAsync([x.Email], "Tour of Milwaukee - Assigned Students", MessageFunc(x)));
-
-        await Task.WhenAll(tasks);
-            
-        await _apiEventService.RecordEvent("Sent student-driver mapping emails");
-
-        // Return true
-        return true;
+        "
+        };
     }
 }

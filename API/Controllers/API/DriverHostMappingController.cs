@@ -56,4 +56,20 @@ public class DriverHostMappingController(IDriverHostMappingLogic driverHostMappi
     {
         return Ok(await driverHostMappingLogic.EmailMappings());
     }
+
+    /// <summary>
+    /// Renders the mapping email for one host so it can be reviewed before sending
+    /// </summary>
+    /// <param name="recipientId">Host to render for, or omitted for the first one that would be sent to</param>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("PreviewEmail")]
+    [SwaggerOperation("PreviewMappingEmail")]
+    [AuthorizeMiddleware(UserRoleEnum.Admin)]
+    public async Task<IActionResult> PreviewEmail(int? recipientId)
+    {
+        var preview = await driverHostMappingLogic.PreviewMappingEmail(recipientId);
+
+        return preview == null ? NotFound() : Ok(preview);
+    }
 }

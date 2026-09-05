@@ -1,18 +1,24 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Mail, Send, Users, Car, Home, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
-import { api, ApiError } from "../../api";
+import { Mail, Send, Users, Car, Home, Loader2, CheckCircle2, AlertCircle, Eye } from "lucide-react";
+import { api, ApiError, type EmailPreviewKind } from "../../api";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Container } from "../../components/layout/Container";
-import { useStudents, useDrivers } from "../../lib/hooks/useApiQueries";
+import { useStudents, useDrivers, useHosts } from "../../lib/hooks/useApiQueries";
+import {
+  EmailPreviewDialog,
+  type PreviewRecipient,
+} from "../../components/EmailPreviewDialog";
+import { displayNumber } from "../../lib/utils";
 
 function EmailAction({
   title,
   description,
   icon: Icon,
   onSend,
+  onPreview,
   isPending,
   result,
 }: {
@@ -20,6 +26,7 @@ function EmailAction({
   description: string;
   icon: React.ElementType;
   onSend: () => void;
+  onPreview: () => void;
   isPending: boolean;
   result: { success: boolean; message: string } | null;
 }) {
@@ -48,20 +55,25 @@ function EmailAction({
             </div>
           )}
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onSend}
-          disabled={isPending}
-        >
-          {isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <>
-              <Send className="mr-1 h-3 w-3" /> Send
-            </>
-          )}
-        </Button>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button variant="outline" size="sm" onClick={onPreview}>
+            <Eye className="mr-1 h-3 w-3" /> Preview
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onSend}
+            disabled={isPending}
+          >
+            {isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Send className="mr-1 h-3 w-3" /> Send
+              </>
+            )}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
@@ -70,6 +82,7 @@ function EmailAction({
 export function EmailToolsPage() {
   const students = useStudents();
   const drivers = useDrivers();
+  const hosts = useHosts();
 
   const [sdResult, setSdResult] = useState<{ success: boolean; message: string } | null>(null);
   const [dhResult, setDhResult] = useState<{ success: boolean; message: string } | null>(null);
@@ -103,6 +116,36 @@ export function EmailToolsPage() {
     onError: (err) =>
       setDcResult({ success: false, message: err instanceof ApiError ? err.message : "Failed" }),
   });
+
+  // Which preview dialog is open, if any
+  const [preview, setPreview] = useState<EmailPreviewKind | null>(null);
+
+  const driverRecipients = useMemo<PreviewRecipient[]>(
+    () =>
+      (drivers.data ?? []).map((d) => ({
+        id: d.id,
+        label: displayNumber(d.displayId)
+          ? `${d.fullname} (${displayNumber(d.displayId)})`
+          : d.fullname,
+      })),
+    [drivers.data]
+  );
+
+  const studentRecipients = useMemo<PreviewRecipient[]>(
+    () =>
+      (students.data ?? []).map((s) => ({
+        id: s.id,
+        label: displayNumber(s.displayId)
+          ? `${s.fullname} (${displayNumber(s.displayId)})`
+          : s.fullname,
+      })),
+    [students.data]
+  );
+
+  const hostRecipients = useMemo<PreviewRecipient[]>(
+    () => (hosts.data ?? []).map((h) => ({ id: h.id, label: h.fullname })),
+    [hosts.data]
+  );
 
   const studentCount = students.data?.length ?? 0;
   const driverCount = drivers.data?.length ?? 0;
@@ -145,6 +188,7 @@ export function EmailToolsPage() {
             setSdResult(null);
             sdEmail.mutate();
           }}
+          onPreview={() => setPreview("student-driver-mapping")}
           isPending={sdEmail.isPending}
           result={sdResult}
         />
@@ -157,6 +201,7 @@ export function EmailToolsPage() {
             setDhResult(null);
             dhEmail.mutate();
           }}
+          onPreview={() => setPreview("driver-host-mapping")}
           isPending={dhEmail.isPending}
           result={dhResult}
         />
@@ -173,6 +218,7 @@ export function EmailToolsPage() {
             setScResult(null);
             studentCheckIn.mutate();
           }}
+          onPreview={() => setPreview("student-check-in")}
           isPending={studentCheckIn.isPending}
           result={scResult}
         />
@@ -185,10 +231,44 @@ export function EmailToolsPage() {
             setDcResult(null);
             driverCheckIn.mutate();
           }}
+          onPreview={() => setPreview("driver-check-in")}
           isPending={driverCheckIn.isPending}
           result={dcResult}
         />
       </div>
+
+      <EmailPreviewDialog
+        open={preview === "student-driver-mapping"}
+        onOpenChange={(o) => !o && setPreview(null)}
+        kind="student-driver-mapping"
+        title="Email Student-Driver Mappings"
+        recipients={driverRecipients}
+        recipientNoun="driver"
+      />
+      <EmailPreviewDialog
+        open={preview === "driver-host-mapping"}
+        onOpenChange={(o) => !o && setPreview(null)}
+        kind="driver-host-mapping"
+        title="Email Driver-Host Mappings"
+        recipients={hostRecipients}
+        recipientNoun="host"
+      />
+      <EmailPreviewDialog
+        open={preview === "student-check-in"}
+        onOpenChange={(o) => !o && setPreview(null)}
+        kind="student-check-in"
+        title="Send Student Check-in"
+        recipients={studentRecipients}
+        recipientNoun="student"
+      />
+      <EmailPreviewDialog
+        open={preview === "driver-check-in"}
+        onOpenChange={(o) => !o && setPreview(null)}
+        kind="driver-check-in"
+        title="Send Driver Check-in"
+        recipients={driverRecipients}
+        recipientNoun="driver"
+      />
     </Container>
   );
 }

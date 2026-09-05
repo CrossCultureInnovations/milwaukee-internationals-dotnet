@@ -42,4 +42,34 @@ public class AttendanceController(IAttendanceLogic attendanceLogic) : Controller
     {
         return Ok(await attendanceLogic.HandleStudentSendCheckIn());
     }
+
+    /// <summary>
+    /// Renders the check-in email for one student so it can be reviewed before sending
+    /// </summary>
+    /// <param name="recipientId">Student to render for, or omitted for the first one that would be sent to</param>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("Student/PreviewCheckIn")]
+    [SwaggerOperation("PreviewStudentCheckIn")]
+    public async Task<IActionResult> StudentPreviewCheckIn(int? recipientId)
+    {
+        var preview = await attendanceLogic.PreviewStudentCheckInEmail(recipientId);
+
+        return preview == null ? NotFound() : Ok(preview);
+    }
+
+    /// <summary>
+    /// Renders the check-in email for one driver so it can be reviewed before sending
+    /// </summary>
+    /// <param name="recipientId">Driver to render for, or omitted for the first one that would be sent to</param>
+    /// <returns></returns>
+    [HttpGet]
+    [Route("Driver/PreviewCheckIn")]
+    [SwaggerOperation("PreviewDriverCheckIn")]
+    public async Task<IActionResult> DriverPreviewCheckIn(int? recipientId)
+    {
+        var preview = await attendanceLogic.PreviewDriverCheckInEmail(recipientId);
+
+        return preview == null ? NotFound() : Ok(preview);
+    }
 }

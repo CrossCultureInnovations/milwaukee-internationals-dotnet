@@ -140,6 +140,20 @@ export type Driver = {
   registeredOn: string;
 };
 
+export type EmailPreview = {
+  to: string;
+  recipientName: string;
+  subject: string;
+  body: string;
+};
+
+/** Which bulk email to render. Each maps to one preview endpoint. */
+export type EmailPreviewKind =
+  | "student-driver-mapping"
+  | "driver-host-mapping"
+  | "student-check-in"
+  | "driver-check-in";
+
 export type Host = {
   id: number;
   email: string;
@@ -443,6 +457,16 @@ export const api = {
     }),
   emailStudentDriverMappings: () =>
     request("/studentdrivermapping/EmailMappings", { method: "POST" }),
+  previewEmail: (kind: EmailPreviewKind, recipientId?: number) => {
+    const paths: Record<EmailPreviewKind, string> = {
+      "student-driver-mapping": "/studentdrivermapping/PreviewEmail",
+      "driver-host-mapping": "/driverhostmapping/PreviewEmail",
+      "student-check-in": "/attendance/Student/PreviewCheckIn",
+      "driver-check-in": "/attendance/Driver/PreviewCheckIn",
+    };
+    const query = recipientId != null ? `?recipientId=${recipientId}` : "";
+    return request<EmailPreview>(`${paths[kind]}${query}`);
+  },
 
   // Driver-Host Mapping
   getDriverHostMappingStatus: () =>
