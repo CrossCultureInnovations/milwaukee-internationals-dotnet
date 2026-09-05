@@ -36,9 +36,9 @@ public class UserLogic(IEfRepository repository, UserManager<User> userManager, 
     /// Identity user — password hash, security stamp, lockout state — belongs to
     /// UserManager and must survive an edit untouched.
     /// </summary>
-    public override Task<User> Update(int id, User user)
+    public override async Task<User> Update(int id, User user)
     {
-        return base.Update(id, x =>
+        var updatedUser = await base.Update(id, x =>
         {
             x.Fullname = user.Fullname;
             x.UserName = user.UserName;
@@ -48,6 +48,33 @@ public class UserLogic(IEfRepository repository, UserManager<User> userManager, 
             x.LastLoggedInDate = user.LastLoggedInDate;
             x.Enable = user.Enable;
         });
+
+        var currentRoles = await userManager.GetRolesAsync(updatedUser);
+        var desiredRoles = user.UserRoleEnum.SubRoles().Select(x => x.ToString()).ToList();
+        var rolesToAdd = desiredRoles.Except(currentRoles).ToList();
+        var rolesToRemove = currentRoles.Except(desiredRoles).ToList();
+
+        if (rolesToAdd.Count > 0)
+        {
+            var result = await userManager.AddToRolesAsync(updatedUser, rolesToAdd);
+            ThrowIfRoleUpdateFailed(result);
+        }
+
+        if (rolesToRemove.Count > 0)
+        {
+            var result = await userManager.RemoveFromRolesAsync(updatedUser, rolesToRemove);
+            ThrowIfRoleUpdateFailed(result);
+        }
+
+        return updatedUser;
+    }
+
+    private static void ThrowIfRoleUpdateFailed(IdentityResult result)
+    {
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException(string.Join(" ", result.Errors.Select(x => x.Description)));
+        }
     }
 
     public async Task Disable(int id)
