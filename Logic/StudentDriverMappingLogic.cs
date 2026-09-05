@@ -158,11 +158,11 @@ public class StudentDriverMappingLogic : IStudentDriverMappingLogic
             Body = $@"                 
         <br />                                                                    
         <p> Hello {driver.Fullname},</p>
-        <p> Your Driver ID:<strong> {driver.DisplayId} </strong></p> 
+        <p> Your Driver ID:<strong> {driver.DisplayId?.Split('-').Last()} </strong></p> 
         <p> Students: </p>                       
         <ul>                                                                    
             {string.Join(Environment.NewLine, driver.Students?.Select(student =>
-                                                  $"<li>{student.Fullname} ({student.Country})</li>")
+                                                  $"<li>{student.Fullname} ({student.Country}){FamilySuffix(student)}</li>")
                                               ?? new List<string> { "<p>No student is assigned to you yet.</p>"})}                                                    
         </ul>
         <br />                                                                   
@@ -174,9 +174,20 @@ public class StudentDriverMappingLogic : IStudentDriverMappingLogic
             } : new List<string> { "<p>You are not assigned to a host home yet.</p>" })}
         <br />                                                                   
         <br />                                                                
-        <p> Thank you for helping with the tour this year. Reply to this email will be sent automatically to the team.</p>      
-        <p> For questions, comments and feedback, please contact Asher Imtiaz (414-499-5360) or Marie Wilke (414-852-5132).</p> 
+        <p> For questions, comments and feedback, please contact Asher Imtiaz (414-499-5360).</p> 
         "
         };
+    }
+
+    /// <summary>
+    /// Renders the family members joining a student, when there are any
+    /// </summary>
+    /// <param name="student"></param>
+    /// <returns></returns>
+    private static string FamilySuffix(Student student)
+    {
+        if (!student.IsFamily || student.FamilySize <= 0) return string.Empty;
+
+        return $" + {student.FamilySize} family member{(student.FamilySize == 1 ? string.Empty : "s")}";
     }
 }
