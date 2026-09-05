@@ -290,6 +290,7 @@ function StudentDriverSection() {
                       onClick={() => setSelectedStudentId(s.id === selectedStudentId ? null : s.id)}
                       className={cn(
                         "flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-accent",
+                        s.isPresent && "bg-green-100/70 dark:bg-green-950/40",
                         s.id === selectedStudentId && "bg-primary/10 text-primary",
                       )}
                     >
@@ -365,6 +366,7 @@ function StudentDriverSection() {
                       onClick={() => setSelectedDriverId(d.id === selectedDriverId ? null : d.id)}
                       className={cn(
                         "flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-accent",
+                        d.isPresent && "bg-green-100/70 dark:bg-green-950/40",
                         d.id === selectedDriverId && "bg-primary/10 text-primary",
                       )}
                     >
