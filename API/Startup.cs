@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text;
@@ -290,7 +291,7 @@ public class Startup
         
         services.Scan(scan => scan
             .FromAssemblies(Assembly.Load("API"), Assembly.Load("Logic"), Assembly.Load("DAL"))
-            .AddClasses() // to register
+            .AddClasses(classes => classes.Where(type => !type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEquatable<>))))
             .UsingRegistrationStrategy(RegistrationStrategy.Skip) // 2. Define how to handle duplicates
             .AsImplementedInterfaces() // 2. Specify which services they are registered as
             .WithTransientLifetime()); // 3. Set the lifetime for the services
@@ -343,8 +344,11 @@ public class Startup
                 var statusCodeEnum = (HttpStatusCode)context.Response.StatusCode;
                 await apiEventServiceCtx.RecordEvent($"Failure with status code: {statusCodeEnum.ToString()} / {context.Response.StatusCode} route: [{context.Request.Method}] {context.Request.GetDisplayUrl()} => {exception?.Message}");
                     
-                context.Request.Path = $"/Error/{context.Response.StatusCode}";
-                await next();
+                if (!context.Request.Path.StartsWithSegments("/api") && !context.Request.Path.StartsWithSegments("/stats"))
+                {
+                    context.Request.Path = $"/Error/{context.Response.StatusCode}";
+                    await next();
+                }
             }
         });
 

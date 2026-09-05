@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using API.Attributes;
 using API.Extensions;
@@ -123,9 +123,11 @@ public class RegistrationController(IRegistrationLogic registrationLogic, IAltch
                 throw new Exception("Captcha failed");
             }
 
-            await registrationLogic.RegisterStudent(student);
+            var registeredStudent = await registrationLogic.RegisterStudent(student);
 
             ModelState.ClearModelStateErrors();
+
+            ViewBag.DisplayId = registeredStudent?.DisplayId;
 
             return View("Thankyou", EntitiesEnum.Student);
         }

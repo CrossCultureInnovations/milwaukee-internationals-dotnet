@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using DAL.Interfaces;
@@ -40,6 +40,7 @@ public class RegistrationLogic(
         await emailServiceApiApi.SendEmailAsync([student.Email], "Tour of Milwaukee Registration Confirmation",
             $@"
                     <p>Name: {student.Fullname}</p>
+                    <p>Student Number: {student.DisplayId}</p>
                     <p>University: {student.University}</p>
                     <p>Major: {student.Major}</p>
                     <p>Phone: {student.Phone}</p>
@@ -160,7 +161,7 @@ public class RegistrationLogic(
         }
     }
 
-    public async Task RegisterStudent(Student student)
+    public async Task<Student> RegisterStudent(Student student)
     {
         student = await studentLogic.Save(student);
 
@@ -171,6 +172,8 @@ public class RegistrationLogic(
             
             await SendStudentEmail(student);
         }
+
+        return student;
     }
 
     public async Task RegisterHost(Host host)

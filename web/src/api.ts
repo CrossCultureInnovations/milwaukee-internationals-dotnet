@@ -534,7 +534,7 @@ export const api = {
   getDriverRegistrationStatus: () =>
     request<RegistrationStatus>("/registration/driver/status"),
   registerStudent: (payload: RegistrationRequest<Student>) =>
-    request<{ success: boolean }>("/registration/student", {
+    request<{ success: boolean; displayId?: string; studentNumber?: string }>("/registration/student", {
       method: "POST",
       body: JSON.stringify(payload),
     }),

@@ -314,7 +314,7 @@ function RegistrationClosed({ type }: { type: "student" | "driver" }) {
 // Thank you screen
 // ---------------------------------------------------------------------------
 
-function ThankYou({ type }: { type: "student" | "driver" }) {
+function ThankYou({ type, displayId }: { type: "student" | "driver"; displayId?: string | null }) {
   return (
     <div className="py-12 text-center">
       <CheckCircle2 className="mx-auto h-12 w-12 text-green-500" />
@@ -329,6 +329,12 @@ function ThankYou({ type }: { type: "student" | "driver" }) {
       <p className="mt-4 text-sm text-muted-foreground">
         If you need any help, please contact Asher Imtiaz (414-499-5360).
       </p>
+
+      {type === "student" && displayId && (
+        <p className="mt-6 text-xs text-muted-foreground">
+          Student number: <span className="font-mono font-medium text-foreground">{displayId}</span>
+        </p>
+      )}
     </div>
   );
 }
@@ -351,6 +357,7 @@ function StudentRegistration() {
   const [kosherFood, setKosherFood] = useState(false);
   const [altcha, setAltcha] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [registeredDisplayId, setRegisteredDisplayId] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
   const statusQuery = useQuery({
@@ -361,7 +368,10 @@ function StudentRegistration() {
   const mutation = useMutation({
     mutationFn: (data: Partial<Student>) =>
       api.registerStudent({ registration: data, altcha }),
-    onSuccess: () => setDone(true),
+    onSuccess: (res) => {
+      setRegisteredDisplayId(res?.displayId ?? null);
+      setDone(true);
+    },
     onError: (err) => {
       setErrors({
         _server: err instanceof ApiError ? err.message : "Registration failed. Please try again.",
@@ -369,7 +379,7 @@ function StudentRegistration() {
     },
   });
 
-  if (done) return <ThankYou type="student" />;
+  if (done) return <ThankYou type="student" displayId={registeredDisplayId} />;
   if (statusQuery.data && !statusQuery.data.isOpen) return <RegistrationClosed type="student" />;
 
   function validate(): boolean {

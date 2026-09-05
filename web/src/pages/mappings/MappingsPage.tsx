@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import {
   Users,
@@ -9,6 +9,8 @@ import {
   Mail,
   Search,
   ArrowRight,
+  UtensilsCrossed,
+  Baby,
 } from "lucide-react";
 import { api } from "../../api";
 import type {
@@ -37,6 +39,7 @@ function StudentDriverSection() {
   const queryClient = useQueryClient();
   const students = useStudents();
   const drivers = useDrivers();
+  const hosts = useHosts();
 
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const [selectedDriverId, setSelectedDriverId] = useState<number | null>(null);
@@ -45,16 +48,103 @@ function StudentDriverSection() {
 
   const studentData = students.data ?? [];
   const driverData = drivers.data ?? [];
+  const hostData = hosts.data ?? [];
+
+  const hostsById = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const h of hostData) {
+      map.set(h.id, h.fullname);
+    }
+    return map;
+  }, [hostData]);
+
+  const getHostName = (d: Driver) =>
+    d.host?.fullname || (d.hostRefId != null ? hostsById.get(d.hostRefId) : undefined);
 
   const unmappedStudents = studentData.filter((s) => s.driverRefId == null);
   const mappedStudents = studentData.filter((s) => s.driverRefId != null);
 
-  const filteredUnmapped = unmappedStudents.filter((s) =>
-    s.fullname.toLowerCase().includes(studentSearch.toLowerCase()),
-  );
-  const filteredDrivers = driverData.filter((d) =>
-    d.fullname.toLowerCase().includes(driverSearch.toLowerCase()),
-  );
+  const houseStudentCounts = useMemo(() => {
+    return hostData.map((h) => {
+      const driversForHost = driverData.filter((d) => d.hostRefId === h.id);
+      const driverIds = new Set(driversForHost.map((d) => d.id));
+      const students = mappedStudents.filter(
+        (s) => s.driverRefId != null && driverIds.has(s.driverRefId)
+      );
+      return {
+        id: h.id,
+        fullname: h.fullname,
+        studentCount: students.length,
+      };
+    });
+  }, [hostData, driverData, mappedStudents]);
+
+  const filteredUnmapped = unmappedStudents.filter((s) => {
+    const q = studentSearch.trim().toLowerCase();
+    if (!q) return true;
+    const cleanQ = q.startsWith("#") ? q.slice(1).trim() : q;
+    const studentNumber = (s.displayId ? s.displayId.split("-").pop() : String(s.id)) || "";
+    const displayId = s.displayId || "";
+    const idStr = String(s.id);
+
+    return (
+      s.fullname.toLowerCase().includes(q) ||
+      (cleanQ !== "" && (
+        studentNumber.toLowerCase().includes(cleanQ) ||
+        displayId.toLowerCase().includes(cleanQ) ||
+        idStr.includes(cleanQ)
+      ))
+    );
+  });
+  const houseStudentCountMap = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const h of houseStudentCounts) {
+      map.set(h.id, h.studentCount);
+    }
+    return map;
+  }, [houseStudentCounts]);
+
+  const filteredDrivers = useMemo(() => {
+    const q = driverSearch.trim().toLowerCase();
+    const matched = driverData.filter((d) => {
+      if (!q) return true;
+      const hostName = getHostName(d)?.toLowerCase() || "";
+      return (
+        d.fullname.toLowerCase().includes(q) ||
+        hostName.includes(q)
+      );
+    });
+
+    return matched.sort((a, b) => {
+      // 1. Number of people in the cars (empty cars first)
+      const studentsA = a.students?.length ?? 0;
+      const studentsB = b.students?.length ?? 0;
+      if (studentsA !== studentsB) {
+        return studentsA - studentsB;
+      }
+
+      // 2. Tie breaker: Drivers going to houses with the least number of people higher
+      const hostIdA = a.hostRefId ?? a.host?.id ?? null;
+      const hostIdB = b.hostRefId ?? b.host?.id ?? null;
+      const houseCountA =
+        hostIdA != null ? (houseStudentCountMap.get(hostIdA) ?? 0) : Infinity;
+      const houseCountB =
+        hostIdB != null ? (houseStudentCountMap.get(hostIdB) ?? 0) : Infinity;
+      if (houseCountA !== houseCountB) {
+        return houseCountA - houseCountB;
+      }
+
+      // 3. Final tie breaker: Capacity remaining (highest capacity remaining first)
+      const remA = a.capacity - studentsA;
+      const remB = b.capacity - studentsB;
+      if (remA !== remB) {
+        return remB - remA;
+      }
+
+      // 4. Deterministic fallback by name
+      return a.fullname.localeCompare(b.fullname);
+    });
+  }, [driverData, driverSearch, houseStudentCountMap, hostsById]);
 
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ["students"] });
@@ -91,7 +181,7 @@ function StudentDriverSection() {
     }
   };
 
-  const isLoading = students.isLoading || drivers.isLoading;
+  const isLoading = students.isLoading || drivers.isLoading || hosts.isLoading;
 
   if (isLoading) {
     return (
@@ -142,6 +232,28 @@ function StudentDriverSection() {
         </Card>
       </div>
 
+      {/* Students per house summary */}
+      {hostData.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3.5 py-2">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mr-1">
+            <Home className="h-3.5 w-3.5 text-primary" />
+            <span>Students per house:</span>
+          </div>
+          {houseStudentCounts.map((h) => (
+            <div
+              key={h.id}
+              className="flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-2.5 py-1 text-xs"
+              title={`${h.fullname}: ${h.studentCount} students assigned`}
+            >
+              <span className="font-medium text-foreground">{h.fullname}</span>
+              <Badge variant="secondary" className="h-4 px-1.5 text-[11px] font-semibold leading-none">
+                {h.studentCount}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Map controls */}
       <Card>
         <CardHeader>
@@ -169,24 +281,45 @@ function StudentDriverSection() {
                     No unmapped students
                   </p>
                 )}
-                {filteredUnmapped.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => setSelectedStudentId(s.id === selectedStudentId ? null : s.id)}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-accent",
-                      s.id === selectedStudentId && "bg-primary/10 text-primary",
-                    )}
-                  >
-                    <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span className="truncate">{s.fullname}</span>
-                    {s.needCarSeat && (
-                      <Badge variant="outline" className="ml-auto text-xs">
-                        Car seat
-                      </Badge>
-                    )}
-                  </button>
-                ))}
+                {filteredUnmapped.map((s) => {
+                  const studentNumber = s.displayId || (s.id ? `#${s.id}` : "");
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => setSelectedStudentId(s.id === selectedStudentId ? null : s.id)}
+                      className={cn(
+                        "flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-accent",
+                        s.id === selectedStudentId && "bg-primary/10 text-primary",
+                      )}
+                    >
+                      <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{s.fullname}</span>
+                      <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                        {studentNumber}
+                      </span>
+                      <div className="ml-auto flex shrink-0 items-center gap-1.5">
+                        {s.kosherFood && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs gap-1 border-green-200 text-green-700 dark:border-green-800 dark:text-green-400"
+                          >
+                            <UtensilsCrossed className="h-3 w-3" />
+                            Kosher
+                          </Badge>
+                        )}
+                        {s.needCarSeat && (
+                          <Badge
+                            variant="outline"
+                            className="text-xs gap-1 border-amber-200 text-amber-700 dark:border-amber-800 dark:text-amber-400"
+                          >
+                            <Baby className="h-3 w-3" />
+                            Car seat
+                          </Badge>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
@@ -223,25 +356,33 @@ function StudentDriverSection() {
                     No drivers found
                   </p>
                 )}
-                {filteredDrivers.map((d) => (
-                  <button
-                    key={d.id}
-                    onClick={() => setSelectedDriverId(d.id === selectedDriverId ? null : d.id)}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-accent",
-                      d.id === selectedDriverId && "bg-primary/10 text-primary",
-                    )}
-                  >
-                    <Car className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <span className="truncate">{d.fullname}</span>
-                    <Badge
-                      variant={d.students.length >= d.capacity ? "secondary" : "outline"}
-                      className="ml-auto text-xs"
+                {filteredDrivers.map((d) => {
+                  const hostName = getHostName(d);
+                  return (
+                    <button
+                      key={d.id}
+                      onClick={() => setSelectedDriverId(d.id === selectedDriverId ? null : d.id)}
+                      className={cn(
+                        "flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm transition-colors hover:bg-accent",
+                        d.id === selectedDriverId && "bg-primary/10 text-primary",
+                      )}
                     >
-                      {d.students.length}/{d.capacity}
-                    </Badge>
-                  </button>
-                ))}
+                      <Car className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{d.fullname}</span>
+                      {hostName && (
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          ({hostName})
+                        </span>
+                      )}
+                      <Badge
+                        variant={d.students.length >= d.capacity ? "secondary" : "outline"}
+                        className="ml-auto text-xs shrink-0"
+                      >
+                        {d.students.length}/{d.capacity}
+                      </Badge>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -287,38 +428,63 @@ function StudentDriverSection() {
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-sm">
                       <Car className="h-4 w-4 text-primary" />
-                      {driver.fullname}
+                      <span>{driver.fullname}</span>
+                      {getHostName(driver) && (
+                        <span className="text-xs font-normal text-muted-foreground">
+                          ({getHostName(driver)})
+                        </span>
+                      )}
                       <Badge variant="outline" className="ml-auto text-xs">
                         {driver.students.length}/{driver.capacity}
                       </Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-1">
-                    {driverStudents.map((s) => (
-                      <div key={s.id} className={cn(
-                        "flex items-center gap-2 rounded-md px-2 py-1.5",
-                        s.isPresent
-                          ? "bg-green-100 dark:bg-green-950/40"
-                          : "bg-red-100 dark:bg-red-950/40"
-                      )}>
-                        <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                        <span className="text-sm truncate">{s.fullname}</span>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="ml-auto h-7 w-7 shrink-0"
-                          onClick={() =>
-                            unmapMutation.mutate({
-                              studentId: s.id,
-                              driverId: s.driverRefId!,
-                            })
-                          }
-                          disabled={unmapMutation.isPending}
-                        >
-                          <Unlink className="h-3.5 w-3.5 text-destructive" />
-                        </Button>
-                      </div>
-                    ))}
+                    {driverStudents.map((s) => {
+                      const studentNumber = s.displayId || (s.id ? `#${s.id}` : "");
+                      return (
+                        <div key={s.id} className={cn(
+                          "flex items-center gap-2 rounded-md px-2 py-1.5",
+                          s.isPresent
+                            ? "bg-green-100 dark:bg-green-950/40"
+                            : "bg-red-100 dark:bg-red-950/40"
+                        )}>
+                          <Users className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                          <span className="text-sm truncate">{s.fullname}</span>
+                          <span className="shrink-0 text-xs text-muted-foreground">
+                            {studentNumber}
+                          </span>
+                          <div className="ml-auto flex shrink-0 items-center gap-1.5">
+                            {s.kosherFood && (
+                              <UtensilsCrossed
+                                className="h-4 w-4 shrink-0 text-green-600 dark:text-green-400"
+                                title="Kosher"
+                              />
+                            )}
+                            {s.needCarSeat && (
+                              <Baby
+                                className="h-4 w-4 shrink-0 text-amber-500 dark:text-amber-400"
+                                title="Car seat"
+                              />
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 shrink-0"
+                              onClick={() =>
+                                unmapMutation.mutate({
+                                  studentId: s.id,
+                                  driverId: s.driverRefId!,
+                                })
+                              }
+                              disabled={unmapMutation.isPending}
+                            >
+                              <Unlink className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </CardContent>
                 </Card>
               ));

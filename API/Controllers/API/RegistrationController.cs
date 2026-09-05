@@ -49,8 +49,13 @@ public class RegistrationController(
 
         try
         {
-            await registrationLogic.RegisterStudent(request.Registration);
-            return Ok(new { success = true });
+            var student = await registrationLogic.RegisterStudent(request.Registration);
+            return Ok(new
+            {
+                success = true,
+                displayId = student?.DisplayId,
+                studentNumber = student?.DisplayId?.Split('-').Last()
+            });
         }
         catch (Exception e)
         {
