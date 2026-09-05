@@ -298,6 +298,23 @@ export type NewDriverHostMappingViewModel = {
 export type TokenViewModel = { token: string };
 export type SendSmsRequest = { phoneNumber: string; message: string };
 
+/** Per-group recipient counts for the current year, as the bulk send resolves them. */
+export type SmsForm = {
+  adminCount: number;
+  userCount: number;
+  studentCount: number;
+  driverCount: number;
+  hostCount: number;
+};
+
+export type BulkSmsRequest = {
+  students: boolean;
+  drivers: boolean;
+  hosts: boolean;
+  message: string;
+  additionalRecipients?: string;
+};
+
 // Auth response
 export type LoginResponse = {
   token: string;
@@ -537,6 +554,12 @@ export const api = {
     request<{ message: string }>("/sms/Driver/SendCheckIn", { method: "POST" }),
   sendStudentCheckInSms: () =>
     request<{ message: string }>("/sms/Student/SendCheckIn", { method: "POST" }),
+  getSmsForm: () => request<SmsForm>("/sms/Form"),
+  sendBulkSms: (payload: BulkSmsRequest) =>
+    request<{ message: string }>("/sms/Bulk", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   sendSms: (payload: SendSmsRequest) =>
     request<{ message: string }>("/sms", {
       method: "POST",

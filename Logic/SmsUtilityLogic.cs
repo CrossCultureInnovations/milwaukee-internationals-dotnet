@@ -25,8 +25,6 @@ public class SmsUtilityLogic(
 {
     public async Task<bool> HandleAdHocSms(SmsFormViewModel smsFormViewModel)
     {
-        var globalConfigs = await configLogic.ResolveGlobalConfig();
-
         // Outbound always addresses this year's people, never a previous cohort
         var year = ApiConstants.CurrentYear;
             
@@ -76,12 +74,6 @@ public class SmsUtilityLogic(
         {
             var emails = smsFormViewModel.AdditionalRecipients.Split(',').Select(x => x.Trim()).ToList();
             phoneNumbers.AddRange(emails);
-        }
-        
-        // CC to website admin
-        if (!string.IsNullOrWhiteSpace(globalConfigs.AdminPhoneNumber))
-        {
-            phoneNumbers.Add(globalConfigs.AdminPhoneNumber);
         }
 
         // Remove duplicates
