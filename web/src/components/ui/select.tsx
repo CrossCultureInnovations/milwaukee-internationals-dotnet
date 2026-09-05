@@ -4,6 +4,22 @@ import { cn } from "../../lib/utils";
 
 export const Select = SelectPrimitive.Root;
 export const SelectValue = SelectPrimitive.Value;
+export const SelectGroup = SelectPrimitive.Group;
+
+export function SelectLabel({
+  className,
+  ...props
+}: SelectPrimitive.SelectLabelProps) {
+  return (
+    <SelectPrimitive.Label
+      className={cn(
+        "px-2 py-1.5 text-xs font-semibold text-muted-foreground",
+        className
+      )}
+      {...props}
+    />
+  );
+}
 
 export function SelectTrigger({
   className,

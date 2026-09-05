@@ -8,6 +8,7 @@ import {
   Send,
   Users,
   Baby,
+  UtensilsCrossed,
   Eye,
   MessageSquare,
 } from "lucide-react";
@@ -30,6 +31,8 @@ import {
   SelectContent,
   SelectItem,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
 } from "../../components/ui/select";
 import { useStudents, useDrivers, useHosts } from "../../lib/hooks/useApiQueries";
 import {
@@ -372,6 +375,7 @@ export function AttendancePage() {
 
         return {
           id: d.id,
+          displayId: d.displayId,
           number: displayNumber(d.displayId),
           name: d.fullname,
           hostName,
@@ -384,6 +388,27 @@ export function AttendancePage() {
       })
       .sort((a, b) => a.sortKey - b.sortKey || a.name.localeCompare(b.name));
   }, [drivers, hostsById, assignedByDriverId]);
+
+  // Same options, bucketed by host home. Hosts read alphabetically; drivers with
+  // no host home go last whatever their name would sort as.
+  const driverGroups = useMemo(() => {
+    const byHost = new Map<string, typeof driverOptions>();
+
+    for (const d of driverOptions) {
+      const key = d.hostName ?? "";
+      const bucket = byHost.get(key);
+      if (bucket) bucket.push(d);
+      else byHost.set(key, [d]);
+    }
+
+    return Array.from(byHost.entries())
+      .map(([hostName, options]) => ({ hostName, options }))
+      .sort((a, b) => {
+        if (!a.hostName) return 1;
+        if (!b.hostName) return -1;
+        return a.hostName.localeCompare(b.hostName);
+      });
+  }, [driverOptions]);
 
   // Counts
   const presentStudents = students?.filter((s) => s.isPresent).length ?? 0;
@@ -610,6 +635,15 @@ export function AttendancePage() {
                             <Users className="h-3 w-3" />+{student.familySize}
                           </span>
                         )}
+                        {student.kosherFood && (
+                          <span
+                            className="inline-flex shrink-0 items-center gap-1 rounded-full bg-green-500/15 px-2 py-0.5 text-xs font-medium text-green-700 dark:text-green-400"
+                            title="Needs a kosher meal"
+                          >
+                            <UtensilsCrossed className="h-3 w-3" aria-hidden="true" />
+                            Kosher
+                          </span>
+                        )}
                         {student.country && (
                           <span className="font-normal text-muted-foreground">
                             ({student.country})
@@ -636,13 +670,20 @@ export function AttendancePage() {
                           });
                         }}
                       >
-                        <SelectTrigger className="h-9 w-full text-sm">
+                        <SelectTrigger
+                          className={cn(
+                            "h-9 w-full text-sm",
+                            // An empty select should read as a blank waiting to
+                            // be filled, not as a value in its own right
+                            !assigned &&
+                              "border-dashed bg-transparent text-muted-foreground"
+                          )}
+                        >
                           {assigned ? (
                             <SelectValue placeholder="Assign driver">
-                              <span className="truncate">
-                                {[assigned.number, assigned.name]
-                                  .filter(Boolean)
-                                  .join(" ")}
+                              <span className="flex min-w-0 items-center gap-2">
+                                <DriverNumber displayId={assigned.displayId} />
+                                <span className="truncate">{assigned.name}</span>
                               </span>
                             </SelectValue>
                           ) : (
@@ -653,29 +694,33 @@ export function AttendancePage() {
                           {assignedId != null && (
                             <SelectItem value={UNASSIGN}>Unassign</SelectItem>
                           )}
-                          {driverOptions.map((d) => (
-                            <SelectItem
-                              key={d.id}
-                              value={String(d.id)}
-                              className={cn(d.full && "text-muted-foreground")}
-                            >
-                              <span className="flex w-full items-center gap-2">
-                                {d.number && (
-                                  <span className="w-6 shrink-0 tabular-nums">
-                                    {d.number}
+                          {driverGroups.map((group) => (
+                            <SelectGroup key={group.hostName || "no-host"}>
+                              <SelectLabel>
+                                {group.hostName || "No host assigned"}
+                              </SelectLabel>
+                              {group.options.map((d) => (
+                                <SelectItem
+                                  key={d.id}
+                                  value={String(d.id)}
+                                  className={cn(
+                                    d.full && "text-muted-foreground"
+                                  )}
+                                >
+                                  <span className="flex w-full items-center gap-2">
+                                    {d.number && (
+                                      <span className="w-6 shrink-0 tabular-nums">
+                                        {d.number}
+                                      </span>
+                                    )}
+                                    <span className="truncate">{d.name}</span>
+                                    <span className="ml-auto shrink-0 pl-3 tabular-nums text-muted-foreground">
+                                      {d.taken}/{d.capacity}
+                                    </span>
                                   </span>
-                                )}
-                                <span className="truncate">{d.name}</span>
-                                {d.hostName && (
-                                  <span className="truncate text-muted-foreground">
-                                    &middot; {d.hostName}
-                                  </span>
-                                )}
-                                <span className="ml-auto shrink-0 pl-3 tabular-nums text-muted-foreground">
-                                  {d.taken}/{d.capacity}
-                                </span>
-                              </span>
-                            </SelectItem>
+                                </SelectItem>
+                              ))}
+                            </SelectGroup>
                           ))}
                         </SelectContent>
                       </Select>
