@@ -44,13 +44,21 @@ import { cn } from "../../lib/utils";
 // Form schemas
 // ---------------------------------------------------------------------------
 
+const passwordPattern = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/;
+
 const userSchema = z.object({
   fullname: z.string().min(1, "Name is required"),
   userName: z.string().min(1, "Username is required"),
   email: z.string().email("Invalid email"),
   phoneNumber: z.string().optional().default(""),
   userRoleEnum: z.enum(["Basic", "Admin"]).default("Basic"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z
+    .string()
+    .regex(
+      passwordPattern,
+      "Must be 8+ chars with uppercase, lowercase, digit, and special char (#?!@$%^&*-)"
+    ),
+  enable: z.boolean().default(true),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
@@ -65,8 +73,6 @@ const editUserSchema = z.object({
 });
 
 type EditUserFormValues = z.infer<typeof editUserSchema>;
-
-const passwordPattern = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/;
 
 // ---------------------------------------------------------------------------
 // Create user form (Sheet)
@@ -91,6 +97,7 @@ function CreateUserForm({ onSuccess }: { onSuccess: () => void }) {
       phoneNumber: "",
       userRoleEnum: "Basic",
       password: "",
+      enable: true,
     },
   });
 
@@ -171,7 +178,7 @@ function CreateUserForm({ onSuccess }: { onSuccess: () => void }) {
           <label className="mb-1.5 block text-sm font-medium text-foreground">
             Password *
           </label>
-          <Input {...register("password")} type="password" placeholder="Min 6 characters" />
+          <Input {...register("password")} type="password" placeholder="8+ chars with uppercase, lowercase, number & symbol" />
           {errors.password && (
             <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>
           )}

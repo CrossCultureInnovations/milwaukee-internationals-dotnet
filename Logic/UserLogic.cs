@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -7,16 +7,55 @@ using DAL.Interfaces;
 using EfCoreRepository.Interfaces;
 using Logic.Abstracts;
 using Logic.Interfaces;
+using Logic.Utilities;
 using Microsoft.AspNetCore.Identity;
 using Models.Entities;
 using Models.Enums;
 
 namespace Logic;
 
-public class UserLogic(IEfRepository repository, UserManager<User> userManager, IApiEventService apiEventService)
+public class UserLogic(
+    IEfRepository repository,
+    UserManager<User> userManager,
+    RoleManager<IdentityRole<int>> roleManager,
+    IApiEventService apiEventService)
     : BasicCrudLogicAbstract<User>, IUserLogic
 {
     private readonly IBasicCrud<User> _dal = repository.For<User>();
+
+    public override async Task<User> Save(User user)
+    {
+        if (string.IsNullOrWhiteSpace(user.Password))
+        {
+            throw new ArgumentException("Password is required to create a user.");
+        }
+
+        user.PhoneNumber = RegistrationUtility.NormalizePhoneNumber(user.PhoneNumber);
+        user.SecurityStamp = Guid.NewGuid().ToString();
+
+        var result = await userManager.CreateAsync(user, user.Password);
+        if (!result.Succeeded)
+        {
+            throw new InvalidOperationException(string.Join(" ", result.Errors.Select(x => x.Description)));
+        }
+
+        var desiredRoles = user.UserRoleEnum.SubRoles().Select(x => x.ToString()).ToList();
+        foreach (var roleName in desiredRoles)
+        {
+            if (!await roleManager.RoleExistsAsync(roleName))
+            {
+                await roleManager.CreateAsync(new IdentityRole<int>(roleName));
+            }
+        }
+
+        var roleResult = await userManager.AddToRolesAsync(user, desiredRoles);
+        ThrowIfRoleUpdateFailed(roleResult);
+
+        await apiEventService.RecordEvent($"Saved a new user [{user.UserName}] with role [{user.UserRoleEnum}]");
+
+        user.Password = null;
+        return user;
+    }
 
     public override async Task<User> Get(int id)
     {

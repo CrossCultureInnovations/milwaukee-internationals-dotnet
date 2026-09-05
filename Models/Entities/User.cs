@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Identity;
@@ -23,6 +23,15 @@ public class User : IdentityUser<int>, IPerson
     public DateTimeOffset LastLoggedInDate { get; set; } = DateTimeOffset.Now;
         
     public bool Enable { get; set; }
+
+    /// <summary>
+    /// Plaintext password used only during account creation.
+    /// Not mapped to database, and never returned in JSON.
+    /// </summary>
+    [NotMapped]
+    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public string Password { get; set; }
 
     /// <summary>
     /// The user endpoints return this entity directly. These two are credential
