@@ -20,7 +20,7 @@ import {
   TableCell,
 } from "../../components/ui/table";
 import { Card, CardContent } from "../../components/ui/card";
-import { cn } from "../../lib/utils";
+import { cn, displayNumber, seatCount, studentSeats } from "../../lib/utils";
 import { useStudents, useDrivers } from "../../lib/hooks/useApiQueries";
 import {
   api,
@@ -36,7 +36,7 @@ import {
 type Tab = "students" | "drivers";
 
 // ---------------------------------------------------------------------------
-// Assigned driver label — "<displayId>-<fullname>", or null when unassigned
+// Assigned driver label — "<number>-<fullname>", or null when unassigned
 // ---------------------------------------------------------------------------
 
 function driverLabel(
@@ -47,9 +47,8 @@ function driverLabel(
     (student.driverRefId != null ? driversById.get(student.driverRefId) : null) ??
     student.driver;
   if (!driver) return null;
-  return driver.displayId
-    ? `${driver.displayId}-${driver.fullname}`
-    : driver.fullname;
+  const number = displayNumber(driver.displayId);
+  return number ? `${number}-${driver.fullname}` : driver.fullname;
 }
 
 // ---------------------------------------------------------------------------
@@ -277,12 +276,16 @@ export function AttendancePage() {
   );
 
   // Seats taken per driver, counted from the student list so the number holds
-  // even when the driver payload does not hydrate its students collection
+  // even when the driver payload does not hydrate its students collection.
+  // A student bringing family takes more than one seat.
   const assignedByDriverId = useMemo(() => {
     const counts = new Map<number, number>();
     for (const student of students ?? []) {
       if (student.driverRefId == null) continue;
-      counts.set(student.driverRefId, (counts.get(student.driverRefId) ?? 0) + 1);
+      counts.set(
+        student.driverRefId,
+        (counts.get(student.driverRefId) ?? 0) + studentSeats(student)
+      );
     }
     return counts;
   }, [students]);
@@ -465,14 +468,18 @@ export function AttendancePage() {
               filteredDrivers.map((driver) => {
                 const assigned =
                   assignedByDriverId.get(driver.id) ??
-                  driver.students?.length ??
-                  0;
+                  seatCount(driver.students ?? []);
                 const full = assigned >= driver.capacity;
                 return (
                 <TableRow key={driver.id}>
                   <TableCell className="font-medium text-foreground">
                     <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
                       <span>{driver.fullname}</span>
+                      {displayNumber(driver.displayId) && (
+                        <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                          {displayNumber(driver.displayId)}
+                        </span>
+                      )}
                       <span
                         className={cn(
                           "inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-xs font-medium tabular-nums",

@@ -27,7 +27,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/ca
 import { Input } from "../../components/ui/input";
 import { Badge } from "../../components/ui/badge";
 import { Skeleton } from "../../components/ui/skeleton";
-import { cn } from "../../lib/utils";
+import { cn, displayNumber, seatCount } from "../../lib/utils";
 
 type Tab = "student-driver" | "driver-host";
 
@@ -282,7 +282,7 @@ function StudentDriverSection() {
                   </p>
                 )}
                 {filteredUnmapped.map((s) => {
-                  const studentNumber = s.displayId || (s.id ? `#${s.id}` : "");
+                  const studentNumber = displayNumber(s.displayId) || (s.id ? `#${s.id}` : "");
                   return (
                     <button
                       key={s.id}
@@ -369,6 +369,11 @@ function StudentDriverSection() {
                     >
                       <Car className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <span className="truncate">{d.fullname}</span>
+                      {displayNumber(d.displayId) && (
+                        <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                          {displayNumber(d.displayId)}
+                        </span>
+                      )}
                       {hostName && (
                         <span className="shrink-0 text-xs text-muted-foreground">
                           ({hostName})
@@ -429,19 +434,24 @@ function StudentDriverSection() {
                     <CardTitle className="flex items-center gap-2 text-sm">
                       <Car className="h-4 w-4 text-primary" />
                       <span>{driver.fullname}</span>
+                      {displayNumber(driver.displayId) && (
+                        <span className="text-xs font-medium text-muted-foreground">
+                          {displayNumber(driver.displayId)}
+                        </span>
+                      )}
                       {getHostName(driver) && (
                         <span className="text-xs font-normal text-muted-foreground">
                           ({getHostName(driver)})
                         </span>
                       )}
                       <Badge variant="outline" className="ml-auto text-xs">
-                        {driver.students.length}/{driver.capacity}
+                        {seatCount(driverStudents)}/{driver.capacity}
                       </Badge>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-1">
                     {driverStudents.map((s) => {
-                      const studentNumber = s.displayId || (s.id ? `#${s.id}` : "");
+                      const studentNumber = displayNumber(s.displayId) || (s.id ? `#${s.id}` : "");
                       return (
                         <div key={s.id} className={cn(
                           "flex items-center gap-2 rounded-md px-2 py-1.5",
@@ -647,6 +657,11 @@ function DriverHostSection() {
                   >
                     <Car className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <span className="truncate">{d.fullname}</span>
+                    {displayNumber(d.displayId) && (
+                      <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                        {displayNumber(d.displayId)}
+                      </span>
+                    )}
                     <Badge variant="outline" className="ml-auto text-xs">
                       {d.students.length} students
                     </Badge>
@@ -765,6 +780,11 @@ function DriverHostSection() {
                       )}>
                         <Car className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                         <span className="text-sm truncate">{d.fullname}</span>
+                        {displayNumber(d.displayId) && (
+                          <span className="shrink-0 text-xs font-medium text-muted-foreground">
+                            {displayNumber(d.displayId)}
+                          </span>
+                        )}
                         <Badge variant="outline" className="ml-auto text-xs shrink-0">
                           {d.students.length}/{d.capacity}
                         </Badge>
