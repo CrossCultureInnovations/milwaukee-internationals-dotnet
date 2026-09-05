@@ -145,7 +145,10 @@ public class RegistrationLogic(
     {
         var globalConfigs = await configLogic.ResolveGlobalConfig();
 
-        return DateTimeOffset.Now.Subtract(globalConfigs.TourDate.AddDays(1)).Days >= 0;
+        // Compare the instants directly. Subtracting and reading TimeSpan.Days
+        // truncates toward zero, so any negative span under 24 hours read as 0
+        // and closed registration a full day early.
+        return DateTimeOffset.Now >= globalConfigs.TourDate.AddDays(1);
     }
     
     public async Task RegisterDriver(Driver driver)
