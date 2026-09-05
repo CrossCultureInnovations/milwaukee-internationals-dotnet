@@ -17,6 +17,10 @@
     var themes = ApplicationConstants.Themes;
     var globalConfig = await ConfigLogic.ResolveGlobalConfig();
     var yearContext = globalConfig.YearValue;
+
+    // Pages reached from an emailed link are opened by drivers and students who are
+    // not signed in; the admin navigation only confuses them, so those views opt out.
+    var hideNav = ViewData["HideNav"] as bool? == true;
 }
 
 <!DOCTYPE html>
@@ -119,11 +123,14 @@
 <nav class="navbar navbar-default">
     <div class="container-fluid">
         <div class="navbar-header">
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
+            @if (!hideNav)
+            {
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+            }
             <a class="navbar-brand" href="~/">
                 @ApplicationName
 
@@ -135,150 +142,153 @@
                 }
             </a>
         </div>
-        <div class="collapse navbar-collapse" id="myNavbar">
-            <ul class="nav navbar-nav">
-                <li class="@(ViewContext.RouteData.Matches("Home") ? "active" : "")">
-                    <a href="/">Register for Tour</a>
-                </li>
-
-                @if (utility.IsAuthenticated())
-                {
-                    <li class="dropdown @(ViewContext.RouteData.MatchesAnyController("User", "Student", "Driver", "Host", "Event") ? "active" : "")">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Listing <span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-
-                            @if (userInfo.UserRoleEnum == UserRoleEnum.Admin)
-                            {
-                                <li>
-                                    <a href="~/User">Users</a>
-                                </li>
-                            }
-                            <li>
-                                <a href="~/Student">Students</a>
-                            </li>
-                            <li>
-                                <a href="~/Driver">Drivers</a>
-                            </li>
-                            <li>
-                                <a href="~/Host">Hosts</a>
-                            </li>
-
-                            @if (globalConfig.EventFeature)
-                            {
-                                <li>
-                                    <a href="~/Event">Events</a>
-                                </li>
-                            }
-                            
-                            @if (userInfo.UserRoleEnum == UserRoleEnum.Admin)
-                            {
-                                <li>
-                                    <a href="~/Location">Locations</a>
-                                </li>
-                            }
-                        </ul>
+        @if (!hideNav)
+        {
+            <div class="collapse navbar-collapse" id="myNavbar">
+                <ul class="nav navbar-nav">
+                    <li class="@(ViewContext.RouteData.Matches("Home") ? "active" : "")">
+                        <a href="/">Register for Tour</a>
                     </li>
 
-                    <li class="dropdown @(ViewContext.RouteData.MatchesAnyController("Registration") ? "active" : "")">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#">Registration <span class="caret"></span></a>
-                        <ul class="dropdown-menu">
-                            <li>
-                                <a href="~/Registration/Driver">Register Driver</a>
-                            </li>
-                            <li>
-                                <a href="~/Registration/Host">Register Host</a>
-                            </li>
-                            @if (userInfo.UserRoleEnum == UserRoleEnum.Admin)
-                            {
-                                <li>
-                                    <a href="~/Registration/Location">Register Location</a>
-                                </li>
-                            }
-                        </ul>
-                    </li>
-
-                    <li class="@(ViewContext.RouteData.Matches("Students") ? "active" : "")">
-                        <a href="~/Student">Students</a>
-                    </li>
-
-                    <li class="@(ViewContext.RouteData.Matches("Mapping", "StudentDriverMapping") ? "active" : "")">
-                        <a href="~/Mapping/StudentDriverMapping">Driver Mapping</a>
-                    </li>
-
-                    @if (userInfo.UserRoleEnum == UserRoleEnum.Admin)
+                    @if (utility.IsAuthenticated())
                     {
-                        <li class="@(ViewContext.RouteData.Matches("Mapping", "DriverHostMapping") ? "active" : "")">
-                            <a href="~/Mapping/DriverHostMapping">Host Mapping</a>
-                        </li>
-                    }
-
-                    <li class="@(ViewContext.RouteData.Matches("Attendance", "Driver") ? "active" : "")">
-                        <a href="~/Attendance/Driver">Driver Attendance</a>
-                    </li>
-
-                    <li class="@(ViewContext.RouteData.Matches("Attendance", "Student") ? "active" : "")">
-                        <a href="~/Attendance/Student">Manage Tour</a>
-                    </li>
-
-                    @if (userInfo.UserRoleEnum == UserRoleEnum.Admin && globalConfig.LocationWizardFeature)
-                    {
-                        <li class="@(ViewContext.RouteData.Matches("LocationWizard") ? "active" : "")">
-                            <a href="~/LocationWizard">Location Wizard</a>
-                        </li>
-                    }
-                }
-            </ul>
-
-            <ul class="nav navbar-nav navbar-right">
-                @if (!utility.IsAuthenticated())
-                {
-                    <li>
-                        <a href="~/Identity/login"><span class="glyphicon glyphicon-log-in"></span> Login</a>
-                    </li>
-                }
-                else
-                {
-                    if (userInfo.UserRoleEnum == UserRoleEnum.Admin)
-                    {
-                        <li class="dropdown">
-                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">Admin Panel <span class="caret"></span></a>
+                        <li class="dropdown @(ViewContext.RouteData.MatchesAnyController("User", "Student", "Driver", "Host", "Event") ? "active" : "")">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">Listing <span class="caret"></span></a>
                             <ul class="dropdown-menu">
-                                <li class="@(ViewContext.RouteData.Matches("Utility", "Email") ? "active" : "")">
-                                    <a href="~/Utility/AdHocEmail">Email Utility</a>
+
+                                @if (userInfo.UserRoleEnum == UserRoleEnum.Admin)
+                                {
+                                    <li>
+                                        <a href="~/User">Users</a>
+                                    </li>
+                                }
+                                <li>
+                                    <a href="~/Student">Students</a>
                                 </li>
+                                <li>
+                                    <a href="~/Driver">Drivers</a>
+                                </li>
+                                <li>
+                                    <a href="~/Host">Hosts</a>
+                                </li>
+
+                                @if (globalConfig.EventFeature)
+                                {
+                                    <li>
+                                        <a href="~/Event">Events</a>
+                                    </li>
+                                }
                                 
-                                <li class="@(ViewContext.RouteData.Matches("Utility", "Sms") ? "active" : "")">
-                                    <a href="~/Utility/AdHocSms">SMS Utility</a>
-                                </li>
-
-                                <li class="@(ViewContext.RouteData.Matches("Config") ? "active" : "")">
-                                    <a href="~/Config">Configuration</a>
-                                </li>
-
-                                <li class="@(ViewContext.RouteData.Matches("Stats") ? "active" : "")">
-                                    <a href="~/Stats">Statistics</a>
-                                </li>
-
-                                <li class="@(ViewContext.RouteData.Matches("ApiEvents") ? "active" : "")">
-                                    <a href="~/ApiEvents">API Events</a>
-                                </li>
+                                @if (userInfo.UserRoleEnum == UserRoleEnum.Admin)
+                                {
+                                    <li>
+                                        <a href="~/Location">Locations</a>
+                                    </li>
+                                }
                             </ul>
                         </li>
+
+                        <li class="dropdown @(ViewContext.RouteData.MatchesAnyController("Registration") ? "active" : "")">
+                            <a class="dropdown-toggle" data-toggle="dropdown" href="#">Registration <span class="caret"></span></a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="~/Registration/Driver">Register Driver</a>
+                                </li>
+                                <li>
+                                    <a href="~/Registration/Host">Register Host</a>
+                                </li>
+                                @if (userInfo.UserRoleEnum == UserRoleEnum.Admin)
+                                {
+                                    <li>
+                                        <a href="~/Registration/Location">Register Location</a>
+                                    </li>
+                                }
+                            </ul>
+                        </li>
+
+                        <li class="@(ViewContext.RouteData.Matches("Students") ? "active" : "")">
+                            <a href="~/Student">Students</a>
+                        </li>
+
+                        <li class="@(ViewContext.RouteData.Matches("Mapping", "StudentDriverMapping") ? "active" : "")">
+                            <a href="~/Mapping/StudentDriverMapping">Driver Mapping</a>
+                        </li>
+
+                        @if (userInfo.UserRoleEnum == UserRoleEnum.Admin)
+                        {
+                            <li class="@(ViewContext.RouteData.Matches("Mapping", "DriverHostMapping") ? "active" : "")">
+                                <a href="~/Mapping/DriverHostMapping">Host Mapping</a>
+                            </li>
+                        }
+
+                        <li class="@(ViewContext.RouteData.Matches("Attendance", "Driver") ? "active" : "")">
+                            <a href="~/Attendance/Driver">Driver Attendance</a>
+                        </li>
+
+                        <li class="@(ViewContext.RouteData.Matches("Attendance", "Student") ? "active" : "")">
+                            <a href="~/Attendance/Student">Manage Tour</a>
+                        </li>
+
+                        @if (userInfo.UserRoleEnum == UserRoleEnum.Admin && globalConfig.LocationWizardFeature)
+                        {
+                            <li class="@(ViewContext.RouteData.Matches("LocationWizard") ? "active" : "")">
+                                <a href="~/LocationWizard">Location Wizard</a>
+                            </li>
+                        }
                     }
-                    <li>
-                        <a href="~/Profile">
-                            <span class="glyphicon glyphicon-user"></span> Profile
-                            <sub>
-                                <span class="badge">@userInfo.UserRoleEnum.ToString()</span>
-                            </sub>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="~/Identity/Logout"><span class="glyphicon glyphicon-log-out"></span> Logout</a>
-                    </li>
-                }
-            </ul>
-        </div>
+                </ul>
+
+                <ul class="nav navbar-nav navbar-right">
+                    @if (!utility.IsAuthenticated())
+                    {
+                        <li>
+                            <a href="~/Identity/login"><span class="glyphicon glyphicon-log-in"></span> Login</a>
+                        </li>
+                    }
+                    else
+                    {
+                        if (userInfo.UserRoleEnum == UserRoleEnum.Admin)
+                        {
+                            <li class="dropdown">
+                                <a class="dropdown-toggle" data-toggle="dropdown" href="#">Admin Panel <span class="caret"></span></a>
+                                <ul class="dropdown-menu">
+                                    <li class="@(ViewContext.RouteData.Matches("Utility", "Email") ? "active" : "")">
+                                        <a href="~/Utility/AdHocEmail">Email Utility</a>
+                                    </li>
+                                    
+                                    <li class="@(ViewContext.RouteData.Matches("Utility", "Sms") ? "active" : "")">
+                                        <a href="~/Utility/AdHocSms">SMS Utility</a>
+                                    </li>
+
+                                    <li class="@(ViewContext.RouteData.Matches("Config") ? "active" : "")">
+                                        <a href="~/Config">Configuration</a>
+                                    </li>
+
+                                    <li class="@(ViewContext.RouteData.Matches("Stats") ? "active" : "")">
+                                        <a href="~/Stats">Statistics</a>
+                                    </li>
+
+                                    <li class="@(ViewContext.RouteData.Matches("ApiEvents") ? "active" : "")">
+                                        <a href="~/ApiEvents">API Events</a>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        <li>
+                            <a href="~/Profile">
+                                <span class="glyphicon glyphicon-user"></span> Profile
+                                <sub>
+                                    <span class="badge">@userInfo.UserRoleEnum.ToString()</span>
+                                </sub>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="~/Identity/Logout"><span class="glyphicon glyphicon-log-out"></span> Logout</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
     </div>
 </nav>
 

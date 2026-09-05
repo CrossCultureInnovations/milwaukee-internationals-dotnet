@@ -4,6 +4,10 @@
 @{
     ViewBag.Title = "Email Check-In Utility";
     Layout = "_Layout";
+
+    // Drivers and students open this from an emailed link while signed out, so the
+    // site navigation is noise to them
+    ViewData["HideNav"] = true;
 }
 
 <div class="container" ng-controller="emailCheckInCtrl">

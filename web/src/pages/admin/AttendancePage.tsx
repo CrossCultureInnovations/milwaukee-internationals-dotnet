@@ -8,6 +8,7 @@ import {
   Send,
   Users,
   Baby,
+  Eye,
 } from "lucide-react";
 import { Container } from "../../components/layout/Container";
 import { Button } from "../../components/ui/button";
@@ -26,9 +27,14 @@ import { useStudents, useDrivers } from "../../lib/hooks/useApiQueries";
 import {
   api,
   type AttendanceViewModel,
+  type EmailPreviewKind,
   type Student,
   type Driver,
 } from "../../api";
+import {
+  EmailPreviewDialog,
+  type PreviewRecipient,
+} from "../../components/EmailPreviewDialog";
 
 // ---------------------------------------------------------------------------
 // Tab type
@@ -247,6 +253,9 @@ export function AttendancePage() {
   const [sendStudentSuccess, setSendStudentSuccess] = useState(false);
   const [sendDriverSuccess, setSendDriverSuccess] = useState(false);
 
+  // Which check-in preview dialog is open, if any
+  const [preview, setPreview] = useState<EmailPreviewKind | null>(null);
+
   // Filtered lists — email is still searchable even though it is no longer shown
   const filteredStudents = useMemo(() => {
     if (!students) return [];
@@ -269,6 +278,30 @@ export function AttendancePage() {
         d.email.toLowerCase().includes(q)
     );
   }, [drivers, search]);
+
+  // Recipient pickers for the preview dialog. These are the full lists, not the
+  // search-filtered ones — the preview is about the email, not the current search.
+  const studentRecipients = useMemo<PreviewRecipient[]>(
+    () =>
+      (students ?? []).map((s) => ({
+        id: s.id,
+        label: displayNumber(s.displayId)
+          ? `${s.fullname} (${displayNumber(s.displayId)})`
+          : s.fullname,
+      })),
+    [students]
+  );
+
+  const driverRecipients = useMemo<PreviewRecipient[]>(
+    () =>
+      (drivers ?? []).map((d) => ({
+        id: d.id,
+        label: displayNumber(d.displayId)
+          ? `${d.fullname} (${displayNumber(d.displayId)})`
+          : d.fullname,
+      })),
+    [drivers]
+  );
 
   // Driver lookup so each student row can name their assigned driver
   const driversById = useMemo(
@@ -313,41 +346,78 @@ export function AttendancePage() {
           </div>
         </div>
 
-        {/* Send check-in button */}
-        {tab === "students" ? (
-          <Button
-            variant="outline"
-            disabled={sendStudentCheckIn.isPending}
-            onClick={() => {
-              setSendStudentSuccess(false);
-              sendStudentCheckIn.mutate();
-            }}
-          >
-            <Send className="mr-2 h-4 w-4" />
-            {sendStudentCheckIn.isPending
-              ? "Sending..."
-              : sendStudentSuccess
-                ? "Check-in Sent!"
-                : "Send Student Check-in"}
-          </Button>
-        ) : (
-          <Button
-            variant="outline"
-            disabled={sendDriverCheckIn.isPending}
-            onClick={() => {
-              setSendDriverSuccess(false);
-              sendDriverCheckIn.mutate();
-            }}
-          >
-            <Send className="mr-2 h-4 w-4" />
-            {sendDriverCheckIn.isPending
-              ? "Sending..."
-              : sendDriverSuccess
-                ? "Check-in Sent!"
-                : "Send Driver Check-in"}
-          </Button>
-        )}
+        {/* Preview and send the check-in email for whichever list is showing */}
+        <div className="flex items-center gap-2">
+          {tab === "students" ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setPreview("student-check-in")}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                Preview
+              </Button>
+              <Button
+                variant="outline"
+                disabled={sendStudentCheckIn.isPending}
+                onClick={() => {
+                  setSendStudentSuccess(false);
+                  sendStudentCheckIn.mutate();
+                }}
+              >
+                <Send className="mr-2 h-4 w-4" />
+                {sendStudentCheckIn.isPending
+                  ? "Sending..."
+                  : sendStudentSuccess
+                    ? "Check-in Sent!"
+                    : "Send Student Check-in"}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setPreview("driver-check-in")}
+              >
+                <Eye className="mr-2 h-4 w-4" />
+                Preview
+              </Button>
+              <Button
+                variant="outline"
+                disabled={sendDriverCheckIn.isPending}
+                onClick={() => {
+                  setSendDriverSuccess(false);
+                  sendDriverCheckIn.mutate();
+                }}
+              >
+                <Send className="mr-2 h-4 w-4" />
+                {sendDriverCheckIn.isPending
+                  ? "Sending..."
+                  : sendDriverSuccess
+                    ? "Check-in Sent!"
+                    : "Send Driver Check-in"}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
+
+      <EmailPreviewDialog
+        open={preview === "student-check-in"}
+        onOpenChange={(o) => !o && setPreview(null)}
+        kind="student-check-in"
+        title="Send Student Check-in"
+        recipients={studentRecipients}
+        recipientNoun="student"
+      />
+      <EmailPreviewDialog
+        open={preview === "driver-check-in"}
+        onOpenChange={(o) => !o && setPreview(null)}
+        kind="driver-check-in"
+        title="Send Driver Check-in"
+        recipients={driverRecipients}
+        recipientNoun="driver"
+      />
 
       {/* Summary cards — clicking one switches the list below */}
       <div className="mb-6 grid gap-4 sm:grid-cols-2">
