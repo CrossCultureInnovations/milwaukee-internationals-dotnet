@@ -10,7 +10,7 @@ import { api, ApiError } from "../../api";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { AltchaWidget } from "../../components/AltchaWidget";
+import { CapWidget } from "../../components/CapWidget";
 
 const registerSchema = z
   .object({
@@ -32,7 +32,7 @@ export function RegisterPage() {
   const { register: registerUser } = useAuth();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState<string | null>(null);
-  const [altcha, setAltcha] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaError, setCaptchaError] = useState<string | null>(null);
   const captchaQuery = useQuery({
     queryKey: ["auth", "captcha"],
@@ -49,7 +49,7 @@ export function RegisterPage() {
 
   const onSubmit = async (data: RegisterFormValues) => {
     setServerError(null);
-    if ((captchaQuery.data?.captchaEnabled ?? true) && !altcha) {
+    if ((captchaQuery.data?.captchaEnabled ?? false) && !captchaToken) {
       setCaptchaError("Please confirm you are human");
       return;
     }
@@ -62,7 +62,7 @@ export function RegisterPage() {
         phoneNumber: data.phoneNumber,
         password: data.password,
         confirmPassword: data.confirmPassword,
-        altcha,
+        captchaToken,
       });
       navigate("/login", { replace: true });
     } catch (err) {
@@ -194,11 +194,11 @@ export function RegisterPage() {
                 )}
               </div>
 
-              {captchaQuery.data?.captchaEnabled && captchaQuery.data.challengeUrl && (
+              {captchaQuery.data?.captchaEnabled && captchaQuery.data.captchaEndpoint && (
                 <div className="space-y-1.5">
-                  <AltchaWidget
-                    challengeUrl={captchaQuery.data.challengeUrl}
-                    onVerified={setAltcha}
+                  <CapWidget
+                    captchaEndpoint={captchaQuery.data.captchaEndpoint}
+                    onVerified={setCaptchaToken}
                   />
                   {captchaError && <p className="text-xs text-red-500">{captchaError}</p>}
                 </div>

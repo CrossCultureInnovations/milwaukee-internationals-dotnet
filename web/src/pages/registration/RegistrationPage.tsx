@@ -12,7 +12,7 @@ import { api, ApiError, type Student, type Driver } from "../../api";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Card, CardContent } from "../../components/ui/card";
-import { AltchaWidget } from "../../components/AltchaWidget";
+import { CapWidget } from "../../components/CapWidget";
 import { cn } from "../../lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -355,7 +355,7 @@ function StudentRegistration() {
   const [familySize, setFamilySize] = useState("1");
   const [needCarSeat, setNeedCarSeat] = useState(false);
   const [kosherFood, setKosherFood] = useState(false);
-  const [altcha, setAltcha] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [registeredDisplayId, setRegisteredDisplayId] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -367,7 +367,7 @@ function StudentRegistration() {
 
   const mutation = useMutation({
     mutationFn: (data: Partial<Student>) =>
-      api.registerStudent({ registration: data, altcha }),
+      api.registerStudent({ registration: data, captchaToken }),
     onSuccess: (res) => {
       setRegisteredDisplayId(res?.displayId ?? null);
       setDone(true);
@@ -392,8 +392,8 @@ function StudentRegistration() {
     if (!country) e.country = "Country is required";
     if (isFamily && (parseInt(familySize) < 1 || isNaN(parseInt(familySize))))
       e.familySize = "Family size must be at least 1";
-    if ((statusQuery.data?.captchaEnabled ?? true) && !altcha)
-      e.altcha = "Please confirm you are human";
+    if ((statusQuery.data?.captchaEnabled ?? false) && !captchaToken)
+      e.captchaToken = "Please confirm you are human";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -521,13 +521,13 @@ function StudentRegistration() {
         />
       </div>
 
-      {statusQuery.data?.captchaEnabled && statusQuery.data.challengeUrl && (
+      {statusQuery.data?.captchaEnabled && statusQuery.data.captchaEndpoint && (
         <div className="space-y-1.5">
-          <AltchaWidget
-            challengeUrl={statusQuery.data.challengeUrl}
-            onVerified={setAltcha}
+          <CapWidget
+            captchaEndpoint={statusQuery.data.captchaEndpoint}
+            onVerified={setCaptchaToken}
           />
-          {errors.altcha && <p className="text-xs text-red-500">{errors.altcha}</p>}
+          {errors.captchaToken && <p className="text-xs text-red-500">{errors.captchaToken}</p>}
         </div>
       )}
 
@@ -556,7 +556,7 @@ function DriverRegistration() {
   const [haveChildSeat, setHaveChildSeat] = useState(false);
   const [requireNavigator, setRequireNavigator] = useState(true);
   const [navigator, setNavigator] = useState("");
-  const [altcha, setAltcha] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [done, setDone] = useState(false);
 
@@ -567,7 +567,7 @@ function DriverRegistration() {
 
   const mutation = useMutation({
     mutationFn: (data: Partial<Driver>) =>
-      api.registerDriver({ registration: data, altcha }),
+      api.registerDriver({ registration: data, captchaToken }),
     onSuccess: () => setDone(true),
     onError: (err) => {
       setErrors({
@@ -589,8 +589,8 @@ function DriverRegistration() {
     if (isNaN(cap) || cap < 1 || cap > 7) e.capacity = "Capacity must be 1-7";
     if (!requireNavigator && !navigator.trim())
       e.navigator = "Navigator name is required";
-    if ((statusQuery.data?.captchaEnabled ?? true) && !altcha)
-      e.altcha = "Please confirm you are human";
+    if ((statusQuery.data?.captchaEnabled ?? false) && !captchaToken)
+      e.captchaToken = "Please confirm you are human";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -685,13 +685,13 @@ function DriverRegistration() {
         )}
       </div>
 
-      {statusQuery.data?.captchaEnabled && statusQuery.data.challengeUrl && (
+      {statusQuery.data?.captchaEnabled && statusQuery.data.captchaEndpoint && (
         <div className="space-y-1.5">
-          <AltchaWidget
-            challengeUrl={statusQuery.data.challengeUrl}
-            onVerified={setAltcha}
+          <CapWidget
+            captchaEndpoint={statusQuery.data.captchaEndpoint}
+            onVerified={setCaptchaToken}
           />
-          {errors.altcha && <p className="text-xs text-red-500">{errors.altcha}</p>}
+          {errors.captchaToken && <p className="text-xs text-red-500">{errors.captchaToken}</p>}
         </div>
       )}
 

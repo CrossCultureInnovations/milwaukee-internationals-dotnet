@@ -15,10 +15,11 @@ public class ConfigController(IConfigLogic configLogic) : Controller
 {
     [HttpGet]
     [Route("")]
+    [AuthorizeMiddleware(UserRoleEnum.Admin)]
     public async Task<IActionResult> Index()
     {
         var result = await configLogic.ResolveGlobalConfig();
-            
+        result.CapSecretKey = string.Empty;
         return View(result);
     }
         
@@ -27,6 +28,11 @@ public class ConfigController(IConfigLogic configLogic) : Controller
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
     public async Task<IActionResult> UpdateConfig(GlobalConfigModel globalConfigs)
     {
+        if (string.IsNullOrWhiteSpace(globalConfigs.CapSecretKey))
+        {
+            globalConfigs.CapSecretKey = (await configLogic.ResolveGlobalConfig()).CapSecretKey;
+        }
+
         await configLogic.SetGlobalConfig(globalConfigs);
 
         return RedirectToAction("Index");

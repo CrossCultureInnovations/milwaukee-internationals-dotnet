@@ -20,7 +20,7 @@ public class HostLogic(IEfRepository repository, IConfigLogic configLogic, IApiE
     public override Task<Host> Save(Host instance)
     {
         // Set the year
-        instance.Year = DateTime.UtcNow.Year;
+        instance.Year = DateTimeOffset.Now.Year;
             
         // Normalize phone number
         instance.Phone = NormalizePhoneNumber(instance.Phone);

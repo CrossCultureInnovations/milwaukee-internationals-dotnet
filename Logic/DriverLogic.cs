@@ -36,12 +36,13 @@ public class DriverLogic(IEfRepository repository, IConfigLogic configLogic, IAp
         // Normalize phone number
         instance.Phone = NormalizePhoneNumber(instance.Phone);
 
-        var count = await _dal.Count([x => x.Year == DateTime.Now.Year]);
+        var currentYear = DateTimeOffset.Now.Year;
+        var count = await _dal.Count([x => x.Year == currentYear]);
 
         // Set the year
-        instance.Year = DateTime.UtcNow.Year;
+        instance.Year = currentYear;
 
-        var allDrivers = (await _dal.GetAll([x => x.Year == DateTime.Now.Year])).ToList();
+        var allDrivers = (await _dal.GetAll<Driver>([x => x.Year == currentYear])).ToList();
 
         // This will ensure there is never two drivers with the same number
         while (true)
@@ -96,10 +97,12 @@ public class DriverLogic(IEfRepository repository, IConfigLogic configLogic, IAp
 
     public async Task<Driver> DriverLogin(DriverLoginViewModel driverLoginViewModel)
     {
+        var currentYear = DateTimeOffset.Now.Year;
+
         var driver = await _dal.Get([x => 
             x.DisplayId == driverLoginViewModel.DriverId &&
             x.Email == driverLoginViewModel.Email &&
-            x.Year == DateTime.Now.Year]);
+            x.Year == currentYear]);
 
         return driver;
     }

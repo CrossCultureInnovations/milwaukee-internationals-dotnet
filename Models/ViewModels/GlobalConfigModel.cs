@@ -68,6 +68,15 @@ public class GlobalConfigModel : IViewModel
     [Display(Name = "Captcha protection")]
     public bool CaptchaEnabled { get; set; } = true;
 
+    [Display(Name = "Cap server URL")]
+    public string CapServerUrl { get; set; } = "https://captcha.coolify.hesamian.com";
+
+    [Display(Name = "Cap site key")]
+    public string CapSiteKey { get; set; } = "3b7034b421";
+
+    [Display(Name = "Cap secret key")]
+    public string CapSecretKey { get; set; }
+
     [Display(Name = "Email sender on behalf (double check with mailjet)")]
     public string EmailSenderOnBehalf { get; set; }
 }

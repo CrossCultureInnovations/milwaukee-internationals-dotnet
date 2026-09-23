@@ -1,16 +1,18 @@
-﻿@using API.Interfaces
+@using API.Interfaces
+@using API.Utilities
 @using DAL.Interfaces
-@using Microsoft.Extensions.Configuration
+@using Microsoft.AspNetCore.Hosting
 @model Models.Entities.Student
 @inject IConfigLogic ConfigLogic
-@inject IConfiguration Configuration
+@inject IWebHostEnvironment Environment
 @inject IHttpRequestUtilityBuilder RequestUtilityBuilder;
 
 @{
     ViewBag.Title = $"{DateTime.Now.Year} Free Tour of Milwaukee Registration";
     Layout = "_Layout";
     var globalConfig = await ConfigLogic.ResolveGlobalConfig();
-    var altchaChallengeUrl = Configuration["AltchaSettings:ChallengeUrl"];
+    var captchaEnabled = CapService.IsEnabled(globalConfig, Environment);
+    var captchaEndpoint = CapService.TryBuildEndpoint(globalConfig, out var endpoint) ? endpoint.AbsoluteUri : null;
     var utility = RequestUtilityBuilder.For(Context);
 }
 
@@ -36,16 +38,16 @@
     {
         @(await Html.PartialAsync("StudentContent", Model, new ViewDataDictionary(ViewData) {{ "Type", "Save"}}))
 
-        if (!utility.IsAuthenticated() && globalConfig.CaptchaEnabled)
+        if (!utility.IsAuthenticated() && captchaEnabled)
         {
-            <altcha-widget challenge="@altchaChallengeUrl"></altcha-widget>
+            <cap-widget required data-cap-api-endpoint="@captchaEndpoint"></cap-widget>
         }
 
         <input class="btn btn-primary" type="submit" value="Register For Tour" />
     }
 
-    @if (!utility.IsAuthenticated() && globalConfig.CaptchaEnabled)
+    @if (!utility.IsAuthenticated() && captchaEnabled)
     {
-        <script src="https://cdn.jsdelivr.net/npm/altcha@3/dist/main/altcha.js" type="module" async defer></script>
+        <script src="https://cdn.jsdelivr.net/npm/cap-widget@0.1.57" type="module" async defer></script>
     }
 </div>

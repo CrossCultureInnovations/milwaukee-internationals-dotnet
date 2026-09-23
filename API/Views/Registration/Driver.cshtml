@@ -1,16 +1,18 @@
-﻿@using API.Interfaces
+@using API.Interfaces
+@using API.Utilities
 @using DAL.Interfaces
-@using Microsoft.Extensions.Configuration
+@using Microsoft.AspNetCore.Hosting
 @model Models.Entities.Driver
 @inject IConfigLogic ConfigLogic
-@inject IConfiguration Configuration
+@inject IWebHostEnvironment Environment
 @inject IHttpRequestUtilityBuilder RequestUtilityBuilder;
 
 @{
     ViewBag.Title = "Edit Driver";
     Layout = "_Layout";
     var globalConfig = await ConfigLogic.ResolveGlobalConfig();
-    var altchaChallengeUrl = Configuration["AltchaSettings:ChallengeUrl"];
+    var captchaEnabled = CapService.IsEnabled(globalConfig, Environment);
+    var captchaEndpoint = CapService.TryBuildEndpoint(globalConfig, out var endpoint) ? endpoint.AbsoluteUri : null;
     var utility = RequestUtilityBuilder.For(Context);
 }
 
@@ -38,16 +40,16 @@
             <toggle class="pull-right" ng-model="agreeSms" on="Agree" off="Disagree" onstyle="btn-primary" offstyle="btn-default" ng-change="agreeSms_val = agreeSms"></toggle>
         </div> 
 
-        if (!utility.IsAuthenticated() && globalConfig.CaptchaEnabled)
+        if (!utility.IsAuthenticated() && captchaEnabled)
         {
-            <altcha-widget challenge="@altchaChallengeUrl"></altcha-widget>
+            <cap-widget required data-cap-api-endpoint="@captchaEndpoint"></cap-widget>
         }
         
         <input class="btn btn-primary" type="submit" value="Register" ng-disabled="!agreeSms" />
     }
 
-    @if (!utility.IsAuthenticated() && globalConfig.CaptchaEnabled)
+    @if (!utility.IsAuthenticated() && captchaEnabled)
     {
-        <script src="https://cdn.jsdelivr.net/npm/altcha@3/dist/main/altcha.js" type="module" async defer></script>
+        <script src="https://cdn.jsdelivr.net/npm/cap-widget@0.1.57" type="module" async defer></script>
     }
 </div>

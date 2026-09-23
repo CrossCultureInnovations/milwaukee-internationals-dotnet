@@ -11,16 +11,16 @@ using Models.Enums;
 
 namespace API.Controllers;
 
-[AllowAnonymous]
 [ApiExplorerSettings(IgnoreApi = true)]
 [Route("legacy/[controller]")]
-public class RegistrationController(IRegistrationLogic registrationLogic, IAltchaService altchaService)
+public class RegistrationController(IRegistrationLogic registrationLogic, ICapService capService)
     : Controller
 {
     /// <summary>
     /// Returns registration page for drivers
     /// </summary>
     /// <returns></returns>
+    [AllowAnonymous]
     [HttpGet]
     [Route("")]
     public IActionResult Index()
@@ -32,6 +32,7 @@ public class RegistrationController(IRegistrationLogic registrationLogic, IAltch
     /// Returns thank you page
     /// </summary>
     /// <returns></returns>
+    [AllowAnonymous]
     [HttpGet]
     [Route("ThankYou")]
     public IActionResult ThankYou()
@@ -43,6 +44,7 @@ public class RegistrationController(IRegistrationLogic registrationLogic, IAltch
     /// Returns registration pages
     /// </summary>
     /// <returns></returns>
+    [AllowAnonymous]
     [HttpGet]
     [Route("Driver")]
     public async Task<IActionResult> Driver()
@@ -65,15 +67,24 @@ public class RegistrationController(IRegistrationLogic registrationLogic, IAltch
     /// POST registration
     /// </summary>
     /// <returns></returns>
+    [AllowAnonymous]
     [HttpPost]
     [Route("Driver/Register")]
     public async Task<IActionResult> RegisterDriver(Driver driver)
     {
         try
         {
-            if (User.Identity is { IsAuthenticated: false } && !await altchaService.IsSatisfied(Request.Form["altcha"]))
+            if (User.Identity is { IsAuthenticated: false })
             {
-                throw new Exception("Captcha failed");
+                if (!await registrationLogic.IsRegisterDriverOpen())
+                {
+                    throw new Exception("Driver registration is closed");
+                }
+
+                if (!await capService.IsSatisfied(Request.Form["cap-token"]))
+                {
+                    throw new Exception("Captcha failed");
+                }
             }
 
             await registrationLogic.RegisterDriver(driver);
@@ -90,6 +101,7 @@ public class RegistrationController(IRegistrationLogic registrationLogic, IAltch
         }
     }
 
+    [AllowAnonymous]
     [HttpGet]
     [Route("Student")]
     public async Task<IActionResult> Student()
@@ -112,15 +124,24 @@ public class RegistrationController(IRegistrationLogic registrationLogic, IAltch
     /// POST registration
     /// </summary>
     /// <returns></returns>
+    [AllowAnonymous]
     [HttpPost]
     [Route("Student/Register")]
     public async Task<IActionResult> RegisterStudent(Student student)
     {
         try
         {
-            if (User.Identity is { IsAuthenticated: false } && !await altchaService.IsSatisfied(Request.Form["altcha"]))
+            if (User.Identity is { IsAuthenticated: false })
             {
-                throw new Exception("Captcha failed");
+                if (!await registrationLogic.IsRegisterStudentOpen())
+                {
+                    throw new Exception("Student registration is closed");
+                }
+
+                if (!await capService.IsSatisfied(Request.Form["cap-token"]))
+                {
+                    throw new Exception("Captcha failed");
+                }
             }
 
             var registeredStudent = await registrationLogic.RegisterStudent(student);

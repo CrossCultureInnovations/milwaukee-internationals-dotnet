@@ -114,6 +114,21 @@
         @Html.LabelFor(x => x.EmailSenderOnBehalf) <a href="https://app.mailjet.com/account/sender" target="_blank">[mailjet]</a>
         @Html.TextBoxFor(x => x.EmailSenderOnBehalf, new { @class = "form-control", type = "email", required = true })
     </div>
+
+    <div class="form-group">
+        @Html.LabelFor(x => x.CapServerUrl)
+        @Html.TextBoxFor(x => x.CapServerUrl, new { @class = "form-control", type = "url", required = true })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(x => x.CapSiteKey)
+        @Html.TextBoxFor(x => x.CapSiteKey, new { @class = "form-control", type = "text", required = true })
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(x => x.CapSecretKey)
+        @Html.PasswordFor(x => x.CapSecretKey, new { @class = "form-control", autocomplete = "new-password", placeholder = "Leave blank to keep the current secret" })
+    </div>
     
     <div class="form-group" style="margin-top: 1rem;">
         <button type="submit" class="btn btn-success">Save Configuration</button>

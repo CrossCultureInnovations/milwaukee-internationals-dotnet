@@ -79,6 +79,13 @@ public class PasswordResetController(
         TempData.Clear();
 
         var user = await userLogic.Get(userId);
+
+        if (user == null || string.IsNullOrWhiteSpace(token))
+        {
+            TempData["Error"] = "Password Reset link is not valid!";
+
+            return RedirectToAction("PasswordResetRequest");
+        }
             
         var isResetTokenValid = await userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultProvider, "ResetPassword", token);
             
@@ -108,10 +115,21 @@ public class PasswordResetController(
         {
             TempData["Error"] = "Password and Password Confirmation do not match!";
 
-            return RedirectToAction("PasswordReset");
+            return RedirectToAction("PasswordReset", new
+            {
+                userId = passwordResetViewModel.Id,
+                token = passwordResetViewModel.Token
+            });
         }
 
         var user = await userManager.FindByIdAsync(passwordResetViewModel.Id.ToString());
+
+        if (user == null || string.IsNullOrWhiteSpace(passwordResetViewModel.Token))
+        {
+            TempData["Error"] = "Password Reset link is not valid!";
+
+            return RedirectToAction("PasswordResetRequest");
+        }
             
         var isResetTokenValid = await userManager.ResetPasswordAsync(user, passwordResetViewModel.Token, passwordResetViewModel.Password);
             

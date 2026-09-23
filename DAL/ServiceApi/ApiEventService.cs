@@ -18,7 +18,8 @@ public class ApiEventService(
     ILogger<ApiEventService> logger)
     : IApiEventService
 {
-    private LinkedList<ApiEvent> _events = [];
+    private static readonly Queue<ApiEvent> Events = new();
+    private static readonly object EventsLock = new();
     private const int QueryLimit = 55;
 
     public async Task RecordEvent(string description)
@@ -41,9 +42,15 @@ public class ApiEventService(
 
         if (globalConfigs.RecordApiEvents)
         {
-            _events.AddFirst(entity);
+            lock (EventsLock)
+            {
+                Events.Enqueue(entity);
 
-            _events = new LinkedList<ApiEvent>(_events.Take(QueryLimit));
+                while (Events.Count > QueryLimit)
+                {
+                    Events.Dequeue();
+                }
+            }
         }
     }
 
@@ -54,6 +61,9 @@ public class ApiEventService(
 
     private IEnumerable<ApiEvent> GetEvents(int limit)
     {
-        return _events.Take(limit).ToList();
+        lock (EventsLock)
+        {
+            return Events.Reverse().Take(limit).ToList();
+        }
     }
 }

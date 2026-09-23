@@ -19,6 +19,7 @@ public class LocationMappingLogic(
     : BasicCrudLogicAbstract<LocationMapping>, ILocationMappingLogic
 {
     private readonly IBasicCrud<LocationMapping> _dal = repository.For<LocationMapping>();
+    private readonly IBasicCrud<Location> _locationDal = repository.For<Location>();
 
     protected override IBasicCrud<LocationMapping> Repository()
     {
@@ -59,9 +60,11 @@ public class LocationMappingLogic(
         return false;
     }
 
-    private async Task<bool> IsCyclic(List<LocationMapping> mappings)
+    private async Task<bool> IsCyclic(List<LocationMapping> mappings, int? year = null)
     {
-        var locations = (await locationLogic.GetAll()).ToList();
+        var locations = year.HasValue
+            ? (await _locationDal.GetAll<Location>([x => x.Year == year.Value])).ToList()
+            : (await locationLogic.GetAll()).ToList();
         var graph = locations.ToDictionary(x => x, _ => new List<Location>());
         
         foreach (var mapping in mappings)
@@ -90,12 +93,14 @@ public class LocationMappingLogic(
     
     public override async Task<LocationMapping> Save(LocationMapping instance)
     {
+        var currentYear = DateTimeOffset.Now.Year;
+
         if (instance.SourceId == instance.SinkId)
         {
             throw new Exception("Source and target are the same");
         }
 
-        var existingMappings = (await GetAll()).ToList();
+        var existingMappings = (await _dal.GetAll<LocationMapping>([x => x.Year == currentYear])).ToList();
 
         if (existingMappings.Any(x => x.SourceId == instance.SourceId && x.SinkId == instance.SinkId))
         {
@@ -104,12 +109,12 @@ public class LocationMappingLogic(
         
         var mappings = existingMappings.Concat([instance]).ToList();
 
-        if (await IsCyclic(mappings))
+        if (await IsCyclic(mappings, currentYear))
         {
             throw new Exception("Adding this mapping introduces a cycle");
         }
 
-        instance.Year = DateTime.Now.Year;
+        instance.Year = currentYear;
         
         // Clear these otherwise entity framework will try to add them to their corresponding tables as well
         instance.Source = null;

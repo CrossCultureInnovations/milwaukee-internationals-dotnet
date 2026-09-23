@@ -43,7 +43,7 @@ public class EventLogic(
     public override Task<Event> Save(Event instance)
     {
         // Set year context
-        instance.Year = DateTime.UtcNow.Year;
+        instance.Year = DateTimeOffset.Now.Year;
             
         return base.Save(instance);
     }
@@ -64,7 +64,7 @@ public class EventLogic(
         {
             Event = @event,
             AvailableStudents = (await studentLogic.GetAll())
-                .Where(x => @event.Students.All(y => y.Student != x))
+                .Where(x => @event.Students.All(y => y.StudentId != x.Id))
         };
     }
 
@@ -117,7 +117,7 @@ public class EventLogic(
         var eventOriginal = await Get(eventId);
 
         // Avoid unnecessary remove
-        if (eventOriginal.Students == null || eventOriginal.Students.Any(x => x.StudentId != studentId))
+        if (eventOriginal.Students == null || eventOriginal.Students.All(x => x.StudentId != studentId))
         {
             return false;
         }

@@ -241,13 +241,16 @@ export type GlobalConfigModel = {
   tourLocation: string;
   locationWizardFeature: boolean;
   captchaEnabled: boolean;
+  capServerUrl: string;
+  capSiteKey: string;
+  capSecretKey: string;
   emailSenderOnBehalf: string;
 };
 
 export type RegistrationStatus = {
   isOpen: boolean;
   captchaEnabled: boolean;
-  challengeUrl: string;
+  captchaEndpoint: string;
 };
 
 export type TourInfo = {
@@ -270,7 +273,7 @@ export type StatsViewModel = {
 };
 
 // View models
-export type LoginViewModel = { username: string; password: string; altcha: string | null };
+export type LoginViewModel = { username: string; password: string; captchaToken: string | null };
 export type RegisterViewModel = {
   phoneNumber: string;
   fullname: string;
@@ -278,12 +281,12 @@ export type RegisterViewModel = {
   password: string;
   confirmPassword: string;
   email: string;
-  altcha: string | null;
+  captchaToken: string | null;
 };
-export type CaptchaStatus = { captchaEnabled: boolean; challengeUrl: string };
+export type CaptchaStatus = { captchaEnabled: boolean; captchaEndpoint: string };
 export type RegistrationRequest<T> = {
   registration: Partial<T>;
-  altcha: string | null;
+  captchaToken: string | null;
 };
 export type DriverLoginViewModel = { email: string; driverId: string };
 export type AttendanceViewModel = { id: number; attendance: boolean };

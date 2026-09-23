@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using API.Abstracts;
+using API.Attributes;
 using API.Interfaces;
 using API.Utilities;
 using DAL.Interfaces;
@@ -9,14 +10,13 @@ using Logic.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Hosting;
 using Models.Entities;
 using Models.ViewModels.Identities;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace API.Controllers.API;
 
-[AllowAnonymous]
 [Route("api/[controller]")]
 public class JwtIdentityController(
     JwtSettings jwtSettings,
@@ -26,19 +26,24 @@ public class JwtIdentityController(
     IUserLogic userLogic,
     IApiEventService apiEventService,
     IConfigLogic configLogic,
-    IAltchaService altchaService,
-    IConfiguration configuration)
+    ICapService capService,
+    IWebHostEnvironment environment)
     : AbstractIdentityController
 {
+    [AllowAnonymous]
     [HttpGet]
     [Route("captcha")]
     public async Task<IActionResult> Captcha()
     {
-        var captchaEnabled = (await configLogic.ResolveGlobalConfig()).CaptchaEnabled;
-        var challengeUrl = configuration["AltchaSettings:ChallengeUrl"];
-        return Ok(new { captchaEnabled, challengeUrl });
+        var config = await configLogic.ResolveGlobalConfig();
+        var captchaEnabled = CapService.IsEnabled(config, environment);
+        var captchaEndpoint = captchaEnabled && CapService.TryBuildEndpoint(config, out var endpoint)
+            ? endpoint.AbsoluteUri
+            : null;
+        return Ok(new { captchaEnabled, captchaEndpoint });
     }
 
+    [AllowAnonymous]
     [HttpGet]
     [Route("")]
     [SwaggerOperation("AccountInfo")]
@@ -79,6 +84,7 @@ public class JwtIdentityController(
         return jwtSettings;
     }
 
+    [AllowAnonymous]
     [HttpPost]
     [Route("Register")]
     [SwaggerOperation("Register")]
@@ -86,7 +92,7 @@ public class JwtIdentityController(
     {
         TempData.Clear();
 
-        if (!await altchaService.IsSatisfied(registerViewModel.Altcha))
+        if (!await capService.IsSatisfied(registerViewModel.CaptchaToken))
         {
             return BadRequest(new { error = "Please complete the anti-spam verification." });
         }
@@ -113,6 +119,7 @@ public class JwtIdentityController(
         return BadRequest("Failed to register");
     }
 
+    [AllowAnonymous]
     [HttpPost]
     [Route("Login")]
     [SwaggerOperation("Login")]
@@ -120,7 +127,7 @@ public class JwtIdentityController(
     {
         TempData.Clear();
 
-        if (!await altchaService.IsSatisfied(loginViewModel.Altcha))
+        if (!await capService.IsSatisfied(loginViewModel.CaptchaToken))
         {
             return BadRequest(new { error = "Please complete the anti-spam verification." });
         }
@@ -153,30 +160,38 @@ public class JwtIdentityController(
         return Unauthorized(new { error = message });
     }
 
-    [Authorize]
+    [AuthorizeMiddleware]
     [HttpPost]
     [Route("Logout")]
     [SwaggerOperation("Logout")]
     public new async Task<IActionResult> Logout()
     {
-        var result = await ResolveUserManager().FindByNameAsync(User.Identity!.Name);
+        var identityName = User.Identity!.Name;
+        var result = await ResolveUserManager().FindByNameAsync(identityName)
+                     ?? await ResolveUserManager().FindByEmailAsync(identityName);
             
         await base.Logout();
             
-        await apiEventService.RecordEvent($"User [{result.UserName}] successfully logged-out");
+        await apiEventService.RecordEvent($"User [{result?.UserName ?? identityName}] successfully logged-out");
 
         return Ok("Successfully logged out");
     }
         
-    [Authorize]
+    [AuthorizeMiddleware]
     [HttpGet]
     [Route("Refresh")]
     [SwaggerOperation("Refresh")]
     public async Task<IActionResult> Refresh()
     {
-        if (User.Identity != null)
+        if (User.Identity?.Name is { } identityName)
         {
-            var user = await userManager.FindByEmailAsync(User.Identity.Name);
+            var user = await userManager.FindByNameAsync(identityName)
+                       ?? await userManager.FindByEmailAsync(identityName);
+
+            if (user == null)
+            {
+                return Unauthorized();
+            }
                 
             var token = await base.ResolveToken(user);
 

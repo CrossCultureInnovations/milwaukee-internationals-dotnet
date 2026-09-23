@@ -22,7 +22,9 @@ public class ConfigController(IConfigLogic configLogic, IConfiguration configura
     [SwaggerOperation("Status")]
     public async Task<IActionResult> Status()
     {
-        return Ok(await configLogic.ResolveGlobalConfig());
+        var config = await configLogic.ResolveGlobalConfig();
+        config.CapSecretKey = string.Empty;
+        return Ok(config);
     }
 
     [HttpPut]
@@ -30,8 +32,15 @@ public class ConfigController(IConfigLogic configLogic, IConfiguration configura
     [AuthorizeMiddleware(UserRoleEnum.Admin)]
     public async Task<IActionResult> Update([FromBody] GlobalConfigModel globalConfigs)
     {
+        if (string.IsNullOrWhiteSpace(globalConfigs.CapSecretKey))
+        {
+            globalConfigs.CapSecretKey = (await configLogic.ResolveGlobalConfig()).CapSecretKey;
+        }
+
         await configLogic.SetGlobalConfig(globalConfigs);
-        return Ok(await configLogic.ResolveGlobalConfig());
+        var config = await configLogic.ResolveGlobalConfig();
+        config.CapSecretKey = string.Empty;
+        return Ok(config);
     }
 
     [HttpGet]

@@ -17,9 +17,15 @@ public class ProfileController(UserManager<User> userManager, IProfileLogic prof
     [Route("")]
     public async Task<IActionResult> Index()
     {
-        if (User.Identity is { IsAuthenticated: true })
+        if (User.Identity is { IsAuthenticated: true, Name: { } identityName })
         {
-            return View(profileLogic.ResolveProfile(await userManager.FindByNameAsync(User.Identity.Name)));
+            var user = await userManager.FindByNameAsync(identityName)
+                       ?? await userManager.FindByEmailAsync(identityName);
+
+            if (user != null)
+            {
+                return View(profileLogic.ResolveProfile(user));
+            }
         }
 
         return new RedirectResult("~/");

@@ -189,11 +189,13 @@ public class IdentityController(
     [Authorize]
     public async Task<IActionResult> LogoutHandler()
     {
-        var result = await ResolveUserManager().FindByNameAsync(User.Identity!.Name);
+        var identityName = User.Identity!.Name;
+        var result = await ResolveUserManager().FindByNameAsync(identityName)
+                     ?? await ResolveUserManager().FindByEmailAsync(identityName);
             
         await Logout();
             
-        await apiEventService.RecordEvent($"User [{result.UserName}] successfully logged-out");
+        await apiEventService.RecordEvent($"User [{result?.UserName ?? identityName}] successfully logged-out");
 
         return RedirectToAction("Login");
     }
@@ -203,7 +205,14 @@ public class IdentityController(
     [Route("Token")]
     public async Task<IActionResult> Token()
     {
-        var user = await userManager.FindByNameAsync(User.Identity!.Name);
+        var identityName = User.Identity!.Name;
+        var user = await userManager.FindByNameAsync(identityName)
+                   ?? await userManager.FindByEmailAsync(identityName);
+
+        if (user == null)
+        {
+            return Unauthorized();
+        }
                 
         var token = await ResolveToken(user);
 

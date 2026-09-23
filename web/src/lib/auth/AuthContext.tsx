@@ -30,7 +30,7 @@ type AuthContextValue = {
   isInitializing: boolean;
   /** True when the session ended on its own rather than by an explicit logout. */
   sessionExpired: boolean;
-  login: (username: string, password: string, altcha: string | null) => Promise<User>;
+  login: (username: string, password: string, captchaToken: string | null) => Promise<User>;
   register: (payload: RegisterViewModel) => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -147,8 +147,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isInitializing,
       sessionExpired,
 
-      login: async (username, password, altcha) => {
-        const res = await api.login({ username, password, altcha } as LoginViewModel);
+      login: async (username, password, captchaToken) => {
+        const res = await api.login({ username, password, captchaToken } as LoginViewModel);
         setToken(res.token);
         const me = await api.me();
         lastCheckedRef.current = Date.now();

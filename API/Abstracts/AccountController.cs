@@ -101,11 +101,21 @@ public abstract class AbstractIdentityController : Controller
             return (false, "Username/Password combination is not valid.");
         }
 
-        // Generate and issue a JWT token
-        var claims = new[]
+        var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, result.Email)
+            new Claim(ClaimTypes.Name, result.UserName),
+            new Claim(ClaimTypes.NameIdentifier, result.Id.ToString())
         };
+
+        var identityRoles = await ResolveUserManager().GetRolesAsync(result);
+        var roles = identityRoles.Count > 0
+            ? identityRoles
+            : result.UserRoleEnum.SubRoles().Select(x => x.ToString()).ToList();
+
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
 
         var identity = new ClaimsIdentity(
             claims, CookieAuthenticationDefaults.AuthenticationScheme,

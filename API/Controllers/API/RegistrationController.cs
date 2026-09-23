@@ -3,10 +3,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using API.Interfaces;
 using DAL.Interfaces;
+using API.Utilities;
 using Logic.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Models.Entities;
 
 namespace API.Controllers.API;
@@ -16,17 +17,20 @@ namespace API.Controllers.API;
 public class RegistrationController(
     IRegistrationLogic registrationLogic,
     IConfigLogic configLogic,
-    IAltchaService altchaService,
-    IConfiguration configuration) : Controller
+    ICapService capService,
+    IWebHostEnvironment environment) : Controller
 {
     [HttpGet]
     [Route("student/status")]
     public async Task<IActionResult> StudentStatus()
     {
         var isOpen = await registrationLogic.IsRegisterStudentOpen();
-        var captchaEnabled = (await configLogic.ResolveGlobalConfig()).CaptchaEnabled;
-        var challengeUrl = configuration["AltchaSettings:ChallengeUrl"];
-        return Ok(new { isOpen, captchaEnabled, challengeUrl });
+        var config = await configLogic.ResolveGlobalConfig();
+        var captchaEnabled = CapService.IsEnabled(config, environment);
+        var captchaEndpoint = captchaEnabled && CapService.TryBuildEndpoint(config, out var endpoint)
+            ? endpoint.AbsoluteUri
+            : null;
+        return Ok(new { isOpen, captchaEnabled, captchaEndpoint });
     }
 
     [HttpGet]
@@ -34,16 +38,24 @@ public class RegistrationController(
     public async Task<IActionResult> DriverStatus()
     {
         var isOpen = await registrationLogic.IsRegisterDriverOpen();
-        var captchaEnabled = (await configLogic.ResolveGlobalConfig()).CaptchaEnabled;
-        var challengeUrl = configuration["AltchaSettings:ChallengeUrl"];
-        return Ok(new { isOpen, captchaEnabled, challengeUrl });
+        var config = await configLogic.ResolveGlobalConfig();
+        var captchaEnabled = CapService.IsEnabled(config, environment);
+        var captchaEndpoint = captchaEnabled && CapService.TryBuildEndpoint(config, out var endpoint)
+            ? endpoint.AbsoluteUri
+            : null;
+        return Ok(new { isOpen, captchaEnabled, captchaEndpoint });
     }
 
     [HttpPost]
     [Route("student")]
     public async Task<IActionResult> RegisterStudent([FromBody] RegistrationRequest<Student> request)
     {
-        if (!await altchaService.IsSatisfied(request.Altcha))
+        if (User.Identity is not { IsAuthenticated: true } && !await registrationLogic.IsRegisterStudentOpen())
+        {
+            return BadRequest(new { error = "Student registration is closed." });
+        }
+
+        if (!await capService.IsSatisfied(request.CaptchaToken))
         {
             return BadRequest(new { error = "Please complete the anti-spam verification." });
         }
@@ -68,7 +80,12 @@ public class RegistrationController(
     [Route("driver")]
     public async Task<IActionResult> RegisterDriver([FromBody] RegistrationRequest<Driver> request)
     {
-        if (!await altchaService.IsSatisfied(request.Altcha))
+        if (User.Identity is not { IsAuthenticated: true } && !await registrationLogic.IsRegisterDriverOpen())
+        {
+            return BadRequest(new { error = "Driver registration is closed." });
+        }
+
+        if (!await capService.IsSatisfied(request.CaptchaToken))
         {
             return BadRequest(new { error = "Please complete the anti-spam verification." });
         }
@@ -89,6 +106,5 @@ public class RegistrationController(
 public class RegistrationRequest<T>
 {
     public T Registration { get; set; }
-    public string Altcha { get; set; }
+    public string CaptchaToken { get; set; }
 }
-

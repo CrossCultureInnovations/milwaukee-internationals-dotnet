@@ -10,7 +10,7 @@ import { api, ApiError } from "../../api";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { AltchaWidget } from "../../components/AltchaWidget";
+import { CapWidget } from "../../components/CapWidget";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -24,7 +24,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [serverError, setServerError] = useState<string | null>(null);
-  const [altcha, setAltcha] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaError, setCaptchaError] = useState<string | null>(null);
   const captchaQuery = useQuery({
     queryKey: ["auth", "captcha"],
@@ -44,13 +44,13 @@ export function LoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setServerError(null);
-    if ((captchaQuery.data?.captchaEnabled ?? true) && !altcha) {
+    if ((captchaQuery.data?.captchaEnabled ?? false) && !captchaToken) {
       setCaptchaError("Please confirm you are human");
       return;
     }
     setCaptchaError(null);
     try {
-      await login(data.username, data.password, altcha);
+      await login(data.username, data.password, captchaToken);
       navigate(from ?? "/dashboard", { replace: true });
     } catch (err) {
       if (err instanceof ApiError) {
@@ -124,11 +124,11 @@ export function LoginPage() {
                 )}
               </div>
 
-              {captchaQuery.data?.captchaEnabled && captchaQuery.data.challengeUrl && (
+              {captchaQuery.data?.captchaEnabled && captchaQuery.data.captchaEndpoint && (
                 <div className="space-y-1.5">
-                  <AltchaWidget
-                    challengeUrl={captchaQuery.data.challengeUrl}
-                    onVerified={setAltcha}
+                  <CapWidget
+                    captchaEndpoint={captchaQuery.data.captchaEndpoint}
+                    onVerified={setCaptchaToken}
                   />
                   {captchaError && <p className="text-xs text-red-500">{captchaError}</p>}
                 </div>

@@ -26,7 +26,8 @@ public class StudentLogic(IEfRepository repository, IConfigLogic configLogic, IA
     /// <returns></returns>
     public override async Task<Student> Save(Student student)
     {
-        var allStudents = (await GetAll(DateTime.UtcNow.Year)).ToList();
+        var currentYear = DateTimeOffset.Now.Year;
+        var allStudents = (await _dal.GetAll<Student>([x => x.Year == currentYear])).ToList();
 
         await ThrowIfDuplicate(student, allStudents);
 
@@ -34,7 +35,7 @@ public class StudentLogic(IEfRepository repository, IConfigLogic configLogic, IA
         student.Phone = NormalizePhoneNumber(student.Phone);
 
         // Set the year
-        student.Year = DateTime.UtcNow.Year;
+        student.Year = currentYear;
         student.RegisteredOn = DateTimeOffset.Now;
 
         var count = allStudents.Count;
@@ -74,7 +75,7 @@ public class StudentLogic(IEfRepository repository, IConfigLogic configLogic, IA
     /// <returns></returns>
     public override async Task<Student> Update(int id, Student student)
     {
-        await ThrowIfDuplicate(student, (await GetAll(DateTime.UtcNow.Year)).Where(x => x.Id != id).ToList());
+        await ThrowIfDuplicate(student, (await GetAll()).Where(x => x.Id != id).ToList());
 
         // Update only subset of properties
         return await base.Update(id, x =>

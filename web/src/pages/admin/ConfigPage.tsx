@@ -4,6 +4,7 @@ import {
   MapPin,
   Mail,
   MessageSquare,
+  ShieldCheck,
   ToggleRight,
   Save,
   Loader2,
@@ -93,7 +94,8 @@ export function ConfigPage() {
     if (!form) return;
     setSaving(true);
     try {
-      await api.updateConfig(form);
+      const updated = await api.updateConfig(form);
+      setForm({ ...updated, capSecretKey: "" });
       await queryClient.invalidateQueries({ queryKey: ["config"] });
       setDirty(false);
     } catch (e) {
@@ -380,6 +382,47 @@ export function ConfigPage() {
                 type="tel"
                 value={form.adminPhoneNumber || ""}
                 onChange={(e) => update("adminPhoneNumber", e.target.value)}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Captcha */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ShieldCheck className="h-4 w-4 text-primary" />
+              Cap Captcha
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="capServerUrl" className="text-sm">Server URL</Label>
+              <Input
+                id="capServerUrl"
+                type="url"
+                placeholder="https://captcha.example.com"
+                value={form.capServerUrl || ""}
+                onChange={(e) => update("capServerUrl", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="capSiteKey" className="text-sm">Site key</Label>
+              <Input
+                id="capSiteKey"
+                value={form.capSiteKey || ""}
+                onChange={(e) => update("capSiteKey", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="capSecretKey" className="text-sm">Secret key</Label>
+              <Input
+                id="capSecretKey"
+                type="password"
+                autoComplete="new-password"
+                placeholder="Leave blank to keep the current secret"
+                value={form.capSecretKey || ""}
+                onChange={(e) => update("capSecretKey", e.target.value)}
               />
             </div>
           </CardContent>

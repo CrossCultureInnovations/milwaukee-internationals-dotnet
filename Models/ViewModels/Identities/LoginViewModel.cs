@@ -16,5 +16,5 @@ public class LoginViewModel
     [PasswordValidation]
     public string Password { get; set; }
 
-    public string Altcha { get; set; }
+    public string CaptchaToken { get; set; }
 }

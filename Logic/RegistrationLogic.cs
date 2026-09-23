@@ -118,8 +118,8 @@ public class RegistrationLogic(
     {
         var globalConfigs = await configLogic.ResolveGlobalConfig();
 
-        var year = DateTimeOffset.Now.Year;
-        var count = await studentLogic.Count(x => x.Year == year);
+        var currentYear = DateTimeOffset.Now.Year;
+        var count = await studentLogic.Count(x => x.Year == currentYear);
 
         var overLimit = count >= globalConfigs.MaxLimitStudentSeats;
 
@@ -132,8 +132,8 @@ public class RegistrationLogic(
     {
         var globalConfigs = await configLogic.ResolveGlobalConfig();
 
-        var year = DateTimeOffset.Now.Year;
-        var count = await driverLogic.Count(x => x.Year == year);
+        var currentYear = DateTimeOffset.Now.Year;
+        var count = await driverLogic.Count(x => x.Year == currentYear);
 
         var overLimit = count >= globalConfigs.MaxLimitDrivers;
         var afterTour = await IsAfterTourDay();
@@ -145,10 +145,7 @@ public class RegistrationLogic(
     {
         var globalConfigs = await configLogic.ResolveGlobalConfig();
 
-        // Compare the instants directly. Subtracting and reading TimeSpan.Days
-        // truncates toward zero, so any negative span under 24 hours read as 0
-        // and closed registration a full day early.
-        return DateTimeOffset.Now >= globalConfigs.TourDate.AddDays(1);
+        return DateTimeOffset.Now - globalConfigs.TourDate.AddDays(1) >= TimeSpan.Zero;
     }
     
     public async Task RegisterDriver(Driver driver)

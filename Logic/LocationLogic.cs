@@ -32,10 +32,11 @@ public class LocationLogic(
 
     public override async Task<Location> Save(Location instance)
     {
-        var locations = await GetAll();
+        var currentYear = DateTimeOffset.Now.Year;
+        var locations = await _dal.GetAll<Location>([x => x.Year == currentYear]);
 
         instance.Rank = locations.Count() + 1;
-        instance.Year = DateTime.Now.Year;
+        instance.Year = currentYear;
 
         var coordinates = await geocodingService.Resolve(instance.Address, instance.Name);
 

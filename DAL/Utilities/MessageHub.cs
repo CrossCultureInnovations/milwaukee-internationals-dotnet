@@ -13,17 +13,21 @@ namespace DAL.Utilities;
 public class MessageHub(UserManager<User> userManager) : Hub
 {
     // Connected IDs
-    private static readonly IDictionary<string, User> UserTable = new ConcurrentDictionary<string, User>();
+    private static readonly ConcurrentDictionary<string, User> UserTable = new();
 
     public override async Task OnConnectedAsync()
     {
-        if (Context.User != null)
+        if (Context.User?.Identity?.Name is { } identityName)
         {
-            var user = await userManager.FindByNameAsync(Context.User.Identity!.Name);
+            var user = await userManager.FindByNameAsync(identityName)
+                       ?? await userManager.FindByEmailAsync(identityName);
 
-            UserTable[Context.ConnectionId] = user;
+            if (user != null)
+            {
+                UserTable[Context.ConnectionId] = user;
 
-            await Clients.All.SendAsync("log", "joined", Context.ConnectionId, user.UserName);
+                await Clients.All.SendAsync("log", "joined", Context.ConnectionId, user.UserName);
+            }
         }
 
         await Clients.All.SendAsync("count", UserTable.Count);
@@ -31,11 +35,11 @@ public class MessageHub(UserManager<User> userManager) : Hub
 
     public override async Task OnDisconnectedAsync(Exception ex)
     {
-        var user = UserTable[Context.ConnectionId];
-        
-        UserTable.Remove(Context.ConnectionId);
+        if (UserTable.TryRemove(Context.ConnectionId, out var user))
+        {
+            await Clients.All.SendAsync("log", "left", Context.ConnectionId, user.UserName);
+        }
 
-        await Clients.All.SendAsync("log", "left", Context.ConnectionId, user.UserName);
         await Clients.All.SendAsync("count", UserTable.Count);
     }
 }
